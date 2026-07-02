@@ -16,8 +16,10 @@ const CUSHION_RESTITUTION = 0.84;
 const MIN_SPEED = 0.04;
 const RAIL_WIDTH = 38;
 const POCKET_CAPTURE = 28;
-const POCKET_OPENING = 21;
-const POCKET_JAW = 14;
+const POCKET_OPENING = 18;
+const POCKET_RECESS = 17;
+const SIDE_NOTCH_HALF = 26;
+const CORNER_JAW_ALONG = 32;
 const POCKET_MAGNET = 0.35;
 
 const CUE_LENGTH = 300;
@@ -73,16 +75,72 @@ function getPlayArea() {
 
 function getPockets() {
     const play = getPlayArea();
-    const midX = play.left + play.width / 2;
+    const mx = play.left + play.width / 2;
+    const d = POCKET_RECESS;
 
     return [
-        { x: play.left, y: play.top, kind: 'corner' },
-        { x: midX, y: play.top, kind: 'side' },
-        { x: play.right, y: play.top, kind: 'corner' },
-        { x: play.left, y: play.bottom, kind: 'corner' },
-        { x: midX, y: play.bottom, kind: 'side' },
-        { x: play.right, y: play.bottom, kind: 'corner' }
+        { kind: 'corner', wall: 'tl', anchorX: play.left, anchorY: play.top, x: play.left - d * 0.62, y: play.top - d * 0.62 },
+        { kind: 'side', wall: 'top', anchorX: mx, anchorY: play.top, x: mx, y: play.top - d },
+        { kind: 'corner', wall: 'tr', anchorX: play.right, anchorY: play.top, x: play.right + d * 0.62, y: play.top - d * 0.62 },
+        { kind: 'corner', wall: 'bl', anchorX: play.left, anchorY: play.bottom, x: play.left - d * 0.62, y: play.bottom + d * 0.62 },
+        { kind: 'side', wall: 'bottom', anchorX: mx, anchorY: play.bottom, x: mx, y: play.bottom + d },
+        { kind: 'corner', wall: 'br', anchorX: play.right, anchorY: play.bottom, x: play.right + d * 0.62, y: play.bottom + d * 0.62 }
     ];
+}
+
+function traceCornerNotch(path, pocket) {
+    const J = CORNER_JAW_ALONG;
+    const d = POCKET_RECESS;
+    const bend = 11;
+    const { anchorX: ax, anchorY: ay, wall } = pocket;
+
+    if (wall === 'tl') {
+        path.moveTo(ax + J, ay);
+        path.lineTo(ax + bend, ay + bend);
+        path.lineTo(ax, ay + J);
+        path.lineTo(ax - d, ay - d);
+        path.closePath();
+    } else if (wall === 'tr') {
+        path.moveTo(ax - J, ay);
+        path.lineTo(ax - bend, ay + bend);
+        path.lineTo(ax, ay + J);
+        path.lineTo(ax + d, ay - d);
+        path.closePath();
+    } else if (wall === 'bl') {
+        path.moveTo(ax + J, ay);
+        path.lineTo(ax + bend, ay - bend);
+        path.lineTo(ax, ay - J);
+        path.lineTo(ax - d, ay + d);
+        path.closePath();
+    } else if (wall === 'br') {
+        path.moveTo(ax - J, ay);
+        path.lineTo(ax - bend, ay - bend);
+        path.lineTo(ax, ay - J);
+        path.lineTo(ax + d, ay + d);
+        path.closePath();
+    }
+}
+
+function traceSideNotch(path, pocket) {
+    const h = SIDE_NOTCH_HALF;
+    const d = POCKET_RECESS;
+    const { anchorX: ax, anchorY: ay, wall } = pocket;
+
+    if (wall === 'top') {
+        path.moveTo(ax - h, ay);
+        path.lineTo(ax - h * 0.55, ay - d * 0.45);
+        path.lineTo(ax, ay - d);
+        path.lineTo(ax + h * 0.55, ay - d * 0.45);
+        path.lineTo(ax + h, ay);
+        path.closePath();
+    } else if (wall === 'bottom') {
+        path.moveTo(ax - h, ay);
+        path.lineTo(ax - h * 0.55, ay + d * 0.45);
+        path.lineTo(ax, ay + d);
+        path.lineTo(ax + h * 0.55, ay + d * 0.45);
+        path.lineTo(ax + h, ay);
+        path.closePath();
+    }
 }
 
 function pocketDistance(x, y, pocket) {
@@ -98,29 +156,22 @@ function isNearPocket(x, y, extra = 0) {
 }
 
 function nearPocketOnWall(x, y, wall) {
-    const play = getPlayArea();
-    const midX = play.left + play.width / 2;
     const zone = POCKET_CAPTURE + BALL_RADIUS;
-
-    if (wall === 'left') {
-        return pocketDistance(x, y, { x: play.left, y: play.top }) < zone
-            || pocketDistance(x, y, { x: play.left, y: play.bottom }) < zone;
-    }
-    if (wall === 'right') {
-        return pocketDistance(x, y, { x: play.right, y: play.top }) < zone
-            || pocketDistance(x, y, { x: play.right, y: play.bottom }) < zone;
-    }
-    if (wall === 'top') {
-        return pocketDistance(x, y, { x: play.left, y: play.top }) < zone
-            || pocketDistance(x, y, { x: midX, y: play.top }) < zone
-            || pocketDistance(x, y, { x: play.right, y: play.top }) < zone;
-    }
-    if (wall === 'bottom') {
-        return pocketDistance(x, y, { x: play.left, y: play.bottom }) < zone
-            || pocketDistance(x, y, { x: midX, y: play.bottom }) < zone
-            || pocketDistance(x, y, { x: play.right, y: play.bottom }) < zone;
-    }
-    return false;
+    return getPockets().some(p => {
+        if (wall === 'left' && (p.wall === 'tl' || p.wall === 'bl')) {
+            return pocketDistance(x, y, p) < zone;
+        }
+        if (wall === 'right' && (p.wall === 'tr' || p.wall === 'br')) {
+            return pocketDistance(x, y, p) < zone;
+        }
+        if (wall === 'top' && (p.wall === 'tl' || p.wall === 'tr' || p.wall === 'top')) {
+            return pocketDistance(x, y, p) < zone;
+        }
+        if (wall === 'bottom' && (p.wall === 'bl' || p.wall === 'br' || p.wall === 'bottom')) {
+            return pocketDistance(x, y, p) < zone;
+        }
+        return false;
+    });
 }
 
 function getHeadSpot() {
@@ -641,22 +692,25 @@ function drawTrajectory(angle) {
 }
 
 function drawPocketHole(pocket) {
-    const r = pocket.kind === 'corner' ? POCKET_OPENING + 2 : POCKET_OPENING;
-    const innerR = r * 0.45;
+    const r = POCKET_OPENING;
 
     ctx.save();
 
     ctx.beginPath();
-    ctx.arc(pocket.x, pocket.y, r + 3, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+    if (pocket.kind === 'corner') {
+        traceCornerNotch(ctx, pocket);
+    } else {
+        traceSideNotch(ctx, pocket);
+    }
+    ctx.fillStyle = '#0a0604';
     ctx.fill();
 
     const depth = ctx.createRadialGradient(
-        pocket.x, pocket.y, innerR * 0.2,
-        pocket.x, pocket.y, r + 1
+        pocket.x, pocket.y, 1,
+        pocket.x, pocket.y, r + 4
     );
     depth.addColorStop(0, '#000000');
-    depth.addColorStop(0.55, '#0a0806');
+    depth.addColorStop(0.55, '#080604');
     depth.addColorStop(1, '#1a1208');
 
     ctx.beginPath();
@@ -665,55 +719,92 @@ function drawPocketHole(pocket) {
     ctx.fill();
 
     ctx.beginPath();
-    ctx.arc(pocket.x, pocket.y, innerR, 0, Math.PI * 2);
+    ctx.arc(pocket.x, pocket.y, r * 0.42, 0, Math.PI * 2);
     ctx.fillStyle = '#000';
     ctx.fill();
 
     ctx.beginPath();
     ctx.arc(pocket.x, pocket.y, r - 1, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(25, 15, 8, 0.9)';
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(30, 18, 10, 0.95)';
+    ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    ctx.beginPath();
-    ctx.arc(pocket.x, pocket.y, r - 4, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(90, 60, 35, 0.5)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    if (pocket.kind === 'corner') {
-        drawPocketJaws(pocket);
-    }
-
+    drawPocketJaws(pocket);
     ctx.restore();
 }
 
 function drawPocketJaws(pocket) {
     const play = getPlayArea();
-    const jaw = POCKET_JAW;
-    ctx.strokeStyle = 'rgba(40, 25, 12, 0.85)';
+    const J = CORNER_JAW_ALONG;
+    const h = SIDE_NOTCH_HALF;
+    const { anchorX: ax, anchorY: ay, wall } = pocket;
+
+    ctx.strokeStyle = 'rgba(55, 35, 18, 0.95)';
     ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
-    if (pocket.x <= play.left + 1 && pocket.y <= play.top + 1) {
+    if (wall === 'tl') {
         ctx.beginPath();
-        ctx.moveTo(pocket.x + jaw, pocket.y - 2);
-        ctx.lineTo(pocket.x - 2, pocket.y + jaw);
+        ctx.moveTo(ax + J, ay);
+        ctx.lineTo(ax + 10, ay + 10);
+        ctx.lineTo(ax, ay + J);
         ctx.stroke();
-    } else if (pocket.x >= play.right - 1 && pocket.y <= play.top + 1) {
+    } else if (wall === 'tr') {
         ctx.beginPath();
-        ctx.moveTo(pocket.x - jaw, pocket.y - 2);
-        ctx.lineTo(pocket.x + 2, pocket.y + jaw);
+        ctx.moveTo(ax - J, ay);
+        ctx.lineTo(ax - 10, ay + 10);
+        ctx.lineTo(ax, ay + J);
         ctx.stroke();
-    } else if (pocket.x <= play.left + 1 && pocket.y >= play.bottom - 1) {
+    } else if (wall === 'bl') {
         ctx.beginPath();
-        ctx.moveTo(pocket.x + jaw, pocket.y + 2);
-        ctx.lineTo(pocket.x - 2, pocket.y - jaw);
+        ctx.moveTo(ax + J, ay);
+        ctx.lineTo(ax + 10, ay - 10);
+        ctx.lineTo(ax, ay - J);
         ctx.stroke();
-    } else if (pocket.x >= play.right - 1 && pocket.y >= play.bottom - 1) {
+    } else if (wall === 'br') {
         ctx.beginPath();
-        ctx.moveTo(pocket.x - jaw, pocket.y + 2);
-        ctx.lineTo(pocket.x + 2, pocket.y - jaw);
+        ctx.moveTo(ax - J, ay);
+        ctx.lineTo(ax - 10, ay - 10);
+        ctx.lineTo(ax, ay - J);
+        ctx.stroke();
+    } else if (wall === 'top') {
+        ctx.beginPath();
+        ctx.moveTo(ax - h, ay);
+        ctx.quadraticCurveTo(ax - h * 0.4, ay - POCKET_RECESS * 0.35, ax, ay - POCKET_RECESS * 0.15);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(ax + h, ay);
+        ctx.quadraticCurveTo(ax + h * 0.4, ay - POCKET_RECESS * 0.35, ax, ay - POCKET_RECESS * 0.15);
+        ctx.stroke();
+    } else if (wall === 'bottom') {
+        ctx.beginPath();
+        ctx.moveTo(ax - h, ay);
+        ctx.quadraticCurveTo(ax - h * 0.4, ay + POCKET_RECESS * 0.35, ax, ay + POCKET_RECESS * 0.15);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(ax + h, ay);
+        ctx.quadraticCurveTo(ax + h * 0.4, ay + POCKET_RECESS * 0.35, ax, ay + POCKET_RECESS * 0.15);
+        ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(200, 165, 110, 0.35)';
+    ctx.lineWidth = 1.2;
+    const inset = 4;
+    if (wall === 'tl' || wall === 'tr') {
+        const x1 = wall === 'tl' ? play.left + inset : play.right - inset;
+        const x2 = wall === 'tl' ? ax + J : ax - J;
+        ctx.beginPath();
+        ctx.moveTo(x2, play.top + inset);
+        ctx.lineTo(x1, play.top + inset);
+        ctx.stroke();
+    }
+    if (wall === 'bl' || wall === 'br') {
+        const x1 = wall === 'bl' ? play.left + inset : play.right - inset;
+        const x2 = wall === 'bl' ? ax + J : ax - J;
+        ctx.beginPath();
+        ctx.moveTo(x2, play.bottom - inset);
+        ctx.lineTo(x1, play.bottom - inset);
         ctx.stroke();
     }
 }
@@ -725,10 +816,12 @@ function drawRailFrame() {
     ctx.rect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     ctx.rect(play.left, play.top, play.width, play.height);
 
-    getPockets().forEach(p => {
-        const holeR = p.kind === 'corner' ? POCKET_OPENING + 2 : POCKET_OPENING;
-        ctx.moveTo(p.x + holeR, p.y);
-        ctx.arc(p.x, p.y, holeR, 0, Math.PI * 2, true);
+    getPockets().forEach(pocket => {
+        if (pocket.kind === 'corner') {
+            traceCornerNotch(ctx, pocket);
+        } else {
+            traceSideNotch(ctx, pocket);
+        }
     });
 
     const wood = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
@@ -794,35 +887,63 @@ function drawFelt() {
 
 function drawCushionFacings() {
     const play = getPlayArea();
-    const inset = 3;
-    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    const mx = play.left + play.width / 2;
+    const J = CORNER_JAW_ALONG;
+    const h = SIDE_NOTCH_HALF;
+    const inset = 4;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(210, 175, 115, 0.55)';
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+
+    ctx.beginPath();
+    ctx.moveTo(play.left + J, play.top + inset);
+    ctx.lineTo(mx - h, play.top + inset);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(mx + h, play.top + inset);
+    ctx.lineTo(play.right - J, play.top + inset);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(play.left + J, play.bottom - inset);
+    ctx.lineTo(mx - h, play.bottom - inset);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(mx + h, play.bottom - inset);
+    ctx.lineTo(play.right - J, play.bottom - inset);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(play.left + inset, play.top + J);
+    ctx.lineTo(play.left + inset, play.bottom - J);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(play.right - inset, play.top + J);
+    ctx.lineTo(play.right - inset, play.bottom - J);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.lineWidth = 1;
-    ctx.strokeRect(play.left + inset, play.top + inset, play.width - inset * 2, play.height - inset * 2);
+    ctx.setLineDash([2, 3]);
+    ctx.strokeRect(play.left + 1, play.top + 1, play.width - 2, play.height - 2);
+    ctx.setLineDash([]);
+    ctx.restore();
 }
 
 function drawTable() {
-    const play = getPlayArea();
-
     ctx.fillStyle = '#080c10';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     drawFelt();
     drawRailFrame();
     getPockets().forEach(drawPocketHole);
-    drawRailDiamonds();
     drawCushionFacings();
-
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(play.left, play.top);
-    ctx.lineTo(play.right, play.top);
-    ctx.lineTo(play.right, play.bottom);
-    ctx.lineTo(play.left, play.bottom);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.restore();
+    drawRailDiamonds();
 }
 
 function drawCueScene(angle, pullBack) {
