@@ -12,16 +12,17 @@
             <canvas id="billiard-canvas"></canvas>
             <div id="shot-controls">
                 <span class="control-label">Сила удара</span>
-                <div id="power-slider-wrap">
-                    <input type="range" id="power-slider" min="0" max="100" value="0" orient="vertical">
+                <p id="pull-hint">Оттяните вниз и отпустите</p>
+                <div id="power-pull-track">
+                    <div id="power-pull-fill"></div>
+                    <div id="power-pull-thumb"></div>
                 </div>
                 <span id="power-value">0%</span>
-                <button id="strike-btn" type="button">Удар</button>
             </div>
         </div>
         <div id="ui">
             <p>Score: <span id="score">0</span></p>
-            <p id="hint">Коснитесь стола — прицел в эту точку. Справа — сила и кнопка «Удар»</p>
+            <p id="hint">Стол — прицел. Справа — оттяните ползунок и отпустите для удара</p>
             <button id="reset-btn" type="button">Reset Game</button>
         </div>
     </div>

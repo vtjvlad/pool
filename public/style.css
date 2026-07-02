@@ -69,45 +69,67 @@ body {
     width: 100%;
 }
 
-#power-slider {
-    width: 220px;
-    height: 36px;
-    margin: 0;
-    transform: rotate(-90deg);
-    transform-origin: center center;
-    accent-color: #e67e22;
+#pull-hint {
+    margin: 0 0 10px;
+    font-size: 0.65em;
+    line-height: 1.25;
+    text-align: center;
+    opacity: 0.75;
+}
+
+#power-pull-track {
+    position: relative;
+    flex: 1;
+    width: 36px;
+    min-height: 220px;
+    border-radius: 18px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    overflow: hidden;
     touch-action: none;
+    cursor: grab;
+}
+
+#power-pull-track.is-pulling {
+    cursor: grabbing;
+    border-color: rgba(230, 126, 34, 0.65);
+}
+
+#power-pull-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 0%;
+    background: linear-gradient(180deg, #2ecc71, #f1c40f, #e74c3c);
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+#power-pull-thumb {
+    position: absolute;
+    left: 50%;
+    top: 0%;
+    width: 28px;
+    height: 28px;
+    margin-left: -14px;
+    margin-top: -14px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff, #ddd 45%, #aaa);
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+    transition: box-shadow 0.15s;
+}
+
+#power-pull-track.is-pulling #power-pull-thumb {
+    box-shadow: 0 0 14px rgba(230, 126, 34, 0.85);
 }
 
 #power-value {
     margin-top: 10px;
     font-size: 1.1em;
     font-weight: bold;
-}
-
-#strike-btn {
-    margin-top: 14px;
-    width: 100%;
-    padding: 12px 6px;
-    cursor: pointer;
-    background: linear-gradient(180deg, #e67e22, #d35400);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 0.95em;
-    touch-action: manipulation;
-    box-shadow: 0 4px 12px rgba(211, 84, 0, 0.45);
-    transition: transform 0.1s, opacity 0.2s;
-}
-
-#strike-btn:active:not(:disabled) {
-    transform: scale(0.96);
-}
-
-#strike-btn:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
 }
 
 #ui {
@@ -171,12 +193,9 @@ body {
         padding: 10px 6px;
     }
 
-    #power-slider-wrap {
+    #power-pull-track {
         min-height: 160px;
-    }
-
-    #power-slider {
-        width: 160px;
+        width: 32px;
     }
 
     #ui {

@@ -2,9 +2,10 @@ const canvas = document.getElementById('billiard-canvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
 const resetBtn = document.getElementById('reset-btn');
-const powerSlider = document.getElementById('power-slider');
 const powerValue = document.getElementById('power-value');
-const strikeBtn = document.getElementById('strike-btn');
+const powerTrack = document.getElementById('power-pull-track');
+const powerFill = document.getElementById('power-pull-fill');
+const powerThumb = document.getElementById('power-pull-thumb');
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 400;
@@ -113,6 +114,8 @@ const POWER_FACTOR = 0.12;
 const STRIKE_ANIM_BASE_MS = 90;
 const IMPACT_FLASH_MS = 220;
 const TRAJECTORY_EXTEND = 22;
+const BOUNCE_PREVIEW_LEN = 58;
+const MIN_BOUNCE_DRAW = 0.08;
 
 let balls = [];
 let cueBall;
@@ -120,6 +123,8 @@ let aimX = CANVAS_WIDTH / 2;
 let aimY = CANVAS_HEIGHT / 2;
 let aimAngle = 0;
 let shotPower = 0;
+let isPullingPower = false;
+let activePullPointerId = null;
 let activeCanvasPointerId = null;
 let score = 0;
 let scoredBalls = new Set();
@@ -144,10 +149,27 @@ function getPullFromPower() {
     return (shotPower / 100) * MAX_PULL;
 }
 
-function updatePowerUI() {
-    shotPower = Number(powerSlider.value);
+function updatePowerVisual(percent) {
+    shotPower = Math.max(0, Math.min(100, Math.round(percent)));
     powerValue.textContent = `${shotPower}%`;
-    strikeBtn.disabled = !canShowCue() || shotPower < MIN_POWER_PERCENT;
+    powerFill.style.height = `${shotPower}%`;
+    powerThumb.style.top = `${shotPower}%`;
+}
+
+function resetPowerPull() {
+    updatePowerVisual(0);
+    powerTrack.classList.remove('is-pulling');
+}
+
+function powerFromClientY(clientY) {
+    const rect = powerTrack.getBoundingClientRect();
+    const y = clientY - rect.top;
+    const clamped = Math.max(0, Math.min(rect.height, y));
+    return (clamped / rect.height) * 100;
+}
+
+function canPullPower() {
+    return canShowCue();
 }
 
 function canShowCue() {
@@ -162,14 +184,22 @@ function startStrike(pullBack, angle) {
         startTime: performance.now(),
         duration: STRIKE_ANIM_BASE_MS + pullBack * 0.6
     };
-    powerSlider.value = 0;
-    updatePowerUI();
+    resetPowerPull();
 }
 
-function fireShot() {
-    if (!canShowCue() || shotPower < MIN_POWER_PERCENT) return;
+function releasePowerPull() {
+    if (!isPullingPower) return;
 
-    startStrike(getPullFromPower(), getAimAngle());
+    const power = shotPower;
+    isPullingPower = false;
+    activePullPointerId = null;
+    powerTrack.classList.remove('is-pulling');
+
+    if (power >= MIN_POWER_PERCENT && canShowCue()) {
+        startStrike(getPullFromPower(), getAimAngle());
+    } else {
+        resetPowerPull();
+    }
 }
 
 function updateStrikeAnim() {
@@ -276,36 +306,37 @@ function rayCircleHit(ox, oy, dx, dy, cx, cy, hitRadius) {
 
 function rayWallHit(ox, oy, dx, dy, radius) {
     let bestT = Infinity;
+    let wall = null;
+
+    const consider = (t, wallName, valid) => {
+        if (t > 0 && valid && t < bestT) {
+            bestT = t;
+            wall = wallName;
+        }
+    };
 
     if (dx < -0.0001) {
         const t = (radius - ox) / dx;
         const y = oy + dy * t;
-        if (t > 0 && y >= radius && y <= CANVAS_HEIGHT - radius) {
-            bestT = Math.min(bestT, t);
-        }
+        consider(t, 'left', y >= radius && y <= CANVAS_HEIGHT - radius);
     } else if (dx > 0.0001) {
         const t = (CANVAS_WIDTH - radius - ox) / dx;
         const y = oy + dy * t;
-        if (t > 0 && y >= radius && y <= CANVAS_HEIGHT - radius) {
-            bestT = Math.min(bestT, t);
-        }
+        consider(t, 'right', y >= radius && y <= CANVAS_HEIGHT - radius);
     }
 
     if (dy < -0.0001) {
         const t = (radius - oy) / dy;
         const x = ox + dx * t;
-        if (t > 0 && x >= radius && x <= CANVAS_WIDTH - radius) {
-            bestT = Math.min(bestT, t);
-        }
+        consider(t, 'top', x >= radius && x <= CANVAS_WIDTH - radius);
     } else if (dy > 0.0001) {
         const t = (CANVAS_HEIGHT - radius - oy) / dy;
         const x = ox + dx * t;
-        if (t > 0 && x >= radius && x <= CANVAS_WIDTH - radius) {
-            bestT = Math.min(bestT, t);
-        }
+        consider(t, 'bottom', x >= radius && x <= CANVAS_WIDTH - radius);
     }
 
-    return bestT === Infinity ? null : bestT;
+    if (bestT === Infinity) return null;
+    return { t: bestT, wall };
 }
 
 function predictCueTrajectory(angle) {
@@ -314,8 +345,11 @@ function predictCueTrajectory(angle) {
     const ox = cueBall.x;
     const oy = cueBall.y;
 
-    let hitT = rayWallHit(ox, oy, dx, dy, BALL_RADIUS);
-    let hitType = hitT !== null ? 'wall' : null;
+    const wallHit = rayWallHit(ox, oy, dx, dy, BALL_RADIUS);
+    let hitT = wallHit ? wallHit.t : null;
+    let hitType = wallHit ? 'wall' : null;
+    let hitWall = wallHit ? wallHit.wall : null;
+    let hitBall = null;
 
     for (const ball of balls) {
         if (ball === cueBall || ball.inPocket) continue;
@@ -324,6 +358,8 @@ function predictCueTrajectory(angle) {
         if (t !== null && (hitT === null || t < hitT)) {
             hitT = t;
             hitType = 'ball';
+            hitBall = ball;
+            hitWall = null;
         }
     }
 
@@ -337,7 +373,67 @@ function predictCueTrajectory(angle) {
     const endX = ox + dx * (hitT + TRAJECTORY_EXTEND);
     const endY = oy + dy * (hitT + TRAJECTORY_EXTEND);
 
-    return { ox, oy, contactX, contactY, endX, endY, hitType, hitT };
+    let bounceDx = 0;
+    let bounceDy = 0;
+    let targetDx = 0;
+    let targetDy = 0;
+    let hasBounce = false;
+    let hasTargetLine = false;
+
+    if (hitType === 'wall' && hitWall) {
+        bounceDx = dx;
+        bounceDy = dy;
+        if (hitWall === 'left' || hitWall === 'right') bounceDx = -dx;
+        if (hitWall === 'top' || hitWall === 'bottom') bounceDy = -dy;
+        hasBounce = true;
+    } else if (hitType === 'ball' && hitBall) {
+        const nx = hitBall.x - contactX;
+        const ny = hitBall.y - contactY;
+        const len = Math.hypot(nx, ny) || 1;
+        const nxu = nx / len;
+        const nyu = ny / len;
+        const dot = dx * nxu + dy * nyu;
+
+        bounceDx = dx - dot * nxu;
+        bounceDy = dy - dot * nyu;
+        targetDx = dot * nxu;
+        targetDy = dot * nyu;
+
+        const bounceLen = Math.hypot(bounceDx, bounceDy);
+        if (bounceLen > MIN_BOUNCE_DRAW) {
+            bounceDx /= bounceLen;
+            bounceDy /= bounceLen;
+            hasBounce = true;
+        }
+
+        const targetLen = Math.hypot(targetDx, targetDy);
+        if (targetLen > MIN_BOUNCE_DRAW) {
+            targetDx /= targetLen;
+            targetDy /= targetLen;
+            hasTargetLine = true;
+        }
+    }
+
+    return {
+        ox,
+        oy,
+        contactX,
+        contactY,
+        endX,
+        endY,
+        hitType,
+        hitT,
+        hasBounce,
+        bounceDx,
+        bounceDy,
+        bounceEndX: contactX + bounceDx * BOUNCE_PREVIEW_LEN,
+        bounceEndY: contactY + bounceDy * BOUNCE_PREVIEW_LEN,
+        hasTargetLine,
+        targetDx,
+        targetDy,
+        targetEndX: contactX + targetDx * BOUNCE_PREVIEW_LEN,
+        targetEndY: contactY + targetDy * BOUNCE_PREVIEW_LEN
+    };
 }
 
 function drawTrajectory(angle) {
@@ -376,6 +472,33 @@ function drawTrajectory(angle) {
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
     ctx.lineWidth = 2;
     ctx.stroke();
+
+    if (path.hasBounce) {
+        ctx.beginPath();
+        ctx.moveTo(path.contactX, path.contactY);
+        ctx.lineTo(path.bounceEndX, path.bounceEndY);
+        ctx.strokeStyle = 'rgba(100, 220, 255, 0.85)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.beginPath();
+        ctx.arc(path.bounceEndX, path.bounceEndY, 4, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(100, 220, 255, 0.55)';
+        ctx.fill();
+    }
+
+    if (path.hasTargetLine) {
+        ctx.beginPath();
+        ctx.moveTo(path.contactX, path.contactY);
+        ctx.lineTo(path.targetEndX, path.targetEndY);
+        ctx.strokeStyle = 'rgba(255, 200, 80, 0.75)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
 
     ctx.restore();
 }
@@ -420,8 +543,9 @@ function initGame() {
     }
 
     updateAimFromPoint(cueBall.x + 160, cueBall.y);
-    powerSlider.value = 0;
-    updatePowerUI();
+    resetPowerPull();
+    isPullingPower = false;
+    activePullPointerId = null;
 }
 
 function resolveCollision(b1, b2) {
@@ -483,7 +607,11 @@ function update() {
         }
     });
 
-    updatePowerUI();
+    if (isPullingPower && !canShowCue()) {
+        resetPowerPull();
+        isPullingPower = false;
+        activePullPointerId = null;
+    }
 }
 
 function draw() {
@@ -582,8 +710,35 @@ canvas.addEventListener('pointercancel', (e) => {
     activeCanvasPointerId = null;
 });
 
-powerSlider.addEventListener('input', updatePowerUI);
-strikeBtn.addEventListener('click', fireShot);
+powerTrack.addEventListener('pointerdown', (e) => {
+    if (!canPullPower()) return;
+
+    e.preventDefault();
+    powerTrack.setPointerCapture(e.pointerId);
+    isPullingPower = true;
+    activePullPointerId = e.pointerId;
+    powerTrack.classList.add('is-pulling');
+    updatePowerVisual(powerFromClientY(e.clientY));
+});
+
+powerTrack.addEventListener('pointermove', (e) => {
+    if (!isPullingPower || e.pointerId !== activePullPointerId) return;
+    updatePowerVisual(powerFromClientY(e.clientY));
+});
+
+function finishPowerPull(e) {
+    if (!isPullingPower || (e && e.pointerId !== activePullPointerId)) return;
+
+    if (powerTrack.hasPointerCapture(e.pointerId)) {
+        powerTrack.releasePointerCapture(e.pointerId);
+    }
+
+    releasePowerPull();
+}
+
+powerTrack.addEventListener('pointerup', finishPowerPull);
+powerTrack.addEventListener('pointercancel', finishPowerPull);
+
 resetBtn.addEventListener('click', initGame);
 
 initGame();
