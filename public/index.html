@@ -3,16 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Billiards Game</title>
+    <title>vtj pool</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container">
+        <header id="top-bar">
+            <div class="stat-pill">
+                <span class="stat-label">Забито</span>
+                <span id="score">0</span><span class="stat-total">/15</span>
+            </div>
+            <h1 id="game-title">vtj pool</h1>
+            <button id="reset-btn" type="button">Новая игра</button>
+        </header>
         <div id="play-area">
             <canvas id="billiard-canvas"></canvas>
             <div id="shot-controls">
-                <span class="control-label">Сила удара</span>
-                <p id="pull-hint">Оттяните вниз и отпустите</p>
+                <span class="control-label">Сила</span>
+                <p id="pull-hint">Оттяните и отпустите</p>
                 <div id="power-pull-track">
                     <div id="power-pull-fill"></div>
                     <div id="power-pull-thumb"></div>
@@ -20,11 +28,7 @@
                 <span id="power-value">0%</span>
             </div>
         </div>
-        <div id="ui">
-            <p>Score: <span id="score">0</span></p>
-            <p id="hint">Стол — прицел. Справа — оттяните ползунок и отпустите для удара</p>
-            <button id="reset-btn" type="button">Reset Game</button>
-        </div>
+        <p id="hint">Коснитесь стола для прицела · справа — сила удара</p>
     </div>
     <script src="game.js"></script>
 </body>
