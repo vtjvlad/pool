@@ -1,0 +1,134 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #222;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#game-container {
+    position: relative;
+    padding: 20px;
+    background: #1a1a1a;
+    border-radius: 15px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+}
+
+#billiard-canvas {
+    border: 15px solid #3d2b1f;
+    border-radius: 10px;
+    background-color: #0a5c0a;
+    display: block;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+    touch-action: none;
+    cursor: crosshair;
+    max-width: 100%;
+    height: auto;
+}
+
+#ui {
+    position: absolute;
+    top: 40px;
+    left: 40px;
+    pointer-events: none;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+}
+
+#ui p {
+    margin: 0;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+#hint {
+    margin-top: 8px !important;
+    font-size: 0.85em !important;
+    font-weight: normal !important;
+    max-width: 220px;
+    line-height: 1.35;
+    opacity: 0.85;
+}
+
+#power-meter {
+    margin-top: 14px;
+    width: 180px;
+}
+
+.power-label {
+    display: block;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.75;
+    margin-bottom: 6px;
+}
+
+.power-track {
+    height: 10px;
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+#power-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 5px;
+    background: linear-gradient(90deg, #2ecc71, #f1c40f, #e74c3c);
+    transition: width 0.05s linear;
+    box-shadow: 0 0 8px rgba(241, 196, 15, 0.5);
+}
+
+#power-value {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 0.8em;
+    font-weight: bold;
+    opacity: 0.9;
+}
+
+@media (max-width: 860px) {
+    body {
+        padding: 10px;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    #game-container {
+        padding: 12px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    #ui {
+        top: 24px;
+        left: 24px;
+    }
+
+    #ui p {
+        font-size: 1.2em;
+    }
+}
+
+#reset-btn {
+    margin-top: 15px;
+    pointer-events: auto;
+    padding: 8px 16px;
+    cursor: pointer;
+    background-color: #d35400;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+#reset-btn:hover {
+    background-color: #e67e22;
+}
