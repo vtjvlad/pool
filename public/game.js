@@ -1111,6 +1111,31 @@ canvas.addEventListener('pointercancel', (e) => {
     activeCanvasPointerId = null;
 });
 
+let lastCanvasTouchEnd = 0;
+canvas.addEventListener('touchstart', (e) => {
+    if (Date.now() - lastCanvasTouchEnd <= 300) {
+        e.preventDefault();
+    }
+}, { passive: false });
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    lastCanvasTouchEnd = Date.now();
+}, { passive: false });
+canvas.addEventListener('gesturestart', (e) => e.preventDefault());
+
+const VIEWPORT_CONTENT = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+
+function resetViewportScale() {
+    const meta = document.querySelector('meta[name="viewport"]');
+    if (!meta) return;
+    meta.setAttribute('content', 'width=device-width, initial-scale=1.0');
+    requestAnimationFrame(() => {
+        meta.setAttribute('content', VIEWPORT_CONTENT);
+    });
+}
+resetViewportScale();
+window.addEventListener('pageshow', resetViewportScale);
+
 powerTrack.addEventListener('pointerdown', (e) => {
     if (!canPullPower()) return;
     e.preventDefault();

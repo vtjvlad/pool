@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>vtj pool</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -17,7 +17,9 @@
             <button id="reset-btn" type="button">Новая игра</button>
         </header>
         <div id="play-area">
-            <canvas id="billiard-canvas"></canvas>
+            <div id="canvas-wrap">
+                <canvas id="billiard-canvas" width="880" height="440"></canvas>
+            </div>
             <div id="shot-controls">
                 <span class="control-label">Сила</span>
                 <p id="pull-hint">Оттяните и отпустите</p>
