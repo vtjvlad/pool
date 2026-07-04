@@ -4,6 +4,10 @@ export const CANVAS_HEIGHT = 520;
 export const BALL_RADIUS = 11;
 export const POCKET_DIAMETER = 33;
 export const POCKET_RADIUS = POCKET_DIAMETER / 2;
+export const POCKET_INSET = POCKET_RADIUS * 1.5;
+export const CUSHION_POCKET_GAP = POCKET_DIAMETER / 4;
+export const MID_POCKET_INSET = POCKET_INSET - CUSHION_POCKET_GAP / 2;
+export const CUSHION_DEPTH = Math.max(16 + POCKET_DIAMETER / 4, POCKET_INSET + POCKET_RADIUS);
 export const POCKET_MAGNET = 0.38;
 export const FRICTION = 0.985;
 export const BALL_RESTITUTION = 0.96;
@@ -21,7 +25,11 @@ export const COLORS = {
     aimLineGhost: 'rgba(255,255,255,0.3)',
     baulkLine: 'rgba(255,255,255,0.55)',
     pocket: '#080808',
-    pocketRim: '#1a1a1a'
+    pocketRim: '#1a1a1a',
+    cushion: '#1a5a78',
+    cushionLight: '#2d8ab5',
+    cushionDark: '#0c3347',
+    cushionEdge: 'rgba(255, 255, 255, 0.18)'
 };
 
 export const CUE_LENGTH = 300;

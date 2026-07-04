@@ -1,4 +1,4 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, BALL_RADIUS, POCKET_RADIUS, POCKET_MAGNET } from './constants.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, BALL_RADIUS, POCKET_RADIUS, POCKET_INSET, MID_POCKET_INSET, POCKET_MAGNET } from './constants.js';
 
 export function getPlayArea() {
     return {
@@ -14,13 +14,13 @@ export function getPlayArea() {
 export function getPockets() {
     const play = getPlayArea();
     const mx = play.left + play.width / 2;
-    const inset = POCKET_RADIUS * 1.5;
+    const inset = POCKET_INSET;
     return [
         { id: 'tl', x: play.left + inset, y: play.top + inset, wall: 'left' },
-        { id: 'tm', x: mx, y: play.top + inset, wall: 'top' },
+        { id: 'tm', x: mx, y: play.top + MID_POCKET_INSET, wall: 'top' },
         { id: 'tr', x: play.right - inset, y: play.top + inset, wall: 'right' },
         { id: 'bl', x: play.left + inset, y: play.bottom - inset, wall: 'left' },
-        { id: 'bm', x: mx, y: play.bottom - inset, wall: 'bottom' },
+        { id: 'bm', x: mx, y: play.bottom - MID_POCKET_INSET, wall: 'bottom' },
         { id: 'br', x: play.right - inset, y: play.bottom - inset, wall: 'right' }
     ];
 }

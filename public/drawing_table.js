@@ -1,4 +1,5 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, COLORS, POCKET_RADIUS } from './constants.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, COLORS, POCKET_RADIUS, CUSHION_DEPTH } from './constants.js';
+import { drawCushionSegments } from './cushions.js';
 import { getHeadSpot, getFootSpot, getPockets } from './utils.js';
 
 function drawPocketCavity(ctx, x, y) {
@@ -32,6 +33,8 @@ export function drawTable(ctx) {
     ctx.fillStyle = felt;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
+    drawCushionSegments(ctx);
+
     ctx.save();
     ctx.globalCompositeOperation = 'destination-out';
     ctx.fillStyle = '#000';
@@ -50,8 +53,8 @@ export function drawTable(ctx) {
     ctx.strokeStyle = COLORS.baulkLine;
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(baulk, POCKET_RADIUS + 2);
-    ctx.lineTo(baulk, CANVAS_HEIGHT - POCKET_RADIUS - 2);
+    ctx.moveTo(baulk, CUSHION_DEPTH + 2);
+    ctx.lineTo(baulk, CANVAS_HEIGHT - CUSHION_DEPTH - 2);
     ctx.stroke();
 
     ctx.fillStyle = COLORS.baulkLine;
