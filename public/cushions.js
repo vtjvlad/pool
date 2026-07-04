@@ -67,10 +67,10 @@ function verticalSegment(side, pocketA, pocketB, play) {
     };
 }
 
-/*
+/** Деревянная рамка в углах за лузами — только отрисовка, без физики и резины. */
 function cornerBehindSegments(play) {
     const pockets = pocketById();
-    const gap = POCKET_LAYOUT_RADIUS + CUSHION_POCKET_GAP;
+    const gap = pocketId => POCKET_LAYOUT_RADIUS + pocketEndGap(pocketId);
     const tl = pockets.tl;
     const tr = pockets.tr;
     const bl = pockets.bl;
@@ -83,7 +83,7 @@ function cornerBehindSegments(play) {
             pocketIds: ['tl'],
             x: play.left,
             y: play.top,
-            width: tl.x + gap - play.left,
+            width: tl.x + gap('tl') - play.left,
             height: CUSHION_DEPTH,
             chamferStart: true,
             chamferEnd: true
@@ -95,7 +95,7 @@ function cornerBehindSegments(play) {
             x: play.left,
             y: play.top,
             width: CUSHION_DEPTH,
-            height: tl.y + gap - play.top,
+            height: tl.y + gap('tl') - play.top,
             chamferStart: true,
             chamferEnd: true
         },
@@ -103,9 +103,9 @@ function cornerBehindSegments(play) {
             id: 'cushion-corner-tr-top',
             side: 'top',
             pocketIds: ['tr'],
-            x: tr.x - gap,
+            x: tr.x - gap('tr'),
             y: play.top,
-            width: play.right - (tr.x - gap),
+            width: play.right - (tr.x - gap('tr')),
             height: CUSHION_DEPTH,
             chamferStart: true,
             chamferEnd: true
@@ -117,7 +117,7 @@ function cornerBehindSegments(play) {
             x: play.right - CUSHION_DEPTH,
             y: play.top,
             width: CUSHION_DEPTH,
-            height: tr.y + gap - play.top,
+            height: tr.y + gap('tr') - play.top,
             chamferStart: true,
             chamferEnd: true
         },
@@ -126,9 +126,9 @@ function cornerBehindSegments(play) {
             side: 'left',
             pocketIds: ['bl'],
             x: play.left,
-            y: bl.y - gap,
+            y: bl.y - gap('bl'),
             width: CUSHION_DEPTH,
-            height: play.bottom - (bl.y - gap),
+            height: play.bottom - (bl.y - gap('bl')),
             chamferStart: true,
             chamferEnd: true
         },
@@ -138,7 +138,7 @@ function cornerBehindSegments(play) {
             pocketIds: ['bl'],
             x: play.left,
             y: play.bottom - CUSHION_DEPTH,
-            width: bl.x + gap - play.left,
+            width: bl.x + gap('bl') - play.left,
             height: CUSHION_DEPTH,
             chamferStart: true,
             chamferEnd: true
@@ -147,9 +147,9 @@ function cornerBehindSegments(play) {
             id: 'cushion-corner-br-bottom',
             side: 'bottom',
             pocketIds: ['br'],
-            x: br.x - gap,
+            x: br.x - gap('br'),
             y: play.bottom - CUSHION_DEPTH,
-            width: play.right - (br.x - gap),
+            width: play.right - (br.x - gap('br')),
             height: CUSHION_DEPTH,
             chamferStart: true,
             chamferEnd: true
@@ -159,15 +159,74 @@ function cornerBehindSegments(play) {
             side: 'right',
             pocketIds: ['br'],
             x: play.right - CUSHION_DEPTH,
-            y: br.y - gap,
+            y: br.y - gap('br'),
             width: CUSHION_DEPTH,
-            height: play.bottom - (br.y - gap),
+            height: play.bottom - (br.y - gap('br')),
             chamferStart: true,
             chamferEnd: true
         }
     ];
 }
-*/
+
+export function getCornerBehindSegments() {
+    return cornerBehindSegments(getPlayArea());
+}
+
+/** Треугольный клин между L-образными сегментами — «челюсть» угловой лузы. */
+function cornerPocketWedges(play) {
+    const pockets = pocketById();
+    const d = CUSHION_DEPTH;
+    const railEnd = id => POCKET_LAYOUT_RADIUS + pocketEndGap(id) + (
+        id === 'tl' || id === 'bl' ? pockets[id].x : play.right - pockets[id].x
+    );
+    const railEndY = id => POCKET_LAYOUT_RADIUS + pocketEndGap(id) + (
+        id === 'tl' || id === 'tr' ? pockets[id].y : play.bottom - pockets[id].y
+    );
+    const jaw = end => end + CUSHION_CHAMFER;
+
+    return [
+        {
+            id: 'cushion-corner-tl-wedge',
+            corner: 'tl',
+            points: [
+                { x: d, y: d },
+                { x: jaw(railEnd('tl')), y: d },
+                { x: d, y: jaw(railEndY('tl')) }
+            ]
+        },
+        {
+            id: 'cushion-corner-tr-wedge',
+            corner: 'tr',
+            points: [
+                { x: play.right - d, y: d },
+                { x: play.right - jaw(railEnd('tr')), y: d },
+                { x: play.right - d, y: jaw(railEndY('tr')) }
+            ]
+        },
+        {
+            id: 'cushion-corner-bl-wedge',
+            corner: 'bl',
+            points: [
+                { x: d, y: play.bottom - d },
+                { x: d, y: play.bottom - jaw(railEndY('bl')) },
+                { x: jaw(railEnd('bl')), y: play.bottom - d }
+            ]
+        },
+        {
+            id: 'cushion-corner-br-wedge',
+            corner: 'br',
+            points: [
+                { x: play.right - d, y: play.bottom - d },
+                { x: play.right - d, y: play.bottom - jaw(railEndY('br')) },
+                { x: play.right - jaw(railEnd('br')), y: play.bottom - d }
+            ]
+        }
+    ];
+}
+
+export function getCornerBehindWedges() {
+    return cornerPocketWedges(getPlayArea());
+}
 
 /** @returns {Array<{ id: string, side: string, pocketIds: string[], x: number, y: number, width: number, height: number, chamferStart: boolean, chamferEnd: boolean }>} */
 export function getCushionSegments() {
@@ -187,8 +246,6 @@ export function getCushionSegments() {
     for (const [pocketAId, pocketBId] of CUSHION_CHAINS.right) {
         segments.push(verticalSegment('right', pockets[pocketAId], pockets[pocketBId], play));
     }
-
-    // segments.push(...cornerBehindSegments(play));
 
     return segments;
 }
@@ -459,10 +516,90 @@ function drawSegmentInnerEdge(ctx, segment) {
     ctx.restore();
 }
 
-export function drawCushionSegments(ctx) {
-    for (const segment of getCushionSegments()) {
+function drawSegmentList(ctx, segments) {
+    for (const segment of segments) {
         if (segment.width <= 0 || segment.height <= 0) continue;
         drawSegmentBody(ctx, segment);
         drawSegmentInnerEdge(ctx, segment);
     }
+}
+
+function wedgeBounds(points) {
+    const xs = points.map(p => p.x);
+    const ys = points.map(p => p.y);
+    const minX = Math.min(...xs);
+    const minY = Math.min(...ys);
+    return {
+        x: minX,
+        y: minY,
+        width: Math.max(...xs) - minX,
+        height: Math.max(...ys) - minY
+    };
+}
+
+function drawWedgeBody(ctx, wedge) {
+    const { points, corner } = wedge;
+    const { x, y, width, height } = wedgeBounds(points);
+    const isTop = corner === 'tl' || corner === 'tr';
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+    }
+    ctx.closePath();
+    ctx.clip();
+
+    const shade = isTop
+        ? ctx.createLinearGradient(x, y, x, y + height)
+        : ctx.createLinearGradient(x, y, x, y + height);
+
+    if (corner === 'tl' || corner === 'bl') {
+        shade.addColorStop(0, COLORS.woodDark);
+        shade.addColorStop(0.4, COLORS.woodBase);
+        shade.addColorStop(1, COLORS.woodLight);
+    } else {
+        shade.addColorStop(0, COLORS.woodLight);
+        shade.addColorStop(0.6, COLORS.woodBase);
+        shade.addColorStop(1, COLORS.woodDark);
+    }
+
+    ctx.fillStyle = shade;
+    ctx.fillRect(x, y, width, height);
+
+    ctx.globalAlpha = 0.82;
+    fillWoodTexture(ctx, x, y, width, height, true);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+}
+
+function drawWedgeInnerEdge(ctx, wedge) {
+    const a = wedge.points[1];
+    const b = wedge.points[2];
+    ctx.save();
+    ctx.strokeStyle = COLORS.woodEdge;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawWedgeList(ctx, wedges) {
+    for (const wedge of wedges) {
+        drawWedgeBody(ctx, wedge);
+        drawWedgeInnerEdge(ctx, wedge);
+    }
+}
+
+/** Деревянная рамка в углах — поверх сукна, без физики и резины. */
+export function drawCornerBehindSegments(ctx) {
+    drawSegmentList(ctx, getCornerBehindSegments());
+    drawWedgeList(ctx, getCornerBehindWedges());
+}
+
+export function drawCushionSegments(ctx) {
+    drawSegmentList(ctx, getCushionSegments());
 }
