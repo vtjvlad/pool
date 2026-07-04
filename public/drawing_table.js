@@ -1,7 +1,7 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, COLORS, POCKET_RADIUS, CUSHION_DEPTH, POCKET_MAGNET_RADIUS, DEBUG_DRAW_POCKET_MAGNET, DEBUG_DRAW_RUBBER } from './constants.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, COLORS, POCKET_RADIUS, POCKET_MAGNET_RADIUS, DEBUG_DRAW_POCKET_MAGNET, DEBUG_DRAW_RUBBER } from './constants.js';
 import { drawCushionSegments } from './cushions.js';
 import { drawRubberGums } from './cushion_rubber.js';
-import { getHeadSpot, getFootSpot, getPockets } from './utils.js';
+import { getHeadSpot, getFootSpot, getPockets, getPlaySurface } from './utils.js';
 
 function drawPocketCavity(ctx, x, y) {
     const r = POCKET_RADIUS;
@@ -41,12 +41,13 @@ export function drawTable(ctx) {
 
     getPockets().forEach(p => drawPocketCavity(ctx, p.x, p.y));
 
-    const felt = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+    const surface = getPlaySurface();
+    const felt = ctx.createLinearGradient(0, surface.top, 0, surface.bottom);
     felt.addColorStop(0, COLORS.feltLight);
     felt.addColorStop(0.5, COLORS.felt);
     felt.addColorStop(1, COLORS.feltDark);
     ctx.fillStyle = felt;
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    ctx.fillRect(surface.left, surface.top, surface.width, surface.height);
 
     drawCushionSegments(ctx);
     if (DEBUG_DRAW_RUBBER) {
@@ -67,12 +68,12 @@ export function drawTable(ctx) {
         ctx.stroke();
     });
 
-    const baulk = CANVAS_WIDTH * 0.25;
+    const baulk = surface.left + surface.width * 0.25;
     ctx.strokeStyle = COLORS.baulkLine;
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(baulk, CUSHION_DEPTH + 2);
-    ctx.lineTo(baulk, CANVAS_HEIGHT - CUSHION_DEPTH - 2);
+    ctx.moveTo(baulk, surface.top + 2);
+    ctx.lineTo(baulk, surface.bottom - 2);
     ctx.stroke();
 
     ctx.fillStyle = COLORS.baulkLine;

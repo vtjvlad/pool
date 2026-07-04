@@ -1,4 +1,4 @@
-import { POCKET_LAYOUT_RADIUS, CUSHION_DEPTH, CUSHION_POCKET_GAP, CUSHION_CHAMFER, COLORS } from './constants.js';
+import { POCKET_LAYOUT_RADIUS, CUSHION_DEPTH, CUSHION_POCKET_GAP, CORNER_CUSHION_POCKET_GAP, CUSHION_CHAMFER, COLORS } from './constants.js';
 import { getPlayArea, getPockets } from './utils.js';
 import { fillWoodTexture } from './wood_texture.js';
 
@@ -20,9 +20,13 @@ function isCornerPocket(id) {
     return CORNER_POCKETS.has(id);
 }
 
+function pocketEndGap(pocketId) {
+    return isCornerPocket(pocketId) ? CORNER_CUSHION_POCKET_GAP : CUSHION_POCKET_GAP;
+}
+
 function horizontalSegment(side, pocketA, pocketB, play) {
-    const x = pocketA.x + POCKET_LAYOUT_RADIUS + CUSHION_POCKET_GAP;
-    const width = pocketB.x - POCKET_LAYOUT_RADIUS - CUSHION_POCKET_GAP - x;
+    const x = pocketA.x + POCKET_LAYOUT_RADIUS + pocketEndGap(pocketA.id);
+    const width = pocketB.x - POCKET_LAYOUT_RADIUS - pocketEndGap(pocketB.id) - x;
     const y = side === 'top' ? play.top : play.bottom - CUSHION_DEPTH;
 
     return {
@@ -39,8 +43,8 @@ function horizontalSegment(side, pocketA, pocketB, play) {
 }
 
 function verticalSegment(side, pocketA, pocketB, play) {
-    const y = pocketA.y + POCKET_LAYOUT_RADIUS + CUSHION_POCKET_GAP;
-    const height = pocketB.y - POCKET_LAYOUT_RADIUS - CUSHION_POCKET_GAP - y;
+    const y = pocketA.y + POCKET_LAYOUT_RADIUS + pocketEndGap(pocketA.id);
+    const height = pocketB.y - POCKET_LAYOUT_RADIUS - pocketEndGap(pocketB.id) - y;
     const x = side === 'left' ? play.left : play.right - CUSHION_DEPTH;
 
     return {

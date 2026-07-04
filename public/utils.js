@@ -1,4 +1,4 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, BALL_RADIUS, POCKET_RADIUS, POCKET_MAGNET_RADIUS, POCKET_INSET, MID_POCKET_INSET, POCKET_MAGNET } from './constants.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, BALL_RADIUS, POCKET_RADIUS, POCKET_MAGNET_RADIUS, POCKET_INSET, MID_POCKET_INSET, POCKET_CENTER_SHIFT, POCKET_MAGNET, PLAY_SURFACE_INSET } from './constants.js';
 
 export function getPlayArea() {
     return {
@@ -11,17 +11,29 @@ export function getPlayArea() {
     };
 }
 
+export function getPlaySurface() {
+    return {
+        left: PLAY_SURFACE_INSET,
+        top: PLAY_SURFACE_INSET,
+        right: CANVAS_WIDTH - PLAY_SURFACE_INSET,
+        bottom: CANVAS_HEIGHT - PLAY_SURFACE_INSET,
+        width: CANVAS_WIDTH - PLAY_SURFACE_INSET * 2,
+        height: CANVAS_HEIGHT - PLAY_SURFACE_INSET * 2
+    };
+}
+
 export function getPockets() {
     const play = getPlayArea();
     const mx = play.left + play.width / 2;
-    const inset = POCKET_INSET;
+    const cornerInset = POCKET_INSET + POCKET_CENTER_SHIFT;
+    const midInset = MID_POCKET_INSET + POCKET_CENTER_SHIFT;
     return [
-        { id: 'tl', x: play.left + inset, y: play.top + inset, wall: 'left' },
-        { id: 'tm', x: mx, y: play.top + MID_POCKET_INSET, wall: 'top' },
-        { id: 'tr', x: play.right - inset, y: play.top + inset, wall: 'right' },
-        { id: 'bl', x: play.left + inset, y: play.bottom - inset, wall: 'left' },
-        { id: 'bm', x: mx, y: play.bottom - MID_POCKET_INSET, wall: 'bottom' },
-        { id: 'br', x: play.right - inset, y: play.bottom - inset, wall: 'right' }
+        { id: 'tl', x: play.left + cornerInset, y: play.top + cornerInset, wall: 'left' },
+        { id: 'tm', x: mx, y: play.top + midInset, wall: 'top' },
+        { id: 'tr', x: play.right - cornerInset, y: play.top + cornerInset, wall: 'right' },
+        { id: 'bl', x: play.left + cornerInset, y: play.bottom - cornerInset, wall: 'left' },
+        { id: 'bm', x: mx, y: play.bottom - midInset, wall: 'bottom' },
+        { id: 'br', x: play.right - cornerInset, y: play.bottom - cornerInset, wall: 'right' }
     ];
 }
 
@@ -49,7 +61,6 @@ export function tryPocketBall(ball) {
         const dx = pocket.x - ball.x;
         const dy = pocket.y - ball.y;
         const dist = Math.hypot(dx, dy);
-
         if (dist < POCKET_MAGNET_RADIUS && dist > 0.5) {
             const speed = Math.hypot(ball.vx, ball.vy);
             ball.vx += (dx / dist) * POCKET_MAGNET * (1 + speed * 0.05);
@@ -67,13 +78,13 @@ export function tryPocketBall(ball) {
 }
 
 export function getHeadSpot() {
-    const play = getPlayArea();
-    return { x: play.left + play.width * 0.25, y: play.top + play.height / 2 };
+    const surface = getPlaySurface();
+    return { x: surface.left + surface.width * 0.25, y: surface.top + surface.height / 2 };
 }
 
 export function getFootSpot() {
-    const play = getPlayArea();
-    return { x: play.left + play.width * 0.75, y: play.top + play.height / 2 };
+    const surface = getPlaySurface();
+    return { x: surface.left + surface.width * 0.75, y: surface.top + surface.height / 2 };
 }
 
 export function lighten(hex, amount) {
