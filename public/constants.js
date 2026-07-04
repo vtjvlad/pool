@@ -89,6 +89,12 @@ export const COLORS = {
 
 export const CUE_LENGTH = 300;
 export const CUE_WIDTH = 6;
+export const AIM_TAP_THRESHOLD_PX = 12;
+export const AIM_TAP_MAX_MS = 280;
+export const AIM_MARKER_MIN_DIST = 48;
+export const AIM_BALL_DEAD_ZONE = BALL_RADIUS * 1.4;
+export const AIM_SLIDER_SENSITIVITY = 0.0056;
+export const AIM_WHEEL_SCROLL_PX = 12;
 export const MAX_PULL = 115;
 export const MIN_POWER_PERCENT = 5;
 export const POWER_FACTOR = 0.22;

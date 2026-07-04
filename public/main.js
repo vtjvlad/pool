@@ -10,7 +10,13 @@ import {
     MAX_SPIN_OFFSET,
     SPIN_SIDE_POWER,
     SPIN_TOP_POWER,
-    SPIN_MASSE_FACTOR
+    SPIN_MASSE_FACTOR,
+    AIM_TAP_THRESHOLD_PX,
+    AIM_TAP_MAX_MS,
+    AIM_MARKER_MIN_DIST,
+    AIM_BALL_DEAD_ZONE,
+    AIM_SLIDER_SENSITIVITY,
+    AIM_WHEEL_SCROLL_PX
 } from './constants.js';
 import { Ball } from './ball.js';
 import { createRack } from './game_logic.js';
@@ -31,6 +37,9 @@ const powerThumb = document.getElementById('power-pull-thumb');
 const spinPad = document.getElementById('spin-pad');
 const spinThumb = document.getElementById('spin-pad-thumb');
 const spinResetBtn = document.getElementById('spin-reset-btn');
+const aimTrack = document.getElementById('aim-slider-track');
+const aimWheelNotches = document.getElementById('aim-wheel-notches');
+const aimDegrees = document.getElementById('aim-degrees');
 
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
@@ -52,6 +61,10 @@ let spinOffsetX = 0;
 let spinOffsetY = 0;
 let isDraggingSpin = false;
 let activeSpinPadPointerId = null;
+let isDraggingAimSlider = false;
+let activeAimSliderPointerId = null;
+let aimSliderLastY = null;
+let aimPointer = null;
 
 function updateSpinPadVisual() {
     const percentX = 50 + (spinOffsetX / MAX_SPIN_OFFSET) * 38;
@@ -102,13 +115,49 @@ function getAimAngle() {
     return aimAngle;
 }
 
+function normalizeAngle(angle) {
+    while (angle <= -Math.PI) angle += Math.PI * 2;
+    while (angle > Math.PI) angle -= Math.PI * 2;
+    return angle;
+}
+
+function getAimMarkerDistance() {
+    const dist = Math.hypot(aimX - cueBall.x, aimY - cueBall.y);
+    return Math.max(AIM_MARKER_MIN_DIST, dist);
+}
+
+function aimDegreesLabel(angle) {
+    const deg = Math.round((normalizeAngle(angle) * 180 / Math.PI + 360) % 360);
+    return `${deg}°`;
+}
+
+function updateAimSliderVisual() {
+    aimDegrees.textContent = aimDegreesLabel(aimAngle);
+    if (aimWheelNotches) {
+        aimWheelNotches.style.transform = `translateY(${-normalizeAngle(aimAngle) * AIM_WHEEL_SCROLL_PX}px)`;
+    }
+}
+
+function setAimAngle(angle) {
+    aimAngle = normalizeAngle(angle);
+    const dist = getAimMarkerDistance();
+    aimX = cueBall.x + Math.cos(aimAngle) * dist;
+    aimY = cueBall.y + Math.sin(aimAngle) * dist;
+    updateAimSliderVisual();
+}
+
 function updateAimFromPoint(x, y) {
     const dx = x - cueBall.x;
     const dy = y - cueBall.y;
-    if (dx * dx + dy * dy < 36) return;
+    if (dx * dx + dy * dy < AIM_BALL_DEAD_ZONE * AIM_BALL_DEAD_ZONE) return;
     aimX = x;
     aimY = y;
     aimAngle = Math.atan2(dy, dx);
+    updateAimSliderVisual();
+}
+
+function canAdjustAim() {
+    return canShowCue();
 }
 
 function getPullFromPower() {
@@ -220,6 +269,10 @@ function initGame() {
     strikeAnim = null;
     impactFlash = null;
     activeCanvasPointerId = null;
+    aimPointer = null;
+    isDraggingAimSlider = false;
+    activeAimSliderPointerId = null;
+    aimSliderLastY = null;
     scoreElement.textContent = score;
 
     const head = getHeadSpot();
@@ -253,6 +306,15 @@ function update() {
         resetPowerPull();
         isPullingPower = false;
         activePullPointerId = null;
+    }
+
+    if ((isDraggingAimSlider || aimPointer) && !canShowCue()) {
+        isDraggingAimSlider = false;
+        activeAimSliderPointerId = null;
+        aimSliderLastY = null;
+        aimTrack.classList.remove('is-dragging');
+        activeCanvasPointerId = null;
+        aimPointer = null;
     }
 }
 
@@ -289,34 +351,75 @@ function canvasPointerPosition(e) {
     };
 }
 
-function handleCanvasAim(e) {
-    if (!canShowCue()) return;
+function handleCanvasAimMove(e) {
+    if (!canShowCue() || !aimPointer) return;
     const pos = canvasPointerPosition(e);
-    updateAimFromPoint(pos.x, pos.y);
+    aimPointer.x = pos.x;
+    aimPointer.y = pos.y;
+
+    const moved = Math.hypot(pos.x - aimPointer.startX, pos.y - aimPointer.startY);
+
+    if (aimPointer.mode === 'pending' && moved >= AIM_TAP_THRESHOLD_PX) {
+        aimPointer.mode = 'rotate';
+        aimPointer.lastAngle = Math.atan2(pos.y - cueBall.y, pos.x - cueBall.x);
+    }
+
+    if (aimPointer.mode === 'rotate') {
+        const pointerAngle = Math.atan2(pos.y - cueBall.y, pos.x - cueBall.x);
+        let delta = pointerAngle - aimPointer.lastAngle;
+        if (delta > Math.PI) delta -= Math.PI * 2;
+        if (delta < -Math.PI) delta += Math.PI * 2;
+        setAimAngle(aimAngle + delta);
+        aimPointer.lastAngle = pointerAngle;
+    }
+}
+
+function finishCanvasAim(e) {
+    if (!aimPointer) return;
+    if (e && canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+
+    if (aimPointer.mode === 'pending') {
+        const elapsed = performance.now() - aimPointer.startTime;
+        const moved = Math.hypot(aimPointer.x - aimPointer.startX, aimPointer.y - aimPointer.startY);
+        if (elapsed <= AIM_TAP_MAX_MS && moved < AIM_TAP_THRESHOLD_PX) {
+            updateAimFromPoint(aimPointer.x, aimPointer.y);
+        }
+    }
+
+    activeCanvasPointerId = null;
+    aimPointer = null;
 }
 
 canvas.addEventListener('pointerdown', (e) => {
     if (!canShowCue()) return;
+    const pos = canvasPointerPosition(e);
     canvas.setPointerCapture(e.pointerId);
     activeCanvasPointerId = e.pointerId;
-    handleCanvasAim(e);
+    aimPointer = {
+        id: e.pointerId,
+        startX: pos.x,
+        startY: pos.y,
+        x: pos.x,
+        y: pos.y,
+        startTime: performance.now(),
+        lastAngle: Math.atan2(pos.y - cueBall.y, pos.x - cueBall.x),
+        mode: 'pending'
+    };
 });
 
 canvas.addEventListener('pointermove', (e) => {
-    if (activeCanvasPointerId !== null && e.pointerId !== activeCanvasPointerId) return;
-    handleCanvasAim(e);
+    if (activeCanvasPointerId === null || e.pointerId !== activeCanvasPointerId) return;
+    handleCanvasAimMove(e);
 });
 
 canvas.addEventListener('pointerup', (e) => {
     if (activeCanvasPointerId !== null && e.pointerId !== activeCanvasPointerId) return;
-    if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
-    handleCanvasAim(e);
-    activeCanvasPointerId = null;
+    finishCanvasAim(e);
 });
 
 canvas.addEventListener('pointercancel', (e) => {
     if (activeCanvasPointerId !== null && e.pointerId !== activeCanvasPointerId) return;
-    activeCanvasPointerId = null;
+    finishCanvasAim(e);
 });
 
 let lastCanvasTouchEnd = 0;
@@ -395,8 +498,38 @@ spinPad.addEventListener('pointerup', finishSpinDrag);
 spinPad.addEventListener('pointercancel', finishSpinDrag);
 spinResetBtn.addEventListener('click', resetSpin);
 
+aimTrack.addEventListener('pointerdown', (e) => {
+    if (!canAdjustAim()) return;
+    e.preventDefault();
+    aimTrack.setPointerCapture(e.pointerId);
+    isDraggingAimSlider = true;
+    activeAimSliderPointerId = e.pointerId;
+    aimSliderLastY = e.clientY;
+    aimTrack.classList.add('is-dragging');
+});
+
+aimTrack.addEventListener('pointermove', (e) => {
+    if (!isDraggingAimSlider || e.pointerId !== activeAimSliderPointerId || aimSliderLastY === null) return;
+    const deltaY = e.clientY - aimSliderLastY;
+    aimSliderLastY = e.clientY;
+    setAimAngle(aimAngle + deltaY * AIM_SLIDER_SENSITIVITY);
+});
+
+function finishAimSliderDrag(e) {
+    if (!isDraggingAimSlider || (e && e.pointerId !== activeAimSliderPointerId)) return;
+    if (e && aimTrack.hasPointerCapture(e.pointerId)) aimTrack.releasePointerCapture(e.pointerId);
+    isDraggingAimSlider = false;
+    activeAimSliderPointerId = null;
+    aimSliderLastY = null;
+    aimTrack.classList.remove('is-dragging');
+}
+
+aimTrack.addEventListener('pointerup', finishAimSliderDrag);
+aimTrack.addEventListener('pointercancel', finishAimSliderDrag);
+
 resetBtn.addEventListener('click', initGame);
 
 updateSpinPadVisual();
+updateAimSliderVisual();
 initGame();
 gameLoop();

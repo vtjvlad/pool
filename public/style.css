@@ -51,6 +51,13 @@ body {
     min-width: 0;
 }
 
+#top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
 #game-title {
     margin: 0;
     font-size: 1.15rem;
@@ -113,21 +120,25 @@ body {
 
 #spin-controls {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
-    width: 72px;
-    padding: 12px 8px;
+    gap: 6px;
+    padding: 4px 8px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.25));
-    border-radius: 14px;
+    border-radius: 10px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     touch-action: none;
 }
 
+#spin-controls .control-label {
+    margin-bottom: 0;
+    font-size: 0.58rem;
+}
+
 #spin-pad {
     position: relative;
-    width: 64px;
-    height: 64px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, #ffffff, #e8e8e8 55%, #c8c8c8 100%);
     border: 2px solid rgba(255, 255, 255, 0.35);
@@ -171,10 +182,10 @@ body {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 14px;
-    height: 14px;
-    margin-left: -7px;
-    margin-top: -7px;
+    width: 10px;
+    height: 10px;
+    margin-left: -5px;
+    margin-top: -5px;
     border-radius: 50%;
     background: radial-gradient(circle at 32% 28%, #6eb6ff, #2a8aff 55%, #1a5fc4);
     border: 2px solid rgba(255, 255, 255, 0.95);
@@ -183,14 +194,13 @@ body {
 }
 
 #spin-reset-btn {
-    margin-top: 10px;
-    padding: 5px 8px;
+    padding: 3px 6px;
     cursor: pointer;
     background: rgba(0, 0, 0, 0.35);
     color: rgba(255, 255, 255, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
-    font-size: 0.62rem;
+    border-radius: 6px;
+    font-size: 0.55rem;
     font-weight: 600;
     touch-action: manipulation;
 }
@@ -203,6 +213,143 @@ body {
     flex: 1 1 auto;
     min-width: 0;
     touch-action: none;
+}
+
+#aim-controls {
+    align-self: flex-end;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    padding: 6px 5px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.25));
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    touch-action: none;
+}
+
+#aim-controls .control-label {
+    margin-bottom: 4px;
+    font-size: 0.58rem;
+}
+
+#aim-slider-track {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    width: 100%;
+    height: 100px;
+    touch-action: none;
+    cursor: grab;
+}
+
+#aim-slider-track.is-dragging {
+    cursor: grabbing;
+}
+
+#aim-wheel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 32px;
+    height: 100%;
+    pointer-events: none;
+}
+
+#aim-wheel-cap-top {
+    width: 32px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: radial-gradient(ellipse 100% 100% at 50% 65%, #7a8490, #3a424c 55%, #1a1f26 100%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow:
+        inset 0 1px 3px rgba(255, 255, 255, 0.18),
+        0 1px 4px rgba(0, 0, 0, 0.35);
+    z-index: 2;
+}
+
+#aim-wheel-cap-bottom {
+    width: 32px;
+    height: 8px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: radial-gradient(ellipse 100% 100% at 50% 35%, #4f5864, #252b33 55%, #0c0f14 100%);
+    border: 1px solid rgba(0, 0, 0, 0.35);
+    box-shadow:
+        inset 0 -2px 4px rgba(0, 0, 0, 0.55),
+        0 2px 5px rgba(0, 0, 0, 0.4);
+    z-index: 2;
+}
+
+#aim-wheel-body {
+    position: relative;
+    flex: 1;
+    width: 26px;
+    overflow: hidden;
+    background: linear-gradient(
+        90deg,
+        #12161c 0%,
+        #2f3844 18%,
+        #5a6674 42%,
+        #687684 50%,
+        #5a6674 58%,
+        #2f3844 82%,
+        #12161c 100%
+    );
+    border-left: 1px solid rgba(255, 255, 255, 0.07);
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow:
+        inset 2px 0 4px rgba(0, 0, 0, 0.35),
+        inset -2px 0 4px rgba(0, 0, 0, 0.35);
+}
+
+#aim-slider-track.is-dragging #aim-wheel-body {
+    box-shadow:
+        inset 2px 0 4px rgba(0, 0, 0, 0.35),
+        inset -2px 0 4px rgba(0, 0, 0, 0.35),
+        0 0 12px rgba(80, 160, 255, 0.28);
+}
+
+#aim-wheel-notches {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -120%;
+    height: 340%;
+    background: repeating-linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.55) 0px,
+        rgba(0, 0, 0, 0.55) 2px,
+        rgba(255, 255, 255, 0.07) 2px,
+        rgba(255, 255, 255, 0.07) 5px
+    );
+    opacity: 0.95;
+    will-change: transform;
+}
+
+#aim-wheel-pointer {
+    position: absolute;
+    right: -2px;
+    top: 50%;
+    width: 6px;
+    height: 9px;
+    margin-top: -4.5px;
+    background: rgba(126, 200, 255, 0.95);
+    clip-path: polygon(0 50%, 100% 15%, 100% 85%);
+    box-shadow: 0 0 6px rgba(126, 200, 255, 0.65);
+    z-index: 3;
+}
+
+#aim-degrees {
+    margin-top: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #7ec8ff;
+    text-align: center;
 }
 
 #billiard-canvas {
@@ -330,14 +477,57 @@ body {
         padding: 8px 5px;
     }
 
+    #aim-controls {
+        width: 44px;
+        padding: 5px 4px;
+    }
+
+    #aim-slider-track {
+        height: 70px;
+    }
+
+    #aim-wheel {
+        width: 28px;
+    }
+
+    #aim-wheel-cap-top,
+    #aim-wheel-cap-bottom {
+        width: 28px;
+        height: 7px;
+    }
+
+    #aim-wheel-body {
+        width: 22px;
+    }
+
+    #aim-degrees {
+        font-size: 0.65rem;
+    }
+
+    #top-bar-right {
+        gap: 6px;
+    }
+
     #spin-controls {
-        width: 56px;
-        padding: 8px 5px;
+        padding: 3px 6px;
+        gap: 4px;
     }
 
     #spin-pad {
-        width: 52px;
-        height: 52px;
+        width: 34px;
+        height: 34px;
+    }
+
+    #spin-pad-thumb {
+        width: 8px;
+        height: 8px;
+        margin-left: -4px;
+        margin-top: -4px;
+    }
+
+    #reset-btn {
+        padding: 7px 10px;
+        font-size: 0.75rem;
     }
 
     #power-pull-track {
