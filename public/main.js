@@ -28,6 +28,9 @@ const powerValue = document.getElementById('power-value');
 const powerTrack = document.getElementById('power-pull-track');
 const powerFill = document.getElementById('power-pull-fill');
 const powerThumb = document.getElementById('power-pull-thumb');
+const spinPad = document.getElementById('spin-pad');
+const spinThumb = document.getElementById('spin-pad-thumb');
+const spinResetBtn = document.getElementById('spin-reset-btn');
 
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
@@ -47,31 +50,17 @@ let strikeAnim = null;
 let impactFlash = null;
 let spinOffsetX = 0;
 let spinOffsetY = 0;
-let isAdjustingSpin = false;
-let activeSpinPointerId = null;
-let lastSpinTapTime = 0;
+let isDraggingSpin = false;
+let activeSpinPadPointerId = null;
 
-function resetSpin() {
-    spinOffsetX = 0;
-    spinOffsetY = 0;
+function updateSpinPadVisual() {
+    const percentX = 50 + (spinOffsetX / MAX_SPIN_OFFSET) * 38;
+    const percentY = 50 + (spinOffsetY / MAX_SPIN_OFFSET) * 38;
+    spinThumb.style.left = `${percentX}%`;
+    spinThumb.style.top = `${percentY}%`;
 }
 
-function isOnCueBall(x, y) {
-    if (!cueBall || !canShowCue()) return false;
-    const dx = x - cueBall.x;
-    const dy = y - cueBall.y;
-    return dx * dx + dy * dy < (BALL_RADIUS * 1.85) ** 2;
-}
-
-function updateSpinFromPoint(x, y) {
-    const perpX = -Math.sin(aimAngle);
-    const perpY = Math.cos(aimAngle);
-    const backX = -Math.cos(aimAngle);
-    const backY = -Math.sin(aimAngle);
-    const dx = x - cueBall.x;
-    const dy = y - cueBall.y;
-    let localX = (dx * perpX + dy * perpY) / BALL_RADIUS;
-    let localY = (dx * backX + dy * backY) / BALL_RADIUS;
+function setSpinOffset(localX, localY) {
     const len = Math.hypot(localX, localY);
     if (len > MAX_SPIN_OFFSET) {
         localX = (localX / len) * MAX_SPIN_OFFSET;
@@ -79,6 +68,24 @@ function updateSpinFromPoint(x, y) {
     }
     spinOffsetX = localX;
     spinOffsetY = localY;
+    updateSpinPadVisual();
+}
+
+function resetSpin() {
+    setSpinOffset(0, 0);
+}
+
+function spinFromPadEvent(e) {
+    const rect = spinPad.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = e.clientX - cx;
+    const dy = e.clientY - cy;
+    const radius = rect.width * 0.42;
+    setSpinOffset(
+        (dx / radius) * MAX_SPIN_OFFSET,
+        (dy / radius) * MAX_SPIN_OFFSET
+    );
 }
 
 function applySpinToCueBall(power, angle) {
@@ -131,6 +138,10 @@ function canShowCue() {
 }
 
 function canPullPower() {
+    return canShowCue();
+}
+
+function canAdjustSpin() {
     return canShowCue();
 }
 
@@ -279,57 +290,24 @@ function canvasPointerPosition(e) {
 }
 
 function handleCanvasAim(e) {
-    if (!canShowCue() || isAdjustingSpin) return;
+    if (!canShowCue()) return;
     const pos = canvasPointerPosition(e);
     updateAimFromPoint(pos.x, pos.y);
 }
 
-function handleSpinAdjust(e) {
-    if (!canShowCue()) return;
-    const pos = canvasPointerPosition(e);
-    updateSpinFromPoint(pos.x, pos.y);
-}
-
 canvas.addEventListener('pointerdown', (e) => {
     if (!canShowCue()) return;
-    const pos = canvasPointerPosition(e);
-
-    if (isOnCueBall(pos.x, pos.y)) {
-        const now = Date.now();
-        if (now - lastSpinTapTime <= 300) {
-            resetSpin();
-            lastSpinTapTime = 0;
-            return;
-        }
-        lastSpinTapTime = now;
-        canvas.setPointerCapture(e.pointerId);
-        isAdjustingSpin = true;
-        activeSpinPointerId = e.pointerId;
-        handleSpinAdjust(e);
-        return;
-    }
-
     canvas.setPointerCapture(e.pointerId);
     activeCanvasPointerId = e.pointerId;
     handleCanvasAim(e);
 });
 
 canvas.addEventListener('pointermove', (e) => {
-    if (isAdjustingSpin && e.pointerId === activeSpinPointerId) {
-        handleSpinAdjust(e);
-        return;
-    }
     if (activeCanvasPointerId !== null && e.pointerId !== activeCanvasPointerId) return;
     handleCanvasAim(e);
 });
 
 canvas.addEventListener('pointerup', (e) => {
-    if (isAdjustingSpin && e.pointerId === activeSpinPointerId) {
-        if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
-        isAdjustingSpin = false;
-        activeSpinPointerId = null;
-        return;
-    }
     if (activeCanvasPointerId !== null && e.pointerId !== activeCanvasPointerId) return;
     if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
     handleCanvasAim(e);
@@ -337,11 +315,6 @@ canvas.addEventListener('pointerup', (e) => {
 });
 
 canvas.addEventListener('pointercancel', (e) => {
-    if (isAdjustingSpin && e.pointerId === activeSpinPointerId) {
-        isAdjustingSpin = false;
-        activeSpinPointerId = null;
-        return;
-    }
     if (activeCanvasPointerId !== null && e.pointerId !== activeCanvasPointerId) return;
     activeCanvasPointerId = null;
 });
@@ -394,7 +367,36 @@ function finishPowerPull(e) {
 
 powerTrack.addEventListener('pointerup', finishPowerPull);
 powerTrack.addEventListener('pointercancel', finishPowerPull);
+
+spinPad.addEventListener('pointerdown', (e) => {
+    if (!canAdjustSpin()) return;
+    e.preventDefault();
+    spinPad.setPointerCapture(e.pointerId);
+    isDraggingSpin = true;
+    activeSpinPadPointerId = e.pointerId;
+    spinPad.classList.add('is-dragging');
+    spinFromPadEvent(e);
+});
+
+spinPad.addEventListener('pointermove', (e) => {
+    if (!isDraggingSpin || e.pointerId !== activeSpinPadPointerId) return;
+    spinFromPadEvent(e);
+});
+
+function finishSpinDrag(e) {
+    if (!isDraggingSpin || (e && e.pointerId !== activeSpinPadPointerId)) return;
+    if (e && spinPad.hasPointerCapture(e.pointerId)) spinPad.releasePointerCapture(e.pointerId);
+    isDraggingSpin = false;
+    activeSpinPadPointerId = null;
+    spinPad.classList.remove('is-dragging');
+}
+
+spinPad.addEventListener('pointerup', finishSpinDrag);
+spinPad.addEventListener('pointercancel', finishSpinDrag);
+spinResetBtn.addEventListener('click', resetSpin);
+
 resetBtn.addEventListener('click', initGame);
 
+updateSpinPadVisual();
 initGame();
 gameLoop();

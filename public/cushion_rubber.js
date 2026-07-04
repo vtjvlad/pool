@@ -5,6 +5,9 @@ import {
     COLORS
 } from './constants.js';
 import { getRubberInnerEdges } from './cushions.js';
+import { getPlaySurface } from './utils.js';
+
+const CUSHION_SHADOW_DEPTH = 9;
 
 const PLAY_CENTER_X = CANVAS_WIDTH / 2;
 const PLAY_CENTER_Y = CANVAS_HEIGHT / 2;
@@ -73,6 +76,48 @@ export function getRubberCollisionEdges() {
     return lines;
 }
 
+function drawRubberShadowOnFelt(ctx, line) {
+    const { nx, ny } = edgeNormal(line.x1, line.y1, line.x2, line.y2);
+    const depth = CUSHION_SHADOW_DEPTH;
+    const { x1, y1, x2, y2 } = line;
+
+    const grad = ctx.createLinearGradient(
+        (x1 + x2) / 2,
+        (y1 + y2) / 2,
+        (x1 + x2) / 2 + nx * depth,
+        (y1 + y2) / 2 + ny * depth
+    );
+    grad.addColorStop(0, COLORS.cushionFeltShadow);
+    grad.addColorStop(0.45, 'rgba(0, 0, 0, 0.12)');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(x2 + nx * depth, y2 + ny * depth);
+    ctx.lineTo(x1 + nx * depth, y1 + ny * depth);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+}
+
+export function drawRubberShadows(ctx) {
+    const surface = getPlaySurface();
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(surface.left, surface.top, surface.width, surface.height);
+    ctx.clip();
+
+    for (const line of getRubberInnerEdges()) {
+        const len = Math.hypot(line.x2 - line.x1, line.y2 - line.y1);
+        if (len < 0.5) continue;
+        drawRubberShadowOnFelt(ctx, line);
+    }
+
+    ctx.restore();
+}
+
 function drawRubberStrip(ctx, line) {
     const { nx, ny, tx, ty } = edgeNormal(line.x1, line.y1, line.x2, line.y2);
     const t = RUBBER_THICKNESS;
@@ -121,7 +166,7 @@ function drawRubberStrip(ctx, line) {
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.strokeStyle = COLORS.rubberShadow;
-    ctx.lineWidth = 0.75;
+    ctx.lineWidth = 1.2;
     ctx.stroke();
 }
 

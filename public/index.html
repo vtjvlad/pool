@@ -17,9 +17,6 @@
             <button id="reset-btn" type="button">Новая игра</button>
         </header>
         <div id="play-area">
-            <div id="canvas-wrap">
-                <canvas id="billiard-canvas" width="1040" height="520"></canvas>
-            </div>
             <div id="shot-controls">
                 <span class="control-label">Сила</span>
                 <p id="pull-hint">Оттяните и отпустите</p>
@@ -29,8 +26,20 @@
                 </div>
                 <span id="power-value">0%</span>
             </div>
+            <div id="canvas-wrap">
+                <canvas id="billiard-canvas" width="1040" height="520"></canvas>
+            </div>
+            <div id="spin-controls">
+                <span class="control-label">Винт</span>
+                <div id="spin-pad">
+                    <div class="spin-pad-mark spin-pad-mark-h"></div>
+                    <div class="spin-pad-mark spin-pad-mark-v"></div>
+                    <div id="spin-pad-thumb"></div>
+                </div>
+                <button id="spin-reset-btn" type="button">Сброс</button>
+            </div>
         </div>
-        <p id="hint">Стол — прицел · биток — подкрутка · справа — сила · двойной тап по битку — сброс</p>
+        <p id="hint">Стол — прицел · слева — сила · справа — винт</p>
     </div>
     <script type="module" src="main.js"></script>
 </body>

@@ -111,6 +111,94 @@ body {
     min-width: 0;
 }
 
+#spin-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    padding: 12px 8px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.25));
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    touch-action: none;
+}
+
+#spin-pad {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffffff, #e8e8e8 55%, #c8c8c8 100%);
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    box-shadow:
+        inset 0 -3px 8px rgba(0, 0, 0, 0.18),
+        0 4px 12px rgba(0, 0, 0, 0.35);
+    touch-action: none;
+    cursor: crosshair;
+}
+
+#spin-pad.is-dragging {
+    border-color: rgba(42, 138, 255, 0.75);
+    box-shadow:
+        inset 0 -3px 8px rgba(0, 0, 0, 0.18),
+        0 0 14px rgba(42, 138, 255, 0.35);
+}
+
+.spin-pad-mark {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.12);
+    pointer-events: none;
+}
+
+.spin-pad-mark-h {
+    left: 10%;
+    right: 10%;
+    top: 50%;
+    height: 1px;
+    margin-top: -0.5px;
+}
+
+.spin-pad-mark-v {
+    top: 10%;
+    bottom: 10%;
+    left: 50%;
+    width: 1px;
+    margin-left: -0.5px;
+}
+
+#spin-pad-thumb {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    margin-top: -7px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, #6eb6ff, #2a8aff 55%, #1a5fc4);
+    border: 2px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+}
+
+#spin-reset-btn {
+    margin-top: 10px;
+    padding: 5px 8px;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.35);
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    font-size: 0.62rem;
+    font-weight: 600;
+    touch-action: manipulation;
+}
+
+#spin-reset-btn:active {
+    transform: scale(0.96);
+}
+
 #canvas-wrap {
     flex: 1 1 auto;
     min-width: 0;
@@ -240,6 +328,16 @@ body {
     #shot-controls {
         width: 52px;
         padding: 8px 5px;
+    }
+
+    #spin-controls {
+        width: 56px;
+        padding: 8px 5px;
+    }
+
+    #spin-pad {
+        width: 52px;
+        height: 52px;
     }
 
     #power-pull-track {

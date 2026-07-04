@@ -1,6 +1,6 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT, COLORS, DEBUG_DRAW_RUBBER } from './constants.js';
 import { drawCushionSegments, drawCornerBehindSegments } from './cushions.js';
-import { drawRubberGums } from './cushion_rubber.js';
+import { drawRubberGums, drawRubberShadows } from './cushion_rubber.js';
 import { drawPocketTexture, drawPocketRim } from './pocket_texture.js';
 import { getHeadSpot, getFootSpot, getPockets, getPlaySurface } from './utils.js';
 
@@ -22,6 +22,7 @@ export function drawTable(ctx) {
     ctx.fillStyle = felt;
     ctx.fillRect(surface.left, surface.top, surface.width, surface.height);
 
+    drawRubberShadows(ctx);
     drawCushionSegments(ctx);
     drawCornerBehindSegments(ctx);
     if (DEBUG_DRAW_RUBBER) {
