@@ -9,46 +9,130 @@
 html {
     touch-action: manipulation;
     width: 100%;
-    overflow-x: hidden;
+    height: 100%;
+    overflow: hidden;
     -webkit-text-size-adjust: 100%;
 }
 
 body {
     margin: 0;
-    padding: 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+    padding: 0;
     width: 100%;
-    overflow-x: hidden;
-    background: radial-gradient(ellipse at 50% 0%, #1e3a5f 0%, #0d1520 55%, #060a10 100%);
+    height: 100%;
+    overflow: hidden;
+    background: #0d1520;
     color: #f0f4f8;
     font-family: 'Segoe UI', system-ui, sans-serif;
     touch-action: manipulation;
 }
 
+#rotate-hint {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 24px;
+    background: radial-gradient(ellipse at 50% 0%, #1e3a5f 0%, #0d1520 55%, #060a10 100%);
+    text-align: center;
+}
+
+#rotate-hint-icon {
+    font-size: 3rem;
+    line-height: 1;
+    color: #7ec8ff;
+    animation: rotate-hint-spin 2.4s ease-in-out infinite;
+}
+
+#rotate-hint p {
+    margin: 0;
+    max-width: 16rem;
+    font-size: 1rem;
+    opacity: 0.85;
+}
+
+@keyframes rotate-hint-spin {
+    0%, 100% { transform: rotate(-90deg); }
+    50% { transform: rotate(0deg); }
+}
+
+@media (orientation: portrait) {
+    #rotate-hint {
+        display: flex;
+    }
+
+    #game-container {
+        visibility: hidden;
+        pointer-events: none;
+    }
+}
+
 #game-container {
-    width: 100%;
-    max-width: 1160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100dvh;
+    max-width: none;
     min-width: 0;
     overflow: hidden;
-    padding: 16px;
+    padding:
+        max(8px, env(safe-area-inset-top))
+        max(8px, env(safe-area-inset-right))
+        max(8px, env(safe-area-inset-bottom))
+        max(8px, env(safe-area-inset-left));
     background: linear-gradient(165deg, #1a2744 0%, #121c30 100%);
-    border-radius: 18px;
-    box-shadow:
-        0 24px 60px rgba(0, 0, 0, 0.55),
-        inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+#game-stage {
+    width: 1168px;
+    height: 600px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    transform-origin: center center;
+    will-change: transform;
 }
 
 #top-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
+    gap: 10px;
+    flex: 0 0 46px;
+    height: 46px;
+    margin: 0;
     min-width: 0;
+}
+
+#play-area {
+    display: flex;
+    align-items: stretch;
+    flex: 0 0 520px;
+    height: 520px;
+    margin-top: 8px;
+    min-height: 0;
+    min-width: 0;
+    gap: 10px;
+}
+
+#canvas-wrap {
+    flex: 0 0 1040px;
+    width: 1040px;
+    height: 520px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+    background: #0d1520;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 #top-bar-right {
@@ -109,13 +193,6 @@ body {
 
 #reset-btn:active {
     transform: scale(0.97);
-}
-
-#play-area {
-    display: flex;
-    align-items: stretch;
-    gap: 12px;
-    min-width: 0;
 }
 
 #spin-controls {
@@ -209,12 +286,6 @@ body {
     transform: scale(0.96);
 }
 
-#canvas-wrap {
-    flex: 1 1 auto;
-    min-width: 0;
-    touch-action: none;
-}
-
 #aim-controls {
     align-self: flex-end;
     flex-shrink: 0;
@@ -223,7 +294,7 @@ body {
     align-items: center;
     justify-content: center;
     width: 52px;
-    padding: 6px 5px;
+    padding: 8px 6px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.25));
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -242,6 +313,7 @@ body {
     justify-content: center;
     width: 100%;
     height: 100px;
+    flex-shrink: 0;
     touch-action: none;
     cursor: grab;
 }
@@ -353,28 +425,29 @@ body {
 }
 
 #billiard-canvas {
-    border-radius: 8px;
-    background-color: #0d1520;
     display: block;
-    box-shadow:
-        0 12px 40px rgba(0, 0, 0, 0.5),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    width: 1040px;
+    height: 520px;
     touch-action: none;
     cursor: crosshair;
-    width: 100%;
-    max-width: 100%;
-    height: auto;
+    border-radius: 8px;
+    background-color: #0d1520;
+    box-shadow:
+        0 8px 28px rgba(0, 0, 0, 0.45),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 #shot-controls {
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 68px;
-    padding: 12px 8px;
+    width: 56px;
+    height: 520px;
+    padding: 10px 6px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.25));
-    border-radius: 14px;
+    border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     touch-action: none;
 }
@@ -446,102 +519,18 @@ body {
 }
 
 #power-value {
-    margin-top: 10px;
-    font-size: 1rem;
+    margin-top: 8px;
+    font-size: 0.9rem;
     font-weight: 700;
     color: #7ec8ff;
 }
 
 #hint {
-    margin: 12px 0 0;
+    flex: 0 0 26px;
+    height: 26px;
+    margin: 0;
+    padding-top: 6px;
     text-align: center;
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     opacity: 0.55;
-}
-
-@media (max-width: 700px) {
-    body {
-        padding: 6px;
-    }
-
-    #game-container {
-        padding: 10px;
-    }
-
-    #game-title {
-        font-size: 0.9rem;
-    }
-
-    #shot-controls {
-        width: 52px;
-        padding: 8px 5px;
-    }
-
-    #aim-controls {
-        width: 44px;
-        padding: 5px 4px;
-    }
-
-    #aim-slider-track {
-        height: 70px;
-    }
-
-    #aim-wheel {
-        width: 28px;
-    }
-
-    #aim-wheel-cap-top,
-    #aim-wheel-cap-bottom {
-        width: 28px;
-        height: 7px;
-    }
-
-    #aim-wheel-body {
-        width: 22px;
-    }
-
-    #aim-degrees {
-        font-size: 0.65rem;
-    }
-
-    #top-bar-right {
-        gap: 6px;
-    }
-
-    #spin-controls {
-        padding: 3px 6px;
-        gap: 4px;
-    }
-
-    #spin-pad {
-        width: 34px;
-        height: 34px;
-    }
-
-    #spin-pad-thumb {
-        width: 8px;
-        height: 8px;
-        margin-left: -4px;
-        margin-top: -4px;
-    }
-
-    #reset-btn {
-        padding: 7px 10px;
-        font-size: 0.75rem;
-    }
-
-    #power-pull-track {
-        min-height: 140px;
-        width: 30px;
-    }
-
-    .stat-pill {
-        padding: 6px 10px;
-        font-size: 0.95rem;
-    }
-
-    #reset-btn {
-        padding: 7px 10px;
-        font-size: 0.75rem;
-    }
 }

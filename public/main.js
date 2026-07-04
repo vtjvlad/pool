@@ -1,6 +1,8 @@
 import {
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
+    LAYOUT_WIDTH,
+    LAYOUT_HEIGHT,
     MAX_PULL,
     POWER_FACTOR,
     STRIKE_ANIM_BASE_MS,
@@ -40,9 +42,29 @@ const spinResetBtn = document.getElementById('spin-reset-btn');
 const aimTrack = document.getElementById('aim-slider-track');
 const aimWheelNotches = document.getElementById('aim-wheel-notches');
 const aimDegrees = document.getElementById('aim-degrees');
+const gameContainer = document.getElementById('game-container');
+const gameStage = document.getElementById('game-stage');
 
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
+
+function fitGameLayout() {
+    if (!gameContainer || !gameStage) return;
+    const availW = gameContainer.clientWidth;
+    const availH = gameContainer.clientHeight;
+    if (availW <= 0 || availH <= 0) return;
+
+    const scale = Math.min(availW / LAYOUT_WIDTH, availH / LAYOUT_HEIGHT);
+    gameStage.style.transform = `scale(${scale})`;
+}
+
+let landscapeLockTried = false;
+
+function tryLockLandscape() {
+    if (landscapeLockTried) return;
+    landscapeLockTried = true;
+    screen.orientation?.lock?.('landscape')?.catch(() => {});
+}
 
 let balls = [];
 let cueBall;
@@ -392,6 +414,7 @@ function finishCanvasAim(e) {
 
 canvas.addEventListener('pointerdown', (e) => {
     if (!canShowCue()) return;
+    tryLockLandscape();
     const pos = canvasPointerPosition(e);
     canvas.setPointerCapture(e.pointerId);
     activeCanvasPointerId = e.pointerId;
@@ -446,6 +469,10 @@ function resetViewportScale() {
 }
 resetViewportScale();
 window.addEventListener('pageshow', resetViewportScale);
+window.addEventListener('resize', fitGameLayout);
+window.addEventListener('orientationchange', () => {
+    setTimeout(fitGameLayout, 100);
+});
 
 powerTrack.addEventListener('pointerdown', (e) => {
     if (!canPullPower()) return;
@@ -532,4 +559,5 @@ resetBtn.addEventListener('click', initGame);
 updateSpinPadVisual();
 updateAimSliderVisual();
 initGame();
+fitGameLayout();
 gameLoop();

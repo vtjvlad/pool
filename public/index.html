@@ -2,12 +2,19 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>vtj pool</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="rotate-hint">
+        <div id="rotate-hint-icon">↻</div>
+        <p>Поверните устройство в альбомную ориентацию</p>
+    </div>
     <div id="game-container">
+        <div id="game-stage">
         <header id="top-bar">
             <div class="stat-pill">
                 <span class="stat-label">Забито</span>
@@ -56,6 +63,7 @@
             </div>
         </div>
         <p id="hint">Стол — тап или свайп · слева — сила · справа — прицел · сверху — винт</p>
+        </div>
     </div>
     <script type="module" src="main.js"></script>
 </body>
