@@ -1,23 +1,23 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, COLORS, POCKET_RADIUS, POCKET_MAGNET_RADIUS, DEBUG_DRAW_POCKET_MAGNET, DEBUG_DRAW_RUBBER } from './constants.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, COLORS, DEBUG_DRAW_POCKET_MAGNET, DEBUG_DRAW_RUBBER } from './constants.js';
 import { drawCushionSegments, drawCornerBehindSegments } from './cushions.js';
 import { drawRubberGums } from './cushion_rubber.js';
 import { getHeadSpot, getFootSpot, getPockets, getPlaySurface } from './utils.js';
 
-function drawPocketCavity(ctx, x, y) {
-    const r = POCKET_RADIUS;
-    const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+function drawPocketCavity(ctx, pocket) {
+    const r = pocket.radius;
+    const grad = ctx.createRadialGradient(pocket.x, pocket.y, 0, pocket.x, pocket.y, r);
     grad.addColorStop(0, '#000');
     grad.addColorStop(0.75, COLORS.pocket);
     grad.addColorStop(1, COLORS.pocketRim);
     ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.arc(pocket.x, pocket.y, r, 0, Math.PI * 2);
     ctx.fillStyle = grad;
     ctx.fill();
 }
 
-function cutPocketHole(ctx, x, y) {
+function cutPocketHole(ctx, pocket) {
     ctx.beginPath();
-    ctx.arc(x, y, POCKET_RADIUS, 0, Math.PI * 2);
+    ctx.arc(pocket.x, pocket.y, pocket.radius, 0, Math.PI * 2);
     ctx.fill();
 }
 
@@ -28,7 +28,7 @@ function drawPocketMagnetDebug(ctx) {
     ctx.setLineDash([6, 4]);
     for (const pocket of getPockets()) {
         ctx.beginPath();
-        ctx.arc(pocket.x, pocket.y, POCKET_MAGNET_RADIUS, 0, Math.PI * 2);
+        ctx.arc(pocket.x, pocket.y, pocket.radius, 0, Math.PI * 2);
         ctx.stroke();
     }
     ctx.setLineDash([]);
@@ -39,7 +39,7 @@ export function drawTable(ctx) {
     ctx.fillStyle = COLORS.background;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    getPockets().forEach(p => drawPocketCavity(ctx, p.x, p.y));
+    getPockets().forEach(p => drawPocketCavity(ctx, p));
 
     const surface = getPlaySurface();
     const felt = ctx.createLinearGradient(0, surface.top, 0, surface.bottom);
@@ -58,14 +58,14 @@ export function drawTable(ctx) {
     ctx.save();
     ctx.globalCompositeOperation = 'destination-out';
     ctx.fillStyle = '#000';
-    getPockets().forEach(p => cutPocketHole(ctx, p.x, p.y));
+    getPockets().forEach(p => cutPocketHole(ctx, p));
     ctx.restore();
 
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
     ctx.lineWidth = 1;
     getPockets().forEach(p => {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, POCKET_RADIUS, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.stroke();
     });
 

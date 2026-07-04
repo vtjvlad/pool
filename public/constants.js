@@ -4,6 +4,8 @@ export const CANVAS_HEIGHT = 520;
 export const BALL_RADIUS = 11;
 export const POCKET_DIAMETER = 47.52;
 export const POCKET_RADIUS = POCKET_DIAMETER / 2;
+export const CORNER_POCKET_RADIUS = POCKET_RADIUS * 1.1;
+export const CENTRAL_POCKET_RADIUS = POCKET_RADIUS * 0.99225;
 
 /** Геометрия бортов и позиций луз — не меняется при изменении POCKET_DIAMETER */
 export const POCKET_LAYOUT_DIAMETER = 33;
@@ -23,7 +25,7 @@ export const RUBBER_CENTER_CHAMFER_ANGLE = 60;
 export const RUBBER_CORNER_CHAMFER_ANGLE = 45;
 export const DEBUG_DRAW_RUBBER = true;
 export const POCKET_MAGNET = 0.38;
-export const POCKET_MAGNET_RADIUS = POCKET_RADIUS;
+export const POCKET_MAGNET_RADIUS = POCKET_RADIUS; // базовый; у луз — свой radius
 export const DEBUG_DRAW_POCKET_MAGNET = true;
 export const FRICTION = 0.985;
 export const BALL_RESTITUTION = 0.96;

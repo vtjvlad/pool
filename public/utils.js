@@ -1,4 +1,10 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, BALL_RADIUS, POCKET_RADIUS, POCKET_MAGNET_RADIUS, POCKET_INSET, MID_POCKET_INSET, POCKET_CENTER_SHIFT, CORNER_POCKET_CENTER_SHIFT, POCKET_MAGNET, PLAY_SURFACE_INSET } from './constants.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, BALL_RADIUS, POCKET_INSET, MID_POCKET_INSET, POCKET_CENTER_SHIFT, CORNER_POCKET_CENTER_SHIFT, CORNER_POCKET_RADIUS, CENTRAL_POCKET_RADIUS, POCKET_MAGNET, PLAY_SURFACE_INSET } from './constants.js';
+
+const CENTRAL_POCKET_IDS = new Set(['tm', 'bm']);
+
+function pocketRadius(id) {
+    return CENTRAL_POCKET_IDS.has(id) ? CENTRAL_POCKET_RADIUS : CORNER_POCKET_RADIUS;
+}
 
 export function getPlayArea() {
     return {
@@ -28,12 +34,12 @@ function buildPockets(cornerShift = 0) {
     const cornerInset = POCKET_INSET + POCKET_CENTER_SHIFT + cornerShift;
     const midInset = MID_POCKET_INSET + POCKET_CENTER_SHIFT;
     return [
-        { id: 'tl', x: play.left + cornerInset, y: play.top + cornerInset, wall: 'left' },
-        { id: 'tm', x: mx, y: play.top + midInset, wall: 'top' },
-        { id: 'tr', x: play.right - cornerInset, y: play.top + cornerInset, wall: 'right' },
-        { id: 'bl', x: play.left + cornerInset, y: play.bottom - cornerInset, wall: 'left' },
-        { id: 'bm', x: mx, y: play.bottom - midInset, wall: 'bottom' },
-        { id: 'br', x: play.right - cornerInset, y: play.bottom - cornerInset, wall: 'right' }
+        { id: 'tl', x: play.left + cornerInset, y: play.top + cornerInset, wall: 'left', radius: pocketRadius('tl') },
+        { id: 'tm', x: mx, y: play.top + midInset, wall: 'top', radius: pocketRadius('tm') },
+        { id: 'tr', x: play.right - cornerInset, y: play.top + cornerInset, wall: 'right', radius: pocketRadius('tr') },
+        { id: 'bl', x: play.left + cornerInset, y: play.bottom - cornerInset, wall: 'left', radius: pocketRadius('bl') },
+        { id: 'bm', x: mx, y: play.bottom - midInset, wall: 'bottom', radius: pocketRadius('bm') },
+        { id: 'br', x: play.right - cornerInset, y: play.bottom - cornerInset, wall: 'right', radius: pocketRadius('br') }
     ];
 }
 
@@ -55,9 +61,9 @@ function pocketAffectsWall(pocket, wall) {
 }
 
 export function nearPocketOnWall(x, y, wall) {
-    const gap = POCKET_RADIUS + BALL_RADIUS;
     return getPockets().some(p => {
         if (!pocketAffectsWall(p, wall)) return false;
+        const gap = p.radius + BALL_RADIUS;
         if (wall === 'left' || wall === 'right') return Math.abs(y - p.y) < gap;
         return Math.abs(x - p.x) < gap;
     });
@@ -70,13 +76,13 @@ export function tryPocketBall(ball) {
         const dx = pocket.x - ball.x;
         const dy = pocket.y - ball.y;
         const dist = Math.hypot(dx, dy);
-        if (dist < POCKET_MAGNET_RADIUS && dist > 0.5) {
+        if (dist < pocket.radius && dist > 0.5) {
             const speed = Math.hypot(ball.vx, ball.vy);
             ball.vx += (dx / dist) * POCKET_MAGNET * (1 + speed * 0.05);
             ball.vy += (dy / dist) * POCKET_MAGNET * (1 + speed * 0.05);
         }
 
-        if (dist < POCKET_RADIUS) {
+        if (dist < pocket.radius) {
             ball.inPocket = true;
             ball.vx = 0;
             ball.vy = 0;
