@@ -6,14 +6,18 @@ import {
     STRIKE_ANIM_BASE_MS,
     IMPACT_FLASH_MS,
     MIN_POWER_PERCENT,
-    BALL_RADIUS
+    BALL_RADIUS,
+    MAX_SPIN_OFFSET,
+    SPIN_SIDE_POWER,
+    SPIN_TOP_POWER,
+    SPIN_MASSE_FACTOR
 } from './constants.js';
 import { Ball } from './ball.js';
 import { createRack } from './game_logic.js';
 import { stepPhysics, updatePocketAnimations } from './physics_engine.js';
 import { predictCueTrajectory } from './physics.js';
 import { drawTable } from './drawing_table.js';
-import { drawCueStick, drawTrajectory } from './drawing_cue.js';
+import { drawCueStick, drawTrajectory, drawSpinMark, getCueTipPosition } from './drawing_cue.js';
 import { getHeadSpot } from './utils.js';
 
 const canvas = document.getElementById('billiard-canvas');
@@ -41,6 +45,51 @@ let score = 0;
 const scoredBalls = new Set();
 let strikeAnim = null;
 let impactFlash = null;
+let spinOffsetX = 0;
+let spinOffsetY = 0;
+let isAdjustingSpin = false;
+let activeSpinPointerId = null;
+let lastSpinTapTime = 0;
+
+function resetSpin() {
+    spinOffsetX = 0;
+    spinOffsetY = 0;
+}
+
+function isOnCueBall(x, y) {
+    if (!cueBall || !canShowCue()) return false;
+    const dx = x - cueBall.x;
+    const dy = y - cueBall.y;
+    return dx * dx + dy * dy < (BALL_RADIUS * 1.85) ** 2;
+}
+
+function updateSpinFromPoint(x, y) {
+    const perpX = -Math.sin(aimAngle);
+    const perpY = Math.cos(aimAngle);
+    const backX = -Math.cos(aimAngle);
+    const backY = -Math.sin(aimAngle);
+    const dx = x - cueBall.x;
+    const dy = y - cueBall.y;
+    let localX = (dx * perpX + dy * perpY) / BALL_RADIUS;
+    let localY = (dx * backX + dy * backY) / BALL_RADIUS;
+    const len = Math.hypot(localX, localY);
+    if (len > MAX_SPIN_OFFSET) {
+        localX = (localX / len) * MAX_SPIN_OFFSET;
+        localY = (localY / len) * MAX_SPIN_OFFSET;
+    }
+    spinOffsetX = localX;
+    spinOffsetY = localY;
+}
+
+function applySpinToCueBall(power, angle) {
+    const perpX = -Math.sin(angle);
+    const perpY = Math.cos(angle);
+    cueBall.spin = spinOffsetX * SPIN_SIDE_POWER * power;
+    cueBall.topSpin = spinOffsetY * SPIN_TOP_POWER * power;
+    cueBall.vx += perpX * spinOffsetX * SPIN_MASSE_FACTOR * power;
+    cueBall.vy += perpY * spinOffsetX * SPIN_MASSE_FACTOR * power;
+    resetSpin();
+}
 
 function getAimAngle() {
     return aimAngle;
@@ -116,8 +165,11 @@ function updateStrikeAnim() {
     const eased = 1 - Math.pow(1 - progress, 3);
     strikeAnim.currentPull = strikeAnim.pullBack * (1 - eased);
     if (progress >= 1) {
-        cueBall.vx = Math.cos(strikeAnim.angle) * strikeAnim.power;
-        cueBall.vy = Math.sin(strikeAnim.angle) * strikeAnim.power;
+        const power = strikeAnim.power;
+        const angle = strikeAnim.angle;
+        cueBall.vx = Math.cos(angle) * power;
+        cueBall.vy = Math.sin(angle) * power;
+        applySpinToCueBall(power, angle);
         impactFlash = { x: cueBall.x, y: cueBall.y, startTime: performance.now() };
         strikeAnim = null;
     }
@@ -143,15 +195,11 @@ function drawImpactFlash() {
 }
 
 function drawCueScene(angle, pullBack) {
-    const tipOffset = BALL_RADIUS + 2 + pullBack;
+    const tip = getCueTipPosition(cueBall, angle, pullBack, spinOffsetX, spinOffsetY);
     const path = predictCueTrajectory(angle, cueBall, balls);
     drawTrajectory(ctx, angle, cueBall, aimX, aimY, path);
-    drawCueStick(
-        ctx,
-        cueBall.x - Math.cos(angle) * tipOffset,
-        cueBall.y - Math.sin(angle) * tipOffset,
-        angle
-    );
+    drawSpinMark(ctx, cueBall, angle, spinOffsetX, spinOffsetY);
+    drawCueStick(ctx, tip.x, tip.y, angle);
 }
 
 function initGame() {
@@ -170,6 +218,7 @@ function initGame() {
 
     updateAimFromPoint(cueBall.x + CANVAS_WIDTH * 0.16, cueBall.y);
     resetPowerPull();
+    resetSpin();
     isPullingPower = false;
     activePullPointerId = null;
 }
@@ -230,24 +279,57 @@ function canvasPointerPosition(e) {
 }
 
 function handleCanvasAim(e) {
-    if (!canShowCue()) return;
+    if (!canShowCue() || isAdjustingSpin) return;
     const pos = canvasPointerPosition(e);
     updateAimFromPoint(pos.x, pos.y);
 }
 
+function handleSpinAdjust(e) {
+    if (!canShowCue()) return;
+    const pos = canvasPointerPosition(e);
+    updateSpinFromPoint(pos.x, pos.y);
+}
+
 canvas.addEventListener('pointerdown', (e) => {
     if (!canShowCue()) return;
+    const pos = canvasPointerPosition(e);
+
+    if (isOnCueBall(pos.x, pos.y)) {
+        const now = Date.now();
+        if (now - lastSpinTapTime <= 300) {
+            resetSpin();
+            lastSpinTapTime = 0;
+            return;
+        }
+        lastSpinTapTime = now;
+        canvas.setPointerCapture(e.pointerId);
+        isAdjustingSpin = true;
+        activeSpinPointerId = e.pointerId;
+        handleSpinAdjust(e);
+        return;
+    }
+
     canvas.setPointerCapture(e.pointerId);
     activeCanvasPointerId = e.pointerId;
     handleCanvasAim(e);
 });
 
 canvas.addEventListener('pointermove', (e) => {
+    if (isAdjustingSpin && e.pointerId === activeSpinPointerId) {
+        handleSpinAdjust(e);
+        return;
+    }
     if (activeCanvasPointerId !== null && e.pointerId !== activeCanvasPointerId) return;
     handleCanvasAim(e);
 });
 
 canvas.addEventListener('pointerup', (e) => {
+    if (isAdjustingSpin && e.pointerId === activeSpinPointerId) {
+        if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+        isAdjustingSpin = false;
+        activeSpinPointerId = null;
+        return;
+    }
     if (activeCanvasPointerId !== null && e.pointerId !== activeCanvasPointerId) return;
     if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
     handleCanvasAim(e);
@@ -255,6 +337,11 @@ canvas.addEventListener('pointerup', (e) => {
 });
 
 canvas.addEventListener('pointercancel', (e) => {
+    if (isAdjustingSpin && e.pointerId === activeSpinPointerId) {
+        isAdjustingSpin = false;
+        activeSpinPointerId = null;
+        return;
+    }
     if (activeCanvasPointerId !== null && e.pointerId !== activeCanvasPointerId) return;
     activeCanvasPointerId = null;
 });

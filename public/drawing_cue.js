@@ -24,6 +24,43 @@ export function drawCueStick(ctx, tipX, tipY, angle) {
     ctx.restore();
 }
 
+export function drawSpinMark(ctx, cueBall, aimAngle, spinOffsetX, spinOffsetY) {
+    if (Math.abs(spinOffsetX) < 0.04 && Math.abs(spinOffsetY) < 0.04) return;
+
+    const r = BALL_RADIUS;
+    const perpX = -Math.sin(aimAngle);
+    const perpY = Math.cos(aimAngle);
+    const backX = -Math.cos(aimAngle);
+    const backY = -Math.sin(aimAngle);
+    const mx = cueBall.x + backX * r + perpX * spinOffsetX * r * 0.9 + backX * spinOffsetY * r * 0.35;
+    const my = cueBall.y + backY * r + perpY * spinOffsetX * r * 0.9 + backY * spinOffsetY * r * 0.35;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(mx, my, 3.8, 0, Math.PI * 2);
+    ctx.fillStyle = '#2a8aff';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.restore();
+}
+
+export function getCueTipPosition(cueBall, angle, pullBack, spinOffsetX, spinOffsetY) {
+    const r = BALL_RADIUS;
+    const perpX = -Math.sin(angle);
+    const perpY = Math.cos(angle);
+    const backX = -Math.cos(angle);
+    const backY = -Math.sin(angle);
+    const contactX = cueBall.x + backX * r + perpX * spinOffsetX * r * 0.9 + backX * spinOffsetY * r * 0.35;
+    const contactY = cueBall.y + backY * r + perpY * spinOffsetX * r * 0.9 + backY * spinOffsetY * r * 0.35;
+    const tipOffset = 2 + pullBack;
+    return {
+        x: contactX - Math.cos(angle) * tipOffset,
+        y: contactY - Math.sin(angle) * tipOffset
+    };
+}
+
 export function drawTrajectory(ctx, angle, cueBall, aimX, aimY, path) {
     const startX = cueBall.x + Math.cos(angle) * BALL_RADIUS;
     const startY = cueBall.y + Math.sin(angle) * BALL_RADIUS;

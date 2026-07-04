@@ -38,6 +38,13 @@ export const BALL_FRICTION = 0.07;
 export const CUSHION_RESTITUTION = 0.78;
 export const CUSHION_FRICTION = 0.12;
 export const MIN_SPEED = 0.04;
+export const MAX_SPIN_OFFSET = 0.72;
+export const SPIN_SIDE_POWER = 0.44;
+export const SPIN_TOP_POWER = 0.38;
+export const SPIN_MASSE_FACTOR = 0.14;
+export const SPIN_DECAY = 0.988;
+export const SPIN_CUSHION_THROW = 0.58;
+export const SPIN_CUSHION_RETAIN = 0.32;
 
 export const COLORS = {
     felt: '#2a8cb8',

@@ -1,4 +1,4 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, CUSHION_RESTITUTION, CUSHION_FRICTION } from './constants.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, CUSHION_RESTITUTION, CUSHION_FRICTION, SPIN_CUSHION_THROW, SPIN_CUSHION_RETAIN } from './constants.js';
 import { getCushionInnerEdges } from './cushions.js';
 import { getRubberCollisionEdges } from './cushion_rubber.js';
 
@@ -78,7 +78,7 @@ function circleSegmentCollision(bx, by, radius, line) {
     };
 }
 
-function resolveAtPosition(bx, by, vx, vy, r, edges) {
+function resolveAtPosition(bx, by, vx, vy, r, edges, ball) {
     for (let iter = 0; iter < 5; iter++) {
         let best = null;
 
@@ -108,6 +108,13 @@ function resolveAtPosition(bx, by, vx, vy, r, edges) {
             const vTan = vx * tx + vy * ty;
             vx -= vTan * CUSHION_FRICTION * tx;
             vy -= vTan * CUSHION_FRICTION * ty;
+
+            if (ball && ball.spin) {
+                const throwV = ball.spin * SPIN_CUSHION_THROW;
+                vx += throwV * tx;
+                vy += throwV * ty;
+                ball.spin *= SPIN_CUSHION_RETAIN;
+            }
         }
     }
 
@@ -133,7 +140,7 @@ export function resolveBallCushionCollision(ball, prevX, prevY) {
         const t = i / samples;
         const sx = prevX + (endX - prevX) * t;
         const sy = prevY + (endY - prevY) * t;
-        const result = resolveAtPosition(sx, sy, vx, vy, r, edges);
+        const result = resolveAtPosition(sx, sy, vx, vy, r, edges, ball);
         bx = result.bx;
         by = result.by;
         vx = result.vx;

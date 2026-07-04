@@ -6,7 +6,8 @@ import {
     LOW_SPEED_THRESHOLD,
     MIN_SPEED,
     PHYSICS_SUBSTEPS,
-    COLLISION_PASSES
+    COLLISION_PASSES,
+    SPIN_DECAY
 } from './constants.js';
 import { resolveBallCushionCollision } from './cushion_collision.js';
 import { tryPocketBall } from './utils.js';
@@ -25,6 +26,20 @@ export function applyRollingFriction(ball, frameFraction) {
     if (newSpeed > 0 && newSpeed < MIN_SPEED) {
         ball.vx = 0;
         ball.vy = 0;
+        ball.spin = 0;
+        ball.topSpin = 0;
+    }
+
+    const spinFactor = Math.pow(SPIN_DECAY, frameFraction);
+    ball.spin *= spinFactor;
+    ball.topSpin *= spinFactor;
+
+    if (ball.topSpin !== 0 && newSpeed > 0) {
+        const topAdj = 1 + ball.topSpin * 0.006;
+        const topFactor = Math.pow(ROLLING_FRICTION / topAdj, frameFraction);
+        const ratio = topFactor / factor;
+        ball.vx *= ratio;
+        ball.vy *= ratio;
     }
 }
 

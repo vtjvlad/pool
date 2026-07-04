@@ -79,6 +79,8 @@ export class Ball {
         this.color = options.color || '#ffffff';
         this.inPocket = false;
         this.pocketFall = null;
+        this.spin = 0;
+        this.topSpin = 0;
         this.orientation = { ...IDENTITY_QUAT };
         this.px = x;
         this.py = y;
@@ -97,6 +99,8 @@ export class Ball {
         };
         this.vx = 0;
         this.vy = 0;
+        this.spin = 0;
+        this.topSpin = 0;
     }
 
     updatePocketFall(balls) {
@@ -384,6 +388,8 @@ export class Ball {
         this.vy = 0;
         this.inPocket = false;
         this.pocketFall = null;
+        this.spin = 0;
+        this.topSpin = 0;
         this.orientation = { ...IDENTITY_QUAT };
 
         for (const ball of balls) {
