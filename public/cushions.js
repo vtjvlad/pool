@@ -1,4 +1,4 @@
-import { POCKET_LAYOUT_RADIUS, CUSHION_DEPTH, CUSHION_POCKET_GAP, CORNER_CUSHION_POCKET_GAP, CUSHION_CHAMFER, COLORS } from './constants.js';
+import { POCKET_LAYOUT_RADIUS, CUSHION_DEPTH, CUSHION_POCKET_GAP, CORNER_CUSHION_POCKET_GAP, CUSHION_CHAMFER, RUBBER_CENTER_CHAMFER_ANGLE, RUBBER_CORNER_CHAMFER_ANGLE, COLORS } from './constants.js';
 import { getPlayArea, getPockets } from './utils.js';
 import { fillWoodTexture } from './wood_texture.js';
 
@@ -245,6 +245,12 @@ function isCentralPocket(id) {
     return CENTRAL_POCKETS.has(id);
 }
 
+function pocketRubberChamferAngle(pocketId) {
+    if (isCentralPocket(pocketId)) return RUBBER_CENTER_CHAMFER_ANGLE;
+    if (isCornerPocket(pocketId)) return RUBBER_CORNER_CHAMFER_ANGLE;
+    return null;
+}
+
 function rubberEdgeLinesForSegment(segment) {
     const { x, y, width, height, side, chamferStart, chamferEnd, pocketIds } = segment;
     const c = chamferSize(segment);
@@ -282,8 +288,8 @@ function rubberEdgeLinesForSegment(segment) {
         };
     }
 
-    line.chamferStart = isCentralPocket(pocketIds[0]);
-    line.chamferEnd = isCentralPocket(pocketIds[1]);
+    line.chamferStartAngle = pocketRubberChamferAngle(pocketIds[0]);
+    line.chamferEndAngle = pocketRubberChamferAngle(pocketIds[1]);
     return [line];
 }
 
