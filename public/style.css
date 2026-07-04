@@ -30,7 +30,7 @@ body {
 
 #game-container {
     width: 100%;
-    max-width: 920px;
+    max-width: 1160px;
     min-width: 0;
     overflow: hidden;
     padding: 16px;

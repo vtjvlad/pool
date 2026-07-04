@@ -1,5 +1,5 @@
-export const CANVAS_WIDTH = 880;
-export const CANVAS_HEIGHT = 440;
+export const CANVAS_WIDTH = 1040;
+export const CANVAS_HEIGHT = 520;
 
 export const BALL_RADIUS = 11;
 export const FRICTION = 0.985;

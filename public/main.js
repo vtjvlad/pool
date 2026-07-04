@@ -166,7 +166,7 @@ function initGame() {
     balls.push(cueBall);
     balls.push(...createRack());
 
-    updateAimFromPoint(cueBall.x + 140, cueBall.y);
+    updateAimFromPoint(cueBall.x + CANVAS_WIDTH * 0.16, cueBall.y);
     resetPowerPull();
     isPullingPower = false;
     activePullPointerId = null;
