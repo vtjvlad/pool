@@ -1,42 +1,12 @@
-import { 
-    BALL_RADIUS, 
-    CUE_LENGTH, 
-    CUE_WIDTH, 
-    MAX_PULL, 
-    POWER_FACTOR, 
-    STRIKE_ANIM_BASE_MS, 
-    IMPACT_FLASH_MS, 
-    TRAJECTORY_EXTEND, 
-    BOUNCE_PREVIEW_LEN, 
+import {
+    BALL_RADIUS,
+    TRAJECTORY_EXTEND,
+    BOUNCE_PREVIEW_LEN,
     MIN_BOUNCE_DRAW,
     CANVAS_WIDTH,
     CANVAS_HEIGHT
 } from './constants.js';
-import { rayCushionHit } from './cushion_physics.js';
-
-export function drawCueStick(ctx, tipX, tipY, angle) {
-    ctx.save();
-    ctx.translate(tipX, tipY);
-    ctx.rotate(angle + Math.PI);
-
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
-    ctx.fillRect(2, -CUE_WIDTH / 2 + 2, CUE_LENGTH, CUE_WIDTH);
-
-    const bodyGrad = ctx.createLinearGradient(0, -CUE_WIDTH / 2, 0, CUE_WIDTH / 2);
-    bodyGrad.addColorStop(0, '#deb887');
-    bodyGrad.addColorStop(0.5, '#f5deb3');
-    bodyGrad.addColorStop(1, '#a0724a');
-    ctx.fillStyle = bodyGrad;
-    ctx.fillRect(0, -CUE_WIDTH / 2, CUE_LENGTH, CUE_WIDTH);
-
-    ctx.fillStyle = '#111';
-    ctx.fillRect(CUE_LENGTH * 0.7, -CUE_WIDTH / 2 - 1, CUE_LENGTH * 0.22, CUE_WIDTH + 2);
-
-    const tipLen = 12;
-    ctx.fillStyle = '#4aa3d8';
-    ctx.fillRect(-tipLen, -CUE_WIDTH / 2 + 1, tipLen, CUE_WIDTH - 2);
-    ctx.restore();
-}
+import { getPlayArea } from './utils.js';
 
 export function rayCircleHit(ox, oy, dx, dy, cx, cy, hitRadius) {
     const fx = ox - cx;
@@ -54,11 +24,23 @@ export function rayCircleHit(ox, oy, dx, dy, cx, cy, hitRadius) {
 }
 
 export function rayWallHit(ox, oy, dx, dy, radius) {
-    const cushionHit = rayCushionHit(ox, oy, dx, dy, radius);
-    if (cushionHit) {
-        return { t: cushionHit.t, wall: 'cushion', nx: cushionHit.nx, ny: cushionHit.ny };
-    }
-    return null;
+    const play = getPlayArea();
+    let bestT = Infinity;
+    let wall = null;
+
+    const consider = (t, wallName) => {
+        if (t > 0 && t < bestT) {
+            bestT = t;
+            wall = wallName;
+        }
+    };
+
+    if (dx < -0.0001) consider((play.left + radius - ox) / dx, 'left');
+    else if (dx > 0.0001) consider((play.right - radius - ox) / dx, 'right');
+    if (dy < -0.0001) consider((play.top + radius - oy) / dy, 'top');
+    else if (dy > 0.0001) consider((play.bottom - radius - oy) / dy, 'bottom');
+
+    return bestT === Infinity ? null : { t: bestT, wall };
 }
 
 export function predictCueTrajectory(angle, cueBall, balls) {
@@ -74,7 +56,7 @@ export function predictCueTrajectory(angle, cueBall, balls) {
     let hitBall = null;
 
     for (const ball of balls) {
-        if (ball === cueBall || ball.inPocket) continue;
+        if (ball === cueBall) continue;
         const t = rayCircleHit(ox, oy, dx, dy, ball.x, ball.y, BALL_RADIUS * 2);
         if (t !== null && (hitT === null || t < hitT)) {
             hitT = t;
@@ -102,14 +84,8 @@ export function predictCueTrajectory(angle, cueBall, balls) {
     let hasTargetLine = false;
 
     if (hitType === 'wall' && hitWall) {
-        if (wallHit && wallHit.nx != null) {
-            const dot = dx * wallHit.nx + dy * wallHit.ny;
-            bounceDx = dx - 2 * dot * wallHit.nx;
-            bounceDy = dy - 2 * dot * wallHit.ny;
-        } else {
-            bounceDx = hitWall === 'left' || hitWall === 'right' ? -dx : dx;
-            bounceDy = hitWall === 'top' || hitWall === 'bottom' ? -dy : dy;
-        }
+        bounceDx = hitWall === 'left' || hitWall === 'right' ? -dx : dx;
+        bounceDy = hitWall === 'top' || hitWall === 'bottom' ? -dy : dy;
         hasBounce = true;
     } else if (hitType === 'ball' && hitBall) {
         const nx = hitBall.x - contactX;

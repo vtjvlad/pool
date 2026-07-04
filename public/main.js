@@ -38,7 +38,6 @@ let isPullingPower = false;
 let activePullPointerId = null;
 let activeCanvasPointerId = null;
 let score = 0;
-const scoredBalls = new Set();
 let strikeAnim = null;
 let impactFlash = null;
 
@@ -78,7 +77,7 @@ function powerFromClientY(clientY) {
 }
 
 function canShowCue() {
-    return cueBall && !cueBall.inPocket && !cueBall.isMoving() && !strikeAnim;
+    return cueBall && !cueBall.isMoving() && !strikeAnim;
 }
 
 function canPullPower() {
@@ -157,7 +156,6 @@ function drawCueScene(angle, pullBack) {
 function initGame() {
     balls = [];
     score = 0;
-    scoredBalls.clear();
     strikeAnim = null;
     impactFlash = null;
     activeCanvasPointerId = null;
@@ -178,23 +176,13 @@ function update() {
     updateStrikeAnim();
     updateImpactFlash();
 
-    for (const ball of balls) ball.update(balls);
+    for (const ball of balls) ball.update();
 
     for (let i = 0; i < balls.length; i++) {
         for (let j = i + 1; j < balls.length; j++) {
-            if (!balls[i].inPocket && !balls[j].inPocket) {
-                resolveCollision(balls[i], balls[j]);
-            }
+            resolveCollision(balls[i], balls[j]);
         }
     }
-
-    balls.forEach(ball => {
-        if (ball.inPocket && !ball.isCueBall && !scoredBalls.has(ball)) {
-            scoredBalls.add(ball);
-            score++;
-            scoreElement.textContent = score;
-        }
-    });
 
     if (isPullingPower && !canShowCue()) {
         resetPowerPull();

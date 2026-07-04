@@ -1,15 +1,10 @@
-import { 
+import {
     BALL_RADIUS,
-    FRICTION, 
-    MIN_SPEED
+    FRICTION,
+    MIN_SPEED,
+    CUSHION_RESTITUTION
 } from './constants.js';
-import { 
-    getHeadSpot,
-    tryPocketBall,
-    lighten,
-    darken
-} from './utils.js';
-import { resolveBallCushions } from './cushion_physics.js';
+import { getPlayArea, lighten, darken } from './utils.js';
 
 export class Ball {
     constructor(x, y, options = {}) {
@@ -22,12 +17,9 @@ export class Ball {
         this.number = options.number || 0;
         this.ballType = options.ballType || (this.isCueBall ? 'cue' : 'solid');
         this.color = options.color || '#ffffff';
-        this.inPocket = false;
     }
 
     draw(ctx) {
-        if (this.inPocket) return;
-
         const r = this.radius;
 
         ctx.save();
@@ -93,9 +85,7 @@ export class Ball {
         ctx.fill();
     }
 
-    update(balls) {
-        if (this.inPocket) return;
-
+    update() {
         this.x += this.vx;
         this.y += this.vy;
         this.vx *= FRICTION;
@@ -104,31 +94,22 @@ export class Ball {
         if (Math.abs(this.vx) < MIN_SPEED) this.vx = 0;
         if (Math.abs(this.vy) < MIN_SPEED) this.vy = 0;
 
-        if (tryPocketBall(this, () => this.respotCueBall(balls))) return;
+        const play = getPlayArea();
 
-        resolveBallCushions(this);
+        if (this.x - this.radius < play.left) {
+            this.x = play.left + this.radius;
+            this.vx = -this.vx * CUSHION_RESTITUTION;
+        } else if (this.x + this.radius > play.right) {
+            this.x = play.right - this.radius;
+            this.vx = -this.vx * CUSHION_RESTITUTION;
+        }
 
-        if (tryPocketBall(this, () => this.respotCueBall(balls))) return;
-    }
-
-    respotCueBall(balls) {
-        const spot = getHeadSpot();
-        this.inPocket = false;
-        this.x = spot.x;
-        this.y = spot.y;
-        this.vx = 0;
-        this.vy = 0;
-
-        for (const ball of balls) {
-            if (ball === this || ball.inPocket) continue;
-            const dx = ball.x - this.x;
-            const dy = ball.y - this.y;
-            const dist = Math.hypot(dx, dy);
-            if (dist < this.radius + ball.radius + 2) {
-                this.x = spot.x - this.radius * 4;
-                this.y = spot.y;
-                break;
-            }
+        if (this.y - this.radius < play.top) {
+            this.y = play.top + this.radius;
+            this.vy = -this.vy * CUSHION_RESTITUTION;
+        } else if (this.y + this.radius > play.bottom) {
+            this.y = play.bottom - this.radius;
+            this.vy = -this.vy * CUSHION_RESTITUTION;
         }
     }
 

@@ -7,7 +7,8 @@
 С июля 2026 заменена модульной точкой входа `main.js`, которая использует:
 
 - `ball.js`, `physics.js`, `physics_engine.js`
-- `drawing_table.js`, `drawing_pockets.js`, `drawing_cue.js`
-- `game_logic.js`, `utils.js`, `table_surface.js`, `constants.js`
+- `ball.js`, `physics.js`, `physics_engine.js`
+- `drawing_table.js`, `drawing_cue.js`
+- `game_logic.js`, `utils.js`, `constants.js`
 
 Файл сохранён для справки и сравнения; в работе приложения не участвует.
