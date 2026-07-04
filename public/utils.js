@@ -70,7 +70,7 @@ export function nearPocketOnWall(x, y, wall) {
 }
 
 export function tryPocketBall(ball) {
-    if (ball.inPocket) return true;
+    if (ball.inPocket || ball.isPocketing()) return true;
 
     for (const pocket of getPockets()) {
         const dx = pocket.x - ball.x;
@@ -83,9 +83,7 @@ export function tryPocketBall(ball) {
         }
 
         if (dist < pocket.radius) {
-            ball.inPocket = true;
-            ball.vx = 0;
-            ball.vy = 0;
+            ball.startPocketFall(pocket);
             return true;
         }
     }

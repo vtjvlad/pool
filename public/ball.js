@@ -1,6 +1,8 @@
 import {
     BALL_RADIUS,
-    MIN_SPEED
+    MIN_SPEED,
+    POCKET_FALL_MS,
+    CUE_RESPOT_DELAY_MS
 } from './constants.js';
 import { getHeadSpot, lighten, darken } from './utils.js';
 
@@ -76,7 +78,53 @@ export class Ball {
         this.ballType = options.ballType || (this.isCueBall ? 'cue' : 'solid');
         this.color = options.color || '#ffffff';
         this.inPocket = false;
+        this.pocketFall = null;
         this.orientation = { ...IDENTITY_QUAT };
+        this.px = x;
+        this.py = y;
+    }
+
+    startPocketFall(pocket) {
+        if (this.pocketFall || this.inPocket) return;
+
+        this.pocketFall = {
+            pocketX: pocket.x,
+            pocketY: pocket.y,
+            startX: this.x,
+            startY: this.y,
+            startTime: performance.now(),
+            duration: POCKET_FALL_MS
+        };
+        this.vx = 0;
+        this.vy = 0;
+    }
+
+    updatePocketFall(balls) {
+        if (!this.pocketFall) return false;
+
+        const { pocketX, pocketY, startX, startY, startTime, duration } = this.pocketFall;
+        const t = Math.min((performance.now() - startTime) / duration, 1);
+        const sink = t * t * (3 - 2 * t);
+
+        this.x = startX + (pocketX - startX) * sink;
+        this.y = startY + (pocketY - startY) * sink;
+        this.pocketFall.scale = 1 - sink * 0.88;
+        this.pocketFall.alpha = 1 - sink * 0.92;
+        this.advanceRoll(sink * 0.08);
+
+        if (t < 1) return false;
+
+        const wasCue = this.isCueBall;
+        this.pocketFall = null;
+        this.inPocket = true;
+        if (wasCue) {
+            setTimeout(() => this.respotCueBall(balls), CUE_RESPOT_DELAY_MS);
+        }
+        return true;
+    }
+
+    isPocketing() {
+        return this.pocketFall !== null;
     }
 
     advanceRoll(frameFraction) {
@@ -247,6 +295,19 @@ export class Ball {
         if (this.inPocket) return;
 
         const r = this.radius;
+        const fall = this.pocketFall;
+        const scale = fall ? fall.scale : 1;
+        const alpha = fall ? fall.alpha : 1;
+        const squash = fall ? 1 - (1 - scale) * 0.3 : 1;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+
+        if (fall) {
+            ctx.translate(this.x, this.y);
+            ctx.scale(scale, scale * squash);
+            ctx.translate(-this.x, -this.y);
+        }
 
         ctx.save();
         ctx.beginPath();
@@ -307,10 +368,12 @@ export class Ball {
         ctx.arc(this.x - r * 0.32, this.y - r * 0.32, r * 0.18, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
         ctx.fill();
+
+        ctx.restore();
     }
 
     isMoving() {
-        return !this.inPocket && Math.hypot(this.vx, this.vy) > MIN_SPEED;
+        return !this.inPocket && !this.isPocketing() && Math.hypot(this.vx, this.vy) > MIN_SPEED;
     }
 
     respotCueBall(balls) {
@@ -320,6 +383,7 @@ export class Ball {
         this.vx = 0;
         this.vy = 0;
         this.inPocket = false;
+        this.pocketFall = null;
         this.orientation = { ...IDENTITY_QUAT };
 
         for (const ball of balls) {

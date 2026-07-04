@@ -1,8 +1,12 @@
 import {
     BALL_RESTITUTION,
+    BALL_FRICTION,
     ROLLING_FRICTION,
+    LOW_SPEED_FRICTION,
+    LOW_SPEED_THRESHOLD,
     MIN_SPEED,
-    PHYSICS_SUBSTEPS
+    PHYSICS_SUBSTEPS,
+    COLLISION_PASSES
 } from './constants.js';
 import { resolveBallCushionCollision } from './cushion_collision.js';
 import { tryPocketBall } from './utils.js';
@@ -10,12 +14,15 @@ import { tryPocketBall } from './utils.js';
 export function applyRollingFriction(ball, frameFraction) {
     if (ball.inPocket) return;
 
-    const factor = Math.pow(ROLLING_FRICTION, frameFraction);
+    const speed = Math.hypot(ball.vx, ball.vy);
+    const friction = speed < LOW_SPEED_THRESHOLD ? LOW_SPEED_FRICTION : ROLLING_FRICTION;
+    const factor = Math.pow(friction, frameFraction);
+
     ball.vx *= factor;
     ball.vy *= factor;
 
-    const speed = Math.hypot(ball.vx, ball.vy);
-    if (speed > 0 && speed < MIN_SPEED) {
+    const newSpeed = Math.hypot(ball.vx, ball.vy);
+    if (newSpeed > 0 && newSpeed < MIN_SPEED) {
         ball.vx = 0;
         ball.vy = 0;
     }
@@ -31,10 +38,19 @@ export function resolveCollision(b1, b2) {
     const nx = dx / dist;
     const ny = dy / dist;
     const overlap = minDist - dist;
-    b1.x -= nx * overlap * 0.5;
-    b1.y -= ny * overlap * 0.5;
-    b2.x += nx * overlap * 0.5;
-    b2.y += ny * overlap * 0.5;
+
+    const v1n = b1.vx * nx + b1.vy * ny;
+    const v2n = b2.vx * nx + b2.vy * ny;
+    const approach1 = Math.max(0, -v1n);
+    const approach2 = Math.max(0, v2n);
+    const approachSum = approach1 + approach2 + 0.001;
+    const share1 = approach1 / approachSum;
+    const share2 = approach2 / approachSum;
+
+    b1.x -= nx * overlap * share1;
+    b1.y -= ny * overlap * share1;
+    b2.x += nx * overlap * share2;
+    b2.y += ny * overlap * share2;
 
     const rvx = b2.vx - b1.vx;
     const rvy = b2.vy - b1.vy;
@@ -46,17 +62,33 @@ export function resolveCollision(b1, b2) {
     b1.vy -= impulse * ny;
     b2.vx += impulse * nx;
     b2.vy += impulse * ny;
+
+    const tx = -ny;
+    const ty = nx;
+    const velT = rvx * tx + rvy * ty;
+    const frictionImpulse = velT * BALL_FRICTION;
+    b1.vx += frictionImpulse * tx * 0.5;
+    b1.vy += frictionImpulse * ty * 0.5;
+    b2.vx -= frictionImpulse * tx * 0.5;
+    b2.vy -= frictionImpulse * ty * 0.5;
 }
 
 export function resolveAllBallCollisions(balls) {
-    for (let pass = 0; pass < 2; pass++) {
+    for (let pass = 0; pass < COLLISION_PASSES; pass++) {
         for (let i = 0; i < balls.length; i++) {
             for (let j = i + 1; j < balls.length; j++) {
-                if (!balls[i].inPocket && !balls[j].inPocket) {
-                    resolveCollision(balls[i], balls[j]);
-                }
+                const a = balls[i];
+                const b = balls[j];
+                if (a.inPocket || b.inPocket || a.isPocketing() || b.isPocketing()) continue;
+                resolveCollision(a, b);
             }
         }
+    }
+}
+
+export function updatePocketAnimations(balls) {
+    for (const ball of balls) {
+        ball.updatePocketFall(balls);
     }
 }
 
@@ -65,7 +97,9 @@ export function stepPhysics(balls) {
 
     for (let step = 0; step < PHYSICS_SUBSTEPS; step++) {
         for (const ball of balls) {
-            if (ball.inPocket) continue;
+            if (ball.inPocket || ball.isPocketing()) continue;
+            ball.px = ball.x;
+            ball.py = ball.y;
             ball.x += ball.vx * subDt;
             ball.y += ball.vy * subDt;
             ball.advanceRoll(subDt);
@@ -74,19 +108,17 @@ export function stepPhysics(balls) {
         resolveAllBallCollisions(balls);
 
         for (const ball of balls) {
-            if (!ball.inPocket) {
-                resolveBallCushionCollision(ball);
+            if (!ball.inPocket && !ball.isPocketing()) {
+                resolveBallCushionCollision(ball, ball.px, ball.py);
             }
         }
 
         resolveAllBallCollisions(balls);
 
         for (const ball of balls) {
+            if (ball.inPocket || ball.isPocketing()) continue;
             applyRollingFriction(ball, subDt);
-            if (ball.inPocket) continue;
-            if (tryPocketBall(ball) && ball.isCueBall) {
-                setTimeout(() => ball.respotCueBall(balls), 600);
-            }
+            tryPocketBall(ball);
         }
     }
 }

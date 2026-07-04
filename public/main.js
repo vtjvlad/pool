@@ -10,7 +10,7 @@ import {
 } from './constants.js';
 import { Ball } from './ball.js';
 import { createRack } from './game_logic.js';
-import { stepPhysics } from './physics_engine.js';
+import { stepPhysics, updatePocketAnimations } from './physics_engine.js';
 import { predictCueTrajectory } from './physics.js';
 import { drawTable } from './drawing_table.js';
 import { drawCueStick, drawTrajectory } from './drawing_cue.js';
@@ -78,7 +78,7 @@ function powerFromClientY(clientY) {
 }
 
 function canShowCue() {
-    return cueBall && !cueBall.inPocket && !cueBall.isMoving() && !strikeAnim;
+    return cueBall && !cueBall.inPocket && !cueBall.isPocketing() && !cueBall.isMoving() && !strikeAnim;
 }
 
 function canPullPower() {
@@ -179,6 +179,7 @@ function update() {
     updateImpactFlash();
 
     stepPhysics(balls);
+    updatePocketAnimations(balls);
 
     balls.forEach(ball => {
         if (ball.inPocket && !ball.isCueBall && !scoredBalls.has(ball)) {
@@ -197,7 +198,12 @@ function update() {
 
 function draw() {
     drawTable(ctx);
-    balls.forEach(ball => ball.draw(ctx));
+    balls.forEach(ball => {
+        if (!ball.isPocketing()) ball.draw(ctx);
+    });
+    balls.forEach(ball => {
+        if (ball.isPocketing()) ball.draw(ctx);
+    });
     drawImpactFlash();
 
     if (strikeAnim) {

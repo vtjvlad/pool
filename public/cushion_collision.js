@@ -24,7 +24,7 @@ function edgeNormal(line) {
     return { nx, ny };
 }
 
-function getCollisionEdges() {
+function buildCollisionEdges() {
     const withNormals = line => {
         const { nx, ny } = edgeNormal(line);
         return { ...line, nx, ny };
@@ -34,6 +34,15 @@ function getCollisionEdges() {
         ...getRubberCollisionEdges().map(withNormals),
         ...getCushionInnerEdges().map(withNormals)
     ];
+}
+
+let cachedCollisionEdges = null;
+
+function getCollisionEdges() {
+    if (!cachedCollisionEdges) {
+        cachedCollisionEdges = buildCollisionEdges();
+    }
+    return cachedCollisionEdges;
 }
 
 function circleSegmentCollision(bx, by, radius, line) {
@@ -69,16 +78,7 @@ function circleSegmentCollision(bx, by, radius, line) {
     };
 }
 
-export function resolveBallCushionCollision(ball) {
-    if (ball.inPocket) return;
-
-    const edges = getCollisionEdges();
-    let bx = ball.x;
-    let by = ball.y;
-    let vx = ball.vx;
-    let vy = ball.vy;
-    const r = ball.radius;
-
+function resolveAtPosition(bx, by, vx, vy, r, edges) {
     for (let iter = 0; iter < 5; iter++) {
         let best = null;
 
@@ -109,6 +109,35 @@ export function resolveBallCushionCollision(ball) {
             vx -= vTan * CUSHION_FRICTION * tx;
             vy -= vTan * CUSHION_FRICTION * ty;
         }
+    }
+
+    return { bx, by, vx, vy };
+}
+
+export function resolveBallCushionCollision(ball, prevX, prevY) {
+    if (ball.inPocket) return;
+
+    const edges = getCollisionEdges();
+    const r = ball.radius;
+    const endX = ball.x;
+    const endY = ball.y;
+    let bx = endX;
+    let by = endY;
+    let vx = ball.vx;
+    let vy = ball.vy;
+
+    const travel = Math.hypot(endX - prevX, endY - prevY);
+    const samples = Math.max(1, Math.ceil(travel / (r * 0.3)));
+
+    for (let i = 0; i <= samples; i++) {
+        const t = i / samples;
+        const sx = prevX + (endX - prevX) * t;
+        const sy = prevY + (endY - prevY) * t;
+        const result = resolveAtPosition(sx, sy, vx, vy, r, edges);
+        bx = result.bx;
+        by = result.by;
+        vx = result.vx;
+        vy = result.vy;
     }
 
     ball.x = bx;
