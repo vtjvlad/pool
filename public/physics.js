@@ -12,10 +12,7 @@ import {
     CANVAS_WIDTH,
     CANVAS_HEIGHT
 } from './constants.js';
-import { 
-    getPlayArea, 
-    nearPocketOnWall 
-} from './utils.js';
+import { rayCushionHit } from './cushion_physics.js';
 
 export function drawCueStick(ctx, tipX, tipY, angle) {
     ctx.save();
@@ -57,41 +54,11 @@ export function rayCircleHit(ox, oy, dx, dy, cx, cy, hitRadius) {
 }
 
 export function rayWallHit(ox, oy, dx, dy, radius) {
-    const play = getPlayArea();
-    let bestT = Infinity;
-    let wall = null;
-
-    const consider = (t, wallName, valid) => {
-        if (t > 0 && valid && t < bestT) {
-            bestT = t;
-            wall = wallName;
-        }
-    };
-
-    if (dx < -0.0001) {
-        const t = (play.left + radius - ox) / dx;
-        const hitX = ox + dx * t;
-        const hitY = oy + dy * t;
-        consider(t, 'left', hitY >= play.top + radius && hitY <= play.bottom - radius && !nearPocketOnWall(hitX, hitY, 'left'));
-    } else if (dx > 0.0001) {
-        const t = (play.right - radius - ox) / dx;
-        const hitX = ox + dx * t;
-        const hitY = oy + dy * t;
-        consider(t, 'right', hitY >= play.top + radius && hitY <= play.bottom - radius && !nearPocketOnWall(hitX, hitY, 'right'));
+    const cushionHit = rayCushionHit(ox, oy, dx, dy, radius);
+    if (cushionHit) {
+        return { t: cushionHit.t, wall: 'cushion', nx: cushionHit.nx, ny: cushionHit.ny };
     }
-    if (dy < -0.0001) {
-        const t = (play.top + radius - oy) / dy;
-        const hitX = ox + dx * t;
-        const hitY = oy + dy * t;
-        consider(t, 'top', hitX >= play.left + radius && hitX <= play.right - radius && !nearPocketOnWall(hitX, hitY, 'top'));
-    } else if (dy > 0.0001) {
-        const t = (play.bottom - radius - oy) / dy;
-        const hitX = ox + dx * t;
-        const hitY = oy + dy * t;
-        consider(t, 'bottom', hitX >= play.left + radius && hitX <= play.right - radius && !nearPocketOnWall(hitX, hitY, 'bottom'));
-    }
-
-    return bestT === Infinity ? null : { t: bestT, wall };
+    return null;
 }
 
 export function predictCueTrajectory(angle, cueBall, balls) {
@@ -135,8 +102,14 @@ export function predictCueTrajectory(angle, cueBall, balls) {
     let hasTargetLine = false;
 
     if (hitType === 'wall' && hitWall) {
-        bounceDx = hitWall === 'left' || hitWall === 'right' ? -dx : dx;
-        bounceDy = hitWall === 'top' || hitWall === 'bottom' ? -dy : dy;
+        if (wallHit && wallHit.nx != null) {
+            const dot = dx * wallHit.nx + dy * wallHit.ny;
+            bounceDx = dx - 2 * dot * wallHit.nx;
+            bounceDy = dy - 2 * dot * wallHit.ny;
+        } else {
+            bounceDx = hitWall === 'left' || hitWall === 'right' ? -dx : dx;
+            bounceDy = hitWall === 'top' || hitWall === 'bottom' ? -dy : dy;
+        }
         hasBounce = true;
     } else if (hitType === 'ball' && hitBall) {
         const nx = hitBall.x - contactX;

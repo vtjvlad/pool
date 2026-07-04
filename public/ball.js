@@ -1,19 +1,15 @@
 import { 
-    BALL_RADIUS, 
+    BALL_RADIUS,
     FRICTION, 
-    MIN_SPEED, 
-    CUSHION_RESTITUTION 
+    MIN_SPEED
 } from './constants.js';
 import { 
-    getPlayArea, 
-    nearPocketOnWall, 
     getHeadSpot,
-    getPockets,
-    isInPocketThroat,
     tryPocketBall,
     lighten,
     darken
 } from './utils.js';
+import { resolveBallCushions } from './cushion_physics.js';
 
 export class Ball {
     constructor(x, y, options = {}) {
@@ -108,52 +104,14 @@ export class Ball {
         if (Math.abs(this.vx) < MIN_SPEED) this.vx = 0;
         if (Math.abs(this.vy) < MIN_SPEED) this.vy = 0;
 
-        const play = getPlayArea();
-
         if (tryPocketBall(this, () => this.respotCueBall(balls))) return;
 
-        if (this.x - this.radius < play.left) {
-            if (!nearPocketOnWall(this.x, this.y, 'left')) {
-                this.x = play.left + this.radius;
-                this.vx = -this.vx * CUSHION_RESTITUTION;
-            }
-        } else if (this.x + this.radius > play.right) {
-            if (!nearPocketOnWall(this.x, this.y, 'right')) {
-                this.x = play.right - this.radius;
-                this.vx = -this.vx * CUSHION_RESTITUTION;
-            }
-        }
-
-        if (this.y - this.radius < play.top) {
-            if (!nearPocketOnWall(this.x, this.y, 'top')) {
-                this.y = play.top + this.radius;
-                this.vy = -this.vy * CUSHION_RESTITUTION;
-            }
-        } else if (this.y + this.radius > play.bottom) {
-            if (!nearPocketOnWall(this.x, this.y, 'bottom')) {
-                this.y = play.bottom - this.radius;
-                this.vy = -this.vy * CUSHION_RESTITUTION;
-            }
-        }
+        resolveBallCushions(this);
 
         if (tryPocketBall(this, () => this.respotCueBall(balls))) return;
-
-        const outside =
-            this.x - this.radius < play.left ||
-            this.x + this.radius > play.right ||
-            this.y - this.radius < play.top ||
-            this.y + this.radius > play.bottom;
-
-        if (outside && !getPockets().some(p => isInPocketThroat(this.x, this.y, p))) {
-            if (this.x - this.radius < play.left) this.x = play.left + this.radius;
-            if (this.x + this.radius > play.right) this.x = play.right - this.radius;
-            if (this.y - this.radius < play.top) this.y = play.top + this.radius;
-            if (this.y + this.radius > play.bottom) this.y = play.bottom - this.radius;
-        }
     }
 
     respotCueBall(balls) {
-        const play = getPlayArea();
         const spot = getHeadSpot();
         this.inPocket = false;
         this.x = spot.x;
@@ -167,7 +125,7 @@ export class Ball {
             const dy = ball.y - this.y;
             const dist = Math.hypot(dx, dy);
             if (dist < this.radius + ball.radius + 2) {
-                this.x = play.left + play.width * 0.18;
+                this.x = spot.x - this.radius * 4;
                 this.y = spot.y;
                 break;
             }

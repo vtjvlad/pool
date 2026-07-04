@@ -19,8 +19,10 @@ import {
     traceFeltPocketCut,
     tracePlaySurface,
     getCushionFacing,
-    getCornerCushionFacings
-} from './table_surface.js';
+    getCornerCushionFacings,
+    getCushionCollisionSegments
+} from './table_geometry.js';
+import { getTableMarkings } from './table_graphics.js';
 
 export {
     getPlayArea,
@@ -36,7 +38,8 @@ export {
     traceFeltPocketCut,
     tracePlaySurface,
     getCushionFacing,
-    getCornerCushionFacings
+    getCornerCushionFacings,
+    getCushionCollisionSegments
 };
 
 export function pocketDistance(x, y, pocket) {
@@ -111,13 +114,11 @@ export function tryPocketBall(ball, onCueRespotted) {
 }
 
 export function getHeadSpot() {
-    const play = getPlayArea();
-    return { x: play.left + play.width * 0.25, y: play.top + play.height / 2 };
+    return getTableMarkings().headSpot;
 }
 
 export function getFootSpot() {
-    const play = getPlayArea();
-    return { x: play.left + play.width * 0.75, y: play.top + play.height / 2 };
+    return getTableMarkings().footSpot;
 }
 
 export function lighten(hex, amount) {

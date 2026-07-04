@@ -1,4 +1,4 @@
-import { BALL_RADIUS, CUE_LENGTH, CUE_WIDTH } from './constants.js';
+import { BALL_RADIUS, CUE_LENGTH, CUE_WIDTH, COLORS } from './constants.js';
 
 export function drawCueStick(ctx, tipX, tipY, angle) {
     ctx.save();
@@ -9,9 +9,9 @@ export function drawCueStick(ctx, tipX, tipY, angle) {
     ctx.fillRect(2, -CUE_WIDTH / 2 + 2, CUE_LENGTH, CUE_WIDTH);
 
     const bodyGrad = ctx.createLinearGradient(0, -CUE_WIDTH / 2, 0, CUE_WIDTH / 2);
-    bodyGrad.addColorStop(0, '#deb887');
+    bodyGrad.addColorStop(0, COLORS.cueStick);
     bodyGrad.addColorStop(0.5, '#f5deb3');
-    bodyGrad.addColorStop(1, '#a0724a');
+    bodyGrad.addColorStop(1, COLORS.cueStickDark);
     ctx.fillStyle = bodyGrad;
     ctx.fillRect(0, -CUE_WIDTH / 2, CUE_LENGTH, CUE_WIDTH);
 
@@ -32,14 +32,14 @@ export function drawTrajectory(ctx, angle, cueBall, aimX, aimY, path) {
     ctx.beginPath();
     ctx.moveTo(startX, startY);
     ctx.lineTo(path.contactX, path.contactY);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.92)';
+    ctx.strokeStyle = COLORS.aimLine;
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
     ctx.beginPath();
     ctx.moveTo(path.contactX, path.contactY);
     ctx.lineTo(path.endX, path.endY);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.strokeStyle = COLORS.aimLineGhost;
     ctx.lineWidth = 1;
     ctx.setLineDash([4, 5]);
     ctx.stroke();
