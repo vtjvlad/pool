@@ -1,6 +1,7 @@
 import { POCKET_LAYOUT_RADIUS, CUSHION_DEPTH, CUSHION_POCKET_GAP, CORNER_CUSHION_POCKET_GAP, CENTRAL_CUSHION_POCKET_GAP, CUSHION_CHAMFER, RUBBER_CENTER_CHAMFER_ANGLE, RUBBER_CORNER_CHAMFER_ANGLE, COLORS } from './constants.js';
 import { getPlayArea, getLayoutPockets } from './utils.js';
 import { fillWoodTexture } from './wood_texture.js';
+import { fillMetalTexture, metalShadeGradient } from './metal_texture.js';
 
 /** Пары соседних луз на каждой стороне стола — один сегмент борта между ними. */
 const CUSHION_CHAINS = {
@@ -67,7 +68,7 @@ function verticalSegment(side, pocketA, pocketB, play) {
     };
 }
 
-/** Деревянная рамка в углах за лузами — только отрисовка, без физики и резины. */
+/** Металлическая рамка в углах за лузами — только отрисовка, без физики и резины. */
 function cornerBehindSegments(play) {
     const pockets = pocketById();
     const gap = pocketId => POCKET_LAYOUT_RADIUS + pocketEndGap(pocketId);
@@ -594,10 +595,95 @@ function drawWedgeList(ctx, wedges) {
     }
 }
 
-/** Деревянная рамка в углах — поверх сукна, без физики и резины. */
+function cornerIdFromSegment(segment) {
+    const id = segment.pocketIds?.[0];
+    if (id === 'tl' || id === 'tr' || id === 'bl' || id === 'br') return id;
+    return 'tl';
+}
+
+function drawCornerSegmentBody(ctx, segment) {
+    const { x, y, width, height, side } = segment;
+    const isHorizontal = side === 'top' || side === 'bottom';
+    const cornerId = cornerIdFromSegment(segment);
+
+    ctx.save();
+    ctx.beginPath();
+    traceSegmentOutline(ctx, segment);
+    ctx.clip();
+
+    ctx.fillStyle = metalShadeGradient(ctx, x, y, width, height, cornerId);
+    ctx.fillRect(x, y, width, height);
+
+    ctx.globalAlpha = 0.88;
+    fillMetalTexture(ctx, x, y, width, height, isHorizontal);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+}
+
+function drawCornerSegmentInnerEdge(ctx, segment) {
+    ctx.save();
+    ctx.strokeStyle = COLORS.metalEdge;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    traceInnerEdge(ctx, segment);
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawCornerSegmentList(ctx, segments) {
+    for (const segment of segments) {
+        if (segment.width <= 0 || segment.height <= 0) continue;
+        drawCornerSegmentBody(ctx, segment);
+        drawCornerSegmentInnerEdge(ctx, segment);
+    }
+}
+
+function drawCornerWedgeBody(ctx, wedge) {
+    const { points, corner } = wedge;
+    const { x, y, width, height } = wedgeBounds(points);
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+    }
+    ctx.closePath();
+    ctx.clip();
+
+    ctx.fillStyle = metalShadeGradient(ctx, x, y, width, height, corner);
+    ctx.fillRect(x, y, width, height);
+
+    ctx.globalAlpha = 0.88;
+    fillMetalTexture(ctx, x, y, width, height, true);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+}
+
+function drawCornerWedgeInnerEdge(ctx, wedge) {
+    const a = wedge.points[1];
+    const b = wedge.points[2];
+    ctx.save();
+    ctx.strokeStyle = COLORS.metalShadow;
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+    ctx.restore();
+}
+
+function drawCornerWedgeList(ctx, wedges) {
+    for (const wedge of wedges) {
+        drawCornerWedgeBody(ctx, wedge);
+        drawCornerWedgeInnerEdge(ctx, wedge);
+    }
+}
+
+/** Псевдо-борт в углах — металл, без физики и резины. */
 export function drawCornerBehindSegments(ctx) {
-    drawSegmentList(ctx, getCornerBehindSegments());
-    drawWedgeList(ctx, getCornerBehindWedges());
+    drawCornerSegmentList(ctx, getCornerBehindSegments());
+    drawCornerWedgeList(ctx, getCornerBehindWedges());
 }
 
 export function drawCushionSegments(ctx) {

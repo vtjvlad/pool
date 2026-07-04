@@ -15,7 +15,7 @@ export const CENTRAL_CUSHION_POCKET_GAP = POCKET_LAYOUT_DIAMETER / 5;
 export const CUSHION_CHAMFER = POCKET_LAYOUT_DIAMETER / 4;
 export const MID_POCKET_INSET = (POCKET_INSET - POCKET_LAYOUT_DIAMETER / 4) * 0.7;
 export const POCKET_CENTER_SHIFT = 0;
-export const CORNER_POCKET_CENTER_SHIFT = POCKET_INSET * 0.15;
+export const CORNER_POCKET_CENTER_SHIFT = POCKET_INSET * 0.24;
 export const CUSHION_DEPTH = Math.max(16 + POCKET_LAYOUT_DIAMETER / 4, POCKET_INSET + POCKET_LAYOUT_RADIUS) * 0.75 * 0.75 * 1.1;
 export const PLAY_SURFACE_INSET = POCKET_LAYOUT_DIAMETER / 4;
 export const RUBBER_THICKNESS = BALL_RADIUS * 2 * 0.75 * 1.1;
@@ -55,7 +55,12 @@ export const COLORS = {
     rubberDark: '#0b452d',
     rubberLight: '#1f8f5e',
     rubberHighlight: 'rgba(255, 255, 255, 0.14)',
-    rubberShadow: 'rgba(0, 0, 0, 0.22)'
+    rubberShadow: 'rgba(0, 0, 0, 0.22)',
+    metalBase: '#adb4bf',
+    metalLight: '#e8ecf2',
+    metalDark: '#636b78',
+    metalEdge: 'rgba(255, 255, 255, 0.38)',
+    metalShadow: 'rgba(18, 22, 30, 0.42)'
 };
 
 export const CUE_LENGTH = 300;
