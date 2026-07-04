@@ -235,6 +235,53 @@ function innerEdgeLinesForSegment(segment) {
     return lines;
 }
 
+function rubberEdgeLinesForSegment(segment) {
+    const { x, y, width, height, side, chamferStart, chamferEnd } = segment;
+    const c = chamferSize(segment);
+    const w = width;
+    const h = height;
+
+    if (side === 'top') {
+        return [{
+            x1: chamferStart ? x + c : x,
+            y1: y + h,
+            x2: chamferEnd ? x + w - c : x + w,
+            y2: y + h
+        }];
+    }
+    if (side === 'bottom') {
+        return [{
+            x1: chamferStart ? x + c : x,
+            y1: y,
+            x2: chamferEnd ? x + w - c : x + w,
+            y2: y
+        }];
+    }
+    if (side === 'left') {
+        return [{
+            x1: x + w,
+            y1: chamferStart ? y + c : y,
+            x2: x + w,
+            y2: chamferEnd ? y + h - c : y + h
+        }];
+    }
+    return [{
+        x1: x,
+        y1: chamferStart ? y + c : y,
+        x2: x,
+        y2: chamferEnd ? y + h - c : y + h
+    }];
+}
+
+export function getRubberInnerEdges() {
+    const lines = [];
+    for (const segment of getCushionSegments()) {
+        if (segment.width <= 0 || segment.height <= 0) continue;
+        lines.push(...rubberEdgeLinesForSegment(segment));
+    }
+    return lines;
+}
+
 export function getCushionInnerEdges() {
     const lines = [];
     for (const segment of getCushionSegments()) {

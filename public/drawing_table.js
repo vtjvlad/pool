@@ -1,5 +1,6 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, COLORS, POCKET_RADIUS, CUSHION_DEPTH, POCKET_MAGNET_RADIUS, DEBUG_DRAW_POCKET_MAGNET } from './constants.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, COLORS, POCKET_RADIUS, CUSHION_DEPTH, POCKET_MAGNET_RADIUS, DEBUG_DRAW_POCKET_MAGNET, DEBUG_DRAW_RUBBER } from './constants.js';
 import { drawCushionSegments } from './cushions.js';
+import { drawRubberGums } from './cushion_rubber.js';
 import { getHeadSpot, getFootSpot, getPockets } from './utils.js';
 
 function drawPocketCavity(ctx, x, y) {
@@ -48,6 +49,9 @@ export function drawTable(ctx) {
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     drawCushionSegments(ctx);
+    if (DEBUG_DRAW_RUBBER) {
+        drawRubberGums(ctx);
+    }
 
     ctx.save();
     ctx.globalCompositeOperation = 'destination-out';

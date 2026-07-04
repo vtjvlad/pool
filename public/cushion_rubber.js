@@ -1,0 +1,78 @@
+import {
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT,
+    RUBBER_THICKNESS,
+    COLORS
+} from './constants.js';
+import { getRubberInnerEdges } from './cushions.js';
+
+const PLAY_CENTER_X = CANVAS_WIDTH / 2;
+const PLAY_CENTER_Y = CANVAS_HEIGHT / 2;
+
+function edgeNormal(x1, y1, x2, y2) {
+    const mx = (x1 + x2) / 2;
+    const my = (y1 + y2) / 2;
+    const edx = x2 - x1;
+    const edy = y2 - y1;
+    let nx = -edy;
+    let ny = edx;
+    const len = Math.hypot(nx, ny) || 1;
+    nx /= len;
+    ny /= len;
+
+    if ((PLAY_CENTER_X - mx) * nx + (PLAY_CENTER_Y - my) * ny < 0) {
+        nx = -nx;
+        ny = -ny;
+    }
+
+    return { nx, ny };
+}
+
+function drawRubberStrip(ctx, line) {
+    const { nx, ny } = edgeNormal(line.x1, line.y1, line.x2, line.y2);
+    const t = RUBBER_THICKNESS;
+    const { x1, y1, x2, y2 } = line;
+
+    const ix1 = x1 + nx * t;
+    const iy1 = y1 + ny * t;
+    const ix2 = x2 + nx * t;
+    const iy2 = y2 + ny * t;
+
+    const grad = ctx.createLinearGradient(x1, y1, ix1, iy1);
+    grad.addColorStop(0, COLORS.rubberDark);
+    grad.addColorStop(0.35, COLORS.rubber);
+    grad.addColorStop(1, COLORS.rubberLight);
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(ix2, iy2);
+    ctx.lineTo(ix1, iy1);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(ix1, iy1);
+    ctx.lineTo(ix2, iy2);
+    ctx.strokeStyle = COLORS.rubberHighlight;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = COLORS.rubberShadow;
+    ctx.lineWidth = 0.75;
+    ctx.stroke();
+}
+
+export function drawRubberGums(ctx) {
+    ctx.save();
+    for (const line of getRubberInnerEdges()) {
+        const len = Math.hypot(line.x2 - line.x1, line.y2 - line.y1);
+        if (len < 0.5) continue;
+        drawRubberStrip(ctx, line);
+    }
+    ctx.restore();
+}
