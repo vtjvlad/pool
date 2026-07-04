@@ -1,5 +1,6 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT, CUSHION_RESTITUTION } from './constants.js';
 import { getCushionInnerEdges } from './cushions.js';
+import { getRubberCollisionEdges } from './cushion_rubber.js';
 
 const PLAY_CENTER_X = CANVAS_WIDTH / 2;
 const PLAY_CENTER_Y = CANVAS_HEIGHT / 2;
@@ -24,10 +25,15 @@ function edgeNormal(line) {
 }
 
 function getCollisionEdges() {
-    return getCushionInnerEdges().map(line => {
+    const withNormals = line => {
         const { nx, ny } = edgeNormal(line);
         return { ...line, nx, ny };
-    });
+    };
+
+    return [
+        ...getRubberCollisionEdges().map(withNormals),
+        ...getCushionInnerEdges().map(withNormals)
+    ];
 }
 
 function circleSegmentCollision(bx, by, radius, line) {

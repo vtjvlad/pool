@@ -1,4 +1,4 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, BALL_RADIUS, POCKET_RADIUS, POCKET_MAGNET_RADIUS, POCKET_INSET, MID_POCKET_INSET, POCKET_CENTER_SHIFT, POCKET_MAGNET, PLAY_SURFACE_INSET } from './constants.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, BALL_RADIUS, POCKET_RADIUS, POCKET_MAGNET_RADIUS, POCKET_INSET, MID_POCKET_INSET, POCKET_CENTER_SHIFT, CORNER_POCKET_CENTER_SHIFT, POCKET_MAGNET, PLAY_SURFACE_INSET } from './constants.js';
 
 export function getPlayArea() {
     return {
@@ -22,10 +22,10 @@ export function getPlaySurface() {
     };
 }
 
-export function getPockets() {
+function buildPockets(cornerShift = 0) {
     const play = getPlayArea();
     const mx = play.left + play.width / 2;
-    const cornerInset = POCKET_INSET + POCKET_CENTER_SHIFT;
+    const cornerInset = POCKET_INSET + POCKET_CENTER_SHIFT + cornerShift;
     const midInset = MID_POCKET_INSET + POCKET_CENTER_SHIFT;
     return [
         { id: 'tl', x: play.left + cornerInset, y: play.top + cornerInset, wall: 'left' },
@@ -35,6 +35,15 @@ export function getPockets() {
         { id: 'bm', x: mx, y: play.bottom - midInset, wall: 'bottom' },
         { id: 'br', x: play.right - cornerInset, y: play.bottom - cornerInset, wall: 'right' }
     ];
+}
+
+/** Позиции луз для геометрии бортов — без сдвига угловых луз к центру. */
+export function getLayoutPockets() {
+    return buildPockets(0);
+}
+
+export function getPockets() {
+    return buildPockets(CORNER_POCKET_CENTER_SHIFT);
 }
 
 function pocketAffectsWall(pocket, wall) {

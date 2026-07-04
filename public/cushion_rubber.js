@@ -30,6 +30,49 @@ function chamferRunAlongEdge(thickness, angleDeg) {
     return thickness / Math.tan(angleDeg * Math.PI / 180);
 }
 
+function rubberCollisionLinesFrom(line) {
+    const { nx, ny, tx, ty } = edgeNormal(line.x1, line.y1, line.x2, line.y2);
+    const t = RUBBER_THICKNESS;
+    const { x1, y1, x2, y2, chamferStartAngle, chamferEndAngle } = line;
+    const ix1 = x1 + nx * t;
+    const iy1 = y1 + ny * t;
+    const ix2 = x2 + nx * t;
+    const iy2 = y2 + ny * t;
+    const lines = [];
+
+    let ox1 = ix1;
+    let oy1 = iy1;
+    let ox2 = ix2;
+    let oy2 = iy2;
+
+    if (chamferEndAngle != null) {
+        const runEnd = chamferRunAlongEdge(t, chamferEndAngle);
+        ox2 = ix2 - tx * runEnd;
+        oy2 = iy2 - ty * runEnd;
+        lines.push({ x1: x2, y1: y2, x2: ox2, y2: oy2 });
+    }
+
+    if (chamferStartAngle != null) {
+        const runStart = chamferRunAlongEdge(t, chamferStartAngle);
+        ox1 = ix1 + tx * runStart;
+        oy1 = iy1 + ty * runStart;
+        lines.push({ x1: ox1, y1: oy1, x2: x1, y2: y1 });
+    }
+
+    lines.push({ x1: ox1, y1: oy1, x2: ox2, y2: oy2 });
+    return lines;
+}
+
+export function getRubberCollisionEdges() {
+    const lines = [];
+    for (const line of getRubberInnerEdges()) {
+        const len = Math.hypot(line.x2 - line.x1, line.y2 - line.y1);
+        if (len < 0.5) continue;
+        lines.push(...rubberCollisionLinesFrom(line));
+    }
+    return lines;
+}
+
 function drawRubberStrip(ctx, line) {
     const { nx, ny, tx, ty } = edgeNormal(line.x1, line.y1, line.x2, line.y2);
     const t = RUBBER_THICKNESS;

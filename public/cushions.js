@@ -1,5 +1,5 @@
-import { POCKET_LAYOUT_RADIUS, CUSHION_DEPTH, CUSHION_POCKET_GAP, CORNER_CUSHION_POCKET_GAP, CUSHION_CHAMFER, RUBBER_CENTER_CHAMFER_ANGLE, RUBBER_CORNER_CHAMFER_ANGLE, COLORS } from './constants.js';
-import { getPlayArea, getPockets } from './utils.js';
+import { POCKET_LAYOUT_RADIUS, CUSHION_DEPTH, CUSHION_POCKET_GAP, CORNER_CUSHION_POCKET_GAP, CENTRAL_CUSHION_POCKET_GAP, CUSHION_CHAMFER, RUBBER_CENTER_CHAMFER_ANGLE, RUBBER_CORNER_CHAMFER_ANGLE, COLORS } from './constants.js';
+import { getPlayArea, getLayoutPockets } from './utils.js';
 import { fillWoodTexture } from './wood_texture.js';
 
 /** Пары соседних луз на каждой стороне стола — один сегмент борта между ними. */
@@ -11,17 +11,24 @@ const CUSHION_CHAINS = {
 };
 
 const CORNER_POCKETS = new Set(['tl', 'tr', 'bl', 'br']);
+const CENTRAL_POCKETS = new Set(['tm', 'bm']);
 
 function pocketById() {
-    return Object.fromEntries(getPockets().map(pocket => [pocket.id, pocket]));
+    return Object.fromEntries(getLayoutPockets().map(pocket => [pocket.id, pocket]));
 }
 
 function isCornerPocket(id) {
     return CORNER_POCKETS.has(id);
 }
 
+function isCentralPocket(id) {
+    return CENTRAL_POCKETS.has(id);
+}
+
 function pocketEndGap(pocketId) {
-    return isCornerPocket(pocketId) ? CORNER_CUSHION_POCKET_GAP : CUSHION_POCKET_GAP;
+    if (isCornerPocket(pocketId)) return CORNER_CUSHION_POCKET_GAP;
+    if (isCentralPocket(pocketId)) return CENTRAL_CUSHION_POCKET_GAP;
+    return CUSHION_POCKET_GAP;
 }
 
 function horizontalSegment(side, pocketA, pocketB, play) {
@@ -237,12 +244,6 @@ function innerEdgeLinesForSegment(segment) {
     }
 
     return lines;
-}
-
-const CENTRAL_POCKETS = new Set(['tm', 'bm']);
-
-function isCentralPocket(id) {
-    return CENTRAL_POCKETS.has(id);
 }
 
 function pocketRubberChamferAngle(pocketId) {
