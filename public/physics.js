@@ -6,7 +6,7 @@ import {
     CANVAS_WIDTH,
     CANVAS_HEIGHT
 } from './constants.js';
-import { getPlayArea, nearPocketOnWall } from './utils.js';
+import { rayCushionHit } from './cushion_collision.js';
 
 export function rayCircleHit(ox, oy, dx, dy, cx, cy, hitRadius) {
     const fx = ox - cx;
@@ -24,41 +24,20 @@ export function rayCircleHit(ox, oy, dx, dy, cx, cy, hitRadius) {
 }
 
 export function rayWallHit(ox, oy, dx, dy, radius) {
-    const play = getPlayArea();
-    let bestT = Infinity;
-    let wall = null;
+    const hit = rayCushionHit(ox, oy, dx, dy, radius);
+    if (!hit) return null;
 
-    const consider = (t, wallName, valid) => {
-        if (t > 0 && valid && t < bestT) {
-            bestT = t;
-            wall = wallName;
-        }
-    };
+    const absNx = Math.abs(hit.nx);
+    const absNy = Math.abs(hit.ny);
+    let wall;
 
-    if (dx < -0.0001) {
-        const t = (play.left + radius - ox) / dx;
-        const hitX = ox + dx * t;
-        const hitY = oy + dy * t;
-        consider(t, 'left', hitY >= play.top + radius && hitY <= play.bottom - radius && !nearPocketOnWall(hitX, hitY, 'left'));
-    } else if (dx > 0.0001) {
-        const t = (play.right - radius - ox) / dx;
-        const hitX = ox + dx * t;
-        const hitY = oy + dy * t;
-        consider(t, 'right', hitY >= play.top + radius && hitY <= play.bottom - radius && !nearPocketOnWall(hitX, hitY, 'right'));
-    }
-    if (dy < -0.0001) {
-        const t = (play.top + radius - oy) / dy;
-        const hitX = ox + dx * t;
-        const hitY = oy + dy * t;
-        consider(t, 'top', hitX >= play.left + radius && hitX <= play.right - radius && !nearPocketOnWall(hitX, hitY, 'top'));
-    } else if (dy > 0.0001) {
-        const t = (play.bottom - radius - oy) / dy;
-        const hitX = ox + dx * t;
-        const hitY = oy + dy * t;
-        consider(t, 'bottom', hitX >= play.left + radius && hitX <= play.right - radius && !nearPocketOnWall(hitX, hitY, 'bottom'));
+    if (absNy > absNx) {
+        wall = hit.ny > 0 ? 'top' : 'bottom';
+    } else {
+        wall = hit.nx > 0 ? 'left' : 'right';
     }
 
-    return bestT === Infinity ? null : { t: bestT, wall };
+    return { t: hit.t, wall, nx: hit.nx, ny: hit.ny };
 }
 
 export function predictCueTrajectory(angle, cueBall, balls) {
@@ -71,6 +50,8 @@ export function predictCueTrajectory(angle, cueBall, balls) {
     let hitT = wallHit ? wallHit.t : null;
     let hitType = wallHit ? 'wall' : null;
     let hitWall = wallHit ? wallHit.wall : null;
+    let hitWallNx = wallHit ? wallHit.nx : 0;
+    let hitWallNy = wallHit ? wallHit.ny : 0;
     let hitBall = null;
 
     for (const ball of balls) {
@@ -102,8 +83,9 @@ export function predictCueTrajectory(angle, cueBall, balls) {
     let hasTargetLine = false;
 
     if (hitType === 'wall' && hitWall) {
-        bounceDx = hitWall === 'left' || hitWall === 'right' ? -dx : dx;
-        bounceDy = hitWall === 'top' || hitWall === 'bottom' ? -dy : dy;
+        const dot = dx * hitWallNx + dy * hitWallNy;
+        bounceDx = dx - 2 * dot * hitWallNx;
+        bounceDy = dy - 2 * dot * hitWallNy;
         hasBounce = true;
     } else if (hitType === 'ball' && hitBall) {
         const nx = hitBall.x - contactX;

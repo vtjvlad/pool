@@ -1,10 +1,10 @@
 import {
     BALL_RADIUS,
     FRICTION,
-    MIN_SPEED,
-    CUSHION_RESTITUTION
+    MIN_SPEED
 } from './constants.js';
-import { getPlayArea, getHeadSpot, tryPocketBall, nearPocketOnWall, lighten, darken } from './utils.js';
+import { getHeadSpot, tryPocketBall, lighten, darken } from './utils.js';
+import { resolveBallCushionCollision } from './cushion_collision.js';
 
 export class Ball {
     constructor(x, y, options = {}) {
@@ -106,31 +106,7 @@ export class Ball {
             return;
         }
 
-        const play = getPlayArea();
-
-        if (this.x - this.radius < play.left) {
-            if (!nearPocketOnWall(this.x, this.y, 'left')) {
-                this.x = play.left + this.radius;
-                this.vx = -this.vx * CUSHION_RESTITUTION;
-            }
-        } else if (this.x + this.radius > play.right) {
-            if (!nearPocketOnWall(this.x, this.y, 'right')) {
-                this.x = play.right - this.radius;
-                this.vx = -this.vx * CUSHION_RESTITUTION;
-            }
-        }
-
-        if (this.y - this.radius < play.top) {
-            if (!nearPocketOnWall(this.x, this.y, 'top')) {
-                this.y = play.top + this.radius;
-                this.vy = -this.vy * CUSHION_RESTITUTION;
-            }
-        } else if (this.y + this.radius > play.bottom) {
-            if (!nearPocketOnWall(this.x, this.y, 'bottom')) {
-                this.y = play.bottom - this.radius;
-                this.vy = -this.vy * CUSHION_RESTITUTION;
-            }
-        }
+        resolveBallCushionCollision(this);
 
         tryPocketBall(this);
     }

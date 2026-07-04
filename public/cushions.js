@@ -82,6 +82,63 @@ function chamferSize(segment) {
     return Math.min(CUSHION_CHAMFER, Math.max(0, limit));
 }
 
+function innerEdgeLinesForSegment(segment) {
+    const { x, y, width, height, side, chamferStart, chamferEnd } = segment;
+    const c = chamferSize(segment);
+    const w = width;
+    const h = height;
+    const lines = [];
+
+    if (side === 'top') {
+        if (chamferStart) lines.push({ x1: x, y1: y + h - c, x2: x + c, y2: y + h });
+        lines.push({
+            x1: chamferStart ? x + c : x,
+            y1: y + h,
+            x2: chamferEnd ? x + w - c : x + w,
+            y2: y + h
+        });
+        if (chamferEnd) lines.push({ x1: x + w - c, y1: y + h, x2: x + w, y2: y + h - c });
+    } else if (side === 'bottom') {
+        if (chamferStart) lines.push({ x1: x, y1: y + c, x2: x + c, y2: y });
+        lines.push({
+            x1: chamferStart ? x + c : x,
+            y1: y,
+            x2: chamferEnd ? x + w - c : x + w,
+            y2: y
+        });
+        if (chamferEnd) lines.push({ x1: x + w - c, y1: y, x2: x + w, y2: y + c });
+    } else if (side === 'left') {
+        if (chamferStart) lines.push({ x1: x + w - c, y1: y, x2: x + w, y2: y + c });
+        lines.push({
+            x1: x + w,
+            y1: chamferStart ? y + c : y,
+            x2: x + w,
+            y2: chamferEnd ? y + h - c : y + h
+        });
+        if (chamferEnd) lines.push({ x1: x + w, y1: y + h - c, x2: x + w - c, y2: y + h });
+    } else {
+        if (chamferStart) lines.push({ x1: x + c, y1: y, x2: x, y2: y + c });
+        lines.push({
+            x1: x,
+            y1: chamferStart ? y + c : y,
+            x2: x,
+            y2: chamferEnd ? y + h - c : y + h
+        });
+        if (chamferEnd) lines.push({ x1: x, y1: y + h - c, x2: x + c, y2: y + h });
+    }
+
+    return lines;
+}
+
+export function getCushionInnerEdges() {
+    const lines = [];
+    for (const segment of getCushionSegments()) {
+        if (segment.width <= 0 || segment.height <= 0) continue;
+        lines.push(...innerEdgeLinesForSegment(segment));
+    }
+    return lines;
+}
+
 function traceSegmentOutline(ctx, segment) {
     const { x, y, width, height, side, chamferStart, chamferEnd } = segment;
     const c = chamferSize(segment);

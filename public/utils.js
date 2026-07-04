@@ -1,4 +1,4 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, BALL_RADIUS, POCKET_RADIUS, POCKET_INSET, MID_POCKET_INSET, POCKET_MAGNET } from './constants.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, BALL_RADIUS, POCKET_RADIUS, POCKET_MAGNET_RADIUS, POCKET_INSET, MID_POCKET_INSET, POCKET_MAGNET } from './constants.js';
 
 export function getPlayArea() {
     return {
@@ -50,7 +50,7 @@ export function tryPocketBall(ball) {
         const dy = pocket.y - ball.y;
         const dist = Math.hypot(dx, dy);
 
-        if (dist < POCKET_RADIUS && dist > 0.5) {
+        if (dist < POCKET_MAGNET_RADIUS && dist > 0.5) {
             const speed = Math.hypot(ball.vx, ball.vy);
             ball.vx += (dx / dist) * POCKET_MAGNET * (1 + speed * 0.05);
             ball.vy += (dy / dist) * POCKET_MAGNET * (1 + speed * 0.05);
