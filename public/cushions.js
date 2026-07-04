@@ -55,6 +55,108 @@ function verticalSegment(side, pocketA, pocketB, play) {
     };
 }
 
+/*
+function cornerBehindSegments(play) {
+    const pockets = pocketById();
+    const gap = POCKET_LAYOUT_RADIUS + CUSHION_POCKET_GAP;
+    const tl = pockets.tl;
+    const tr = pockets.tr;
+    const bl = pockets.bl;
+    const br = pockets.br;
+
+    return [
+        {
+            id: 'cushion-corner-tl-top',
+            side: 'top',
+            pocketIds: ['tl'],
+            x: play.left,
+            y: play.top,
+            width: tl.x + gap - play.left,
+            height: CUSHION_DEPTH,
+            chamferStart: true,
+            chamferEnd: true
+        },
+        {
+            id: 'cushion-corner-tl-left',
+            side: 'left',
+            pocketIds: ['tl'],
+            x: play.left,
+            y: play.top,
+            width: CUSHION_DEPTH,
+            height: tl.y + gap - play.top,
+            chamferStart: true,
+            chamferEnd: true
+        },
+        {
+            id: 'cushion-corner-tr-top',
+            side: 'top',
+            pocketIds: ['tr'],
+            x: tr.x - gap,
+            y: play.top,
+            width: play.right - (tr.x - gap),
+            height: CUSHION_DEPTH,
+            chamferStart: true,
+            chamferEnd: true
+        },
+        {
+            id: 'cushion-corner-tr-right',
+            side: 'right',
+            pocketIds: ['tr'],
+            x: play.right - CUSHION_DEPTH,
+            y: play.top,
+            width: CUSHION_DEPTH,
+            height: tr.y + gap - play.top,
+            chamferStart: true,
+            chamferEnd: true
+        },
+        {
+            id: 'cushion-corner-bl-left',
+            side: 'left',
+            pocketIds: ['bl'],
+            x: play.left,
+            y: bl.y - gap,
+            width: CUSHION_DEPTH,
+            height: play.bottom - (bl.y - gap),
+            chamferStart: true,
+            chamferEnd: true
+        },
+        {
+            id: 'cushion-corner-bl-bottom',
+            side: 'bottom',
+            pocketIds: ['bl'],
+            x: play.left,
+            y: play.bottom - CUSHION_DEPTH,
+            width: bl.x + gap - play.left,
+            height: CUSHION_DEPTH,
+            chamferStart: true,
+            chamferEnd: true
+        },
+        {
+            id: 'cushion-corner-br-bottom',
+            side: 'bottom',
+            pocketIds: ['br'],
+            x: br.x - gap,
+            y: play.bottom - CUSHION_DEPTH,
+            width: play.right - (br.x - gap),
+            height: CUSHION_DEPTH,
+            chamferStart: true,
+            chamferEnd: true
+        },
+        {
+            id: 'cushion-corner-br-right',
+            side: 'right',
+            pocketIds: ['br'],
+            x: play.right - CUSHION_DEPTH,
+            y: br.y - gap,
+            width: CUSHION_DEPTH,
+            height: play.bottom - (br.y - gap),
+            chamferStart: true,
+            chamferEnd: true
+        }
+    ];
+}
+*/
+
 /** @returns {Array<{ id: string, side: string, pocketIds: string[], x: number, y: number, width: number, height: number, chamferStart: boolean, chamferEnd: boolean }>} */
 export function getCushionSegments() {
     const play = getPlayArea();
@@ -73,6 +175,8 @@ export function getCushionSegments() {
     for (const [pocketAId, pocketBId] of CUSHION_CHAINS.right) {
         segments.push(verticalSegment('right', pockets[pocketAId], pockets[pocketBId], play));
     }
+
+    // segments.push(...cornerBehindSegments(play));
 
     return segments;
 }
