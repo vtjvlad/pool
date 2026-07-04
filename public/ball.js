@@ -2,15 +2,15 @@ import {
     BALL_RADIUS, 
     FRICTION, 
     MIN_SPEED, 
-    POCKET_CAPTURE, 
     CUSHION_RESTITUTION 
 } from './constants.js';
 import { 
     getPlayArea, 
-    getPockets, 
-    pocketDistance, 
     nearPocketOnWall, 
     getHeadSpot,
+    getPockets,
+    isInPocketThroat,
+    tryPocketBall,
     lighten,
     darken
 } from './utils.js';
@@ -110,26 +110,7 @@ export class Ball {
 
         const play = getPlayArea();
 
-        for (const pocket of getPockets()) {
-            const dist = pocketDistance(this.x, this.y, pocket);
-
-            if (dist < POCKET_CAPTURE + BALL_RADIUS && dist > 0.5) {
-                const speed = Math.hypot(this.vx, this.vy);
-                const pull = POCKET_MAGNET * (1.2 + speed * 0.06);
-                this.vx += ((pocket.x - this.x) / dist) * pull;
-                this.vy += ((pocket.y - this.y) / dist) * pull;
-            }
-
-            if (dist < POCKET_CAPTURE) {
-                this.inPocket = true;
-                this.vx = 0;
-                this.vy = 0;
-                if (this.isCueBall) {
-                    setTimeout(() => this.respotCueBall(balls), 600);
-                }
-                return;
-            }
-        }
+        if (tryPocketBall(this, () => this.respotCueBall(balls))) return;
 
         if (this.x - this.radius < play.left) {
             if (!nearPocketOnWall(this.x, this.y, 'left')) {
@@ -153,6 +134,21 @@ export class Ball {
                 this.y = play.bottom - this.radius;
                 this.vy = -this.vy * CUSHION_RESTITUTION;
             }
+        }
+
+        if (tryPocketBall(this, () => this.respotCueBall(balls))) return;
+
+        const outside =
+            this.x - this.radius < play.left ||
+            this.x + this.radius > play.right ||
+            this.y - this.radius < play.top ||
+            this.y + this.radius > play.bottom;
+
+        if (outside && !getPockets().some(p => isInPocketThroat(this.x, this.y, p))) {
+            if (this.x - this.radius < play.left) this.x = play.left + this.radius;
+            if (this.x + this.radius > play.right) this.x = play.right - this.radius;
+            if (this.y - this.radius < play.top) this.y = play.top + this.radius;
+            if (this.y + this.radius > play.bottom) this.y = play.bottom - this.radius;
         }
     }
 

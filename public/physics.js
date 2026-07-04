@@ -8,7 +8,9 @@ import {
     IMPACT_FLASH_MS, 
     TRAJECTORY_EXTEND, 
     BOUNCE_PREVIEW_LEN, 
-    MIN_BOUNCE_DRAW 
+    MIN_BOUNCE_DRAW,
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT
 } from './constants.js';
 import { 
     getPlayArea, 
@@ -116,7 +118,7 @@ export function predictCueTrajectory(angle, cueBall, balls) {
     }
 
     if (hitT === null) {
-        hitT = Math.max(880, 440); // Using hardcoded max values for simplicity, though constants would be better
+        hitT = Math.max(CANVAS_WIDTH, CANVAS_HEIGHT);
         hitType = 'none';
     }
 

@@ -15,12 +15,14 @@ const BALL_RESTITUTION = 0.94;
 const CUSHION_RESTITUTION = 0.84;
 const MIN_SPEED = 0.04;
 const RAIL_WIDTH = 38;
-const POCKET_CAPTURE = 28;
-const POCKET_OPENING = 18;
-const POCKET_RECESS = 17;
-const SIDE_NOTCH_HALF = 26;
-const CORNER_JAW_ALONG = 32;
-const POCKET_MAGNET = 0.35;
+const POCKET_OPENING = 22;
+const POCKET_CAPTURE = BALL_RADIUS * 1.55;
+const POCKET_RECESS = 22;
+const POCKET_MOUTH_INSET = 8;
+const SIDE_NOTCH_HALF = 30;
+const CORNER_JAW_ALONG = 36;
+const POCKET_MAGNET = 0.42;
+const POCKET_RAIL_DEPTH = RAIL_WIDTH * 0.48;
 
 const CUE_LENGTH = 300;
 const CUE_WIDTH = 6;
@@ -76,69 +78,152 @@ function getPlayArea() {
 function getPockets() {
     const play = getPlayArea();
     const mx = play.left + play.width / 2;
-    const d = POCKET_RECESS;
+    const m = POCKET_MOUTH_INSET;
+    const d = POCKET_RECESS + POCKET_RAIL_DEPTH;
 
     return [
-        { kind: 'corner', wall: 'tl', anchorX: play.left, anchorY: play.top, x: play.left - d * 0.62, y: play.top - d * 0.62 },
-        { kind: 'side', wall: 'top', anchorX: mx, anchorY: play.top, x: mx, y: play.top - d },
-        { kind: 'corner', wall: 'tr', anchorX: play.right, anchorY: play.top, x: play.right + d * 0.62, y: play.top - d * 0.62 },
-        { kind: 'corner', wall: 'bl', anchorX: play.left, anchorY: play.bottom, x: play.left - d * 0.62, y: play.bottom + d * 0.62 },
-        { kind: 'side', wall: 'bottom', anchorX: mx, anchorY: play.bottom, x: mx, y: play.bottom + d },
-        { kind: 'corner', wall: 'br', anchorX: play.right, anchorY: play.bottom, x: play.right + d * 0.62, y: play.bottom + d * 0.62 }
+        {
+            kind: 'corner', wall: 'tl', anchorX: play.left, anchorY: play.top,
+            x: play.left + m, y: play.top + m,
+            drawX: play.left - d * 0.58, drawY: play.top - d * 0.58
+        },
+        {
+            kind: 'side', wall: 'top', anchorX: mx, anchorY: play.top,
+            x: mx, y: play.top + m * 0.55,
+            drawX: mx, drawY: play.top - d * 0.62
+        },
+        {
+            kind: 'corner', wall: 'tr', anchorX: play.right, anchorY: play.top,
+            x: play.right - m, y: play.top + m,
+            drawX: play.right + d * 0.58, drawY: play.top - d * 0.58
+        },
+        {
+            kind: 'corner', wall: 'bl', anchorX: play.left, anchorY: play.bottom,
+            x: play.left + m, y: play.bottom - m,
+            drawX: play.left - d * 0.58, drawY: play.bottom + d * 0.58
+        },
+        {
+            kind: 'side', wall: 'bottom', anchorX: mx, anchorY: play.bottom,
+            x: mx, y: play.bottom - m * 0.55,
+            drawX: mx, drawY: play.bottom + d * 0.62
+        },
+        {
+            kind: 'corner', wall: 'br', anchorX: play.right, anchorY: play.bottom,
+            x: play.right - m, y: play.bottom - m,
+            drawX: play.right + d * 0.58, drawY: play.bottom + d * 0.58
+        }
     ];
+}
+
+function pocketAffectsWall(pocket, wall) {
+    if (wall === 'left') return pocket.wall === 'tl' || pocket.wall === 'bl';
+    if (wall === 'right') return pocket.wall === 'tr' || pocket.wall === 'br';
+    if (wall === 'top') return pocket.wall === 'tl' || pocket.wall === 'tr' || pocket.wall === 'top';
+    if (wall === 'bottom') return pocket.wall === 'bl' || pocket.wall === 'br' || pocket.wall === 'bottom';
+    return false;
+}
+
+function traceFeltPocketCut(path, pocket) {
+    const J = CORNER_JAW_ALONG;
+    const h = SIDE_NOTCH_HALF;
+    const bite = 9;
+    const { anchorX: ax, anchorY: ay, wall, kind } = pocket;
+
+    if (kind === 'corner') {
+        const bend = 9;
+        if (wall === 'tl') {
+            path.moveTo(ax + J, ay);
+            path.quadraticCurveTo(ax + bend, ay + bend * 0.45, ax + bend, ay + bend);
+            path.lineTo(ax, ay + J);
+            path.lineTo(ax - bite * 0.35, ay - bite * 0.35);
+            path.closePath();
+        } else if (wall === 'tr') {
+            path.moveTo(ax - J, ay);
+            path.quadraticCurveTo(ax - bend, ay + bend * 0.45, ax - bend, ay + bend);
+            path.lineTo(ax, ay + J);
+            path.lineTo(ax + bite * 0.35, ay - bite * 0.35);
+            path.closePath();
+        } else if (wall === 'bl') {
+            path.moveTo(ax + J, ay);
+            path.quadraticCurveTo(ax + bend, ay - bend * 0.45, ax + bend, ay - bend);
+            path.lineTo(ax, ay - J);
+            path.lineTo(ax - bite * 0.35, ay + bite * 0.35);
+            path.closePath();
+        } else if (wall === 'br') {
+            path.moveTo(ax - J, ay);
+            path.quadraticCurveTo(ax - bend, ay - bend * 0.45, ax - bend, ay - bend);
+            path.lineTo(ax, ay - J);
+            path.lineTo(ax + bite * 0.35, ay + bite * 0.35);
+            path.closePath();
+        }
+    } else if (wall === 'top') {
+        path.moveTo(ax - h, ay);
+        path.quadraticCurveTo(ax - h * 0.42, ay - bite, ax, ay - bite * 1.05);
+        path.quadraticCurveTo(ax + h * 0.42, ay - bite, ax + h, ay);
+        path.lineTo(ax + h, ay + 1);
+        path.lineTo(ax - h, ay + 1);
+        path.closePath();
+    } else if (wall === 'bottom') {
+        path.moveTo(ax - h, ay);
+        path.quadraticCurveTo(ax - h * 0.42, ay + bite, ax, ay + bite * 1.05);
+        path.quadraticCurveTo(ax + h * 0.42, ay + bite, ax + h, ay);
+        path.lineTo(ax + h, ay - 1);
+        path.lineTo(ax - h, ay - 1);
+        path.closePath();
+    }
 }
 
 function traceCornerNotch(path, pocket) {
     const J = CORNER_JAW_ALONG;
-    const d = POCKET_RECESS;
-    const bend = 11;
+    const d = POCKET_RECESS + POCKET_RAIL_DEPTH;
+    const bend = 13;
     const { anchorX: ax, anchorY: ay, wall } = pocket;
 
     if (wall === 'tl') {
         path.moveTo(ax + J, ay);
-        path.lineTo(ax + bend, ay + bend);
+        path.quadraticCurveTo(ax + bend, ay + bend * 0.35, ax + bend, ay + bend);
         path.lineTo(ax, ay + J);
-        path.lineTo(ax - d, ay - d);
+        path.quadraticCurveTo(ax - d * 0.35, ay - d * 0.15, ax - d, ay - d);
         path.closePath();
     } else if (wall === 'tr') {
         path.moveTo(ax - J, ay);
-        path.lineTo(ax - bend, ay + bend);
+        path.quadraticCurveTo(ax - bend, ay + bend * 0.35, ax - bend, ay + bend);
         path.lineTo(ax, ay + J);
-        path.lineTo(ax + d, ay - d);
+        path.quadraticCurveTo(ax + d * 0.35, ay - d * 0.15, ax + d, ay - d);
         path.closePath();
     } else if (wall === 'bl') {
         path.moveTo(ax + J, ay);
-        path.lineTo(ax + bend, ay - bend);
+        path.quadraticCurveTo(ax + bend, ay - bend * 0.35, ax + bend, ay - bend);
         path.lineTo(ax, ay - J);
-        path.lineTo(ax - d, ay + d);
+        path.quadraticCurveTo(ax - d * 0.35, ay + d * 0.15, ax - d, ay + d);
         path.closePath();
     } else if (wall === 'br') {
         path.moveTo(ax - J, ay);
-        path.lineTo(ax - bend, ay - bend);
+        path.quadraticCurveTo(ax - bend, ay - bend * 0.35, ax - bend, ay - bend);
         path.lineTo(ax, ay - J);
-        path.lineTo(ax + d, ay + d);
+        path.quadraticCurveTo(ax + d * 0.35, ay + d * 0.15, ax + d, ay + d);
         path.closePath();
     }
 }
 
 function traceSideNotch(path, pocket) {
     const h = SIDE_NOTCH_HALF;
-    const d = POCKET_RECESS;
+    const d = POCKET_RECESS + POCKET_RAIL_DEPTH;
     const { anchorX: ax, anchorY: ay, wall } = pocket;
 
     if (wall === 'top') {
         path.moveTo(ax - h, ay);
-        path.lineTo(ax - h * 0.55, ay - d * 0.45);
-        path.lineTo(ax, ay - d);
-        path.lineTo(ax + h * 0.55, ay - d * 0.45);
-        path.lineTo(ax + h, ay);
+        path.quadraticCurveTo(ax - h * 0.65, ay - d * 0.25, ax - h * 0.5, ay - d * 0.55);
+        path.quadraticCurveTo(ax - h * 0.2, ay - d * 0.85, ax, ay - d);
+        path.quadraticCurveTo(ax + h * 0.2, ay - d * 0.85, ax + h * 0.5, ay - d * 0.55);
+        path.quadraticCurveTo(ax + h * 0.65, ay - d * 0.25, ax + h, ay);
         path.closePath();
     } else if (wall === 'bottom') {
         path.moveTo(ax - h, ay);
-        path.lineTo(ax - h * 0.55, ay + d * 0.45);
-        path.lineTo(ax, ay + d);
-        path.lineTo(ax + h * 0.55, ay + d * 0.45);
-        path.lineTo(ax + h, ay);
+        path.quadraticCurveTo(ax - h * 0.65, ay + d * 0.25, ax - h * 0.5, ay + d * 0.55);
+        path.quadraticCurveTo(ax - h * 0.2, ay + d * 0.85, ax, ay + d);
+        path.quadraticCurveTo(ax + h * 0.2, ay + d * 0.85, ax + h * 0.5, ay + d * 0.55);
+        path.quadraticCurveTo(ax + h * 0.65, ay + d * 0.25, ax + h, ay);
         path.closePath();
     }
 }
@@ -147,8 +232,32 @@ function pocketDistance(x, y, pocket) {
     return Math.hypot(x - pocket.x, y - pocket.y);
 }
 
+function pocketHoleDistance(x, y, pocket) {
+    return Math.hypot(x - pocket.drawX, y - pocket.drawY);
+}
+
+function isInPocketThroat(x, y, pocket) {
+    const { anchorX: ax, anchorY: ay, wall, kind } = pocket;
+    const J = CORNER_JAW_ALONG;
+    const h = SIDE_NOTCH_HALF;
+    const r = BALL_RADIUS;
+
+    if (kind === 'corner') {
+        if (wall === 'tl') return x < ax + J + r && y < ay + J + r;
+        if (wall === 'tr') return x > ax - J - r && y < ay + J + r;
+        if (wall === 'bl') return x < ax + J + r && y > ay - J - r;
+        if (wall === 'br') return x > ax - J - r && y > ay - J - r;
+    } else {
+        if (wall === 'top') return Math.abs(x - ax) < h + r && y < ay + J * 0.42;
+        if (wall === 'bottom') return Math.abs(x - ax) < h + r && y > ay - J * 0.42;
+    }
+    return false;
+}
+
 function isInPocketZone(x, y, extra = 0) {
-    return getPockets().some(p => pocketDistance(x, y, p) < POCKET_CAPTURE + extra);
+    return getPockets().some(p =>
+        isInPocketThroat(x, y, p) && pocketHoleDistance(x, y, p) < POCKET_CAPTURE + BALL_RADIUS + extra
+    );
 }
 
 function isNearPocket(x, y, extra = 0) {
@@ -156,22 +265,38 @@ function isNearPocket(x, y, extra = 0) {
 }
 
 function nearPocketOnWall(x, y, wall) {
-    const zone = POCKET_CAPTURE + BALL_RADIUS;
-    return getPockets().some(p => {
-        if (wall === 'left' && (p.wall === 'tl' || p.wall === 'bl')) {
-            return pocketDistance(x, y, p) < zone;
+    return getPockets().some(p => pocketAffectsWall(p, wall) && isInPocketThroat(x, y, p));
+}
+
+function tryPocketBall(ball) {
+    if (ball.inPocket) return true;
+
+    for (const pocket of getPockets()) {
+        if (!isInPocketThroat(ball.x, ball.y, pocket)) continue;
+
+        const dist = pocketHoleDistance(ball.x, ball.y, pocket);
+        const cx = pocket.drawX;
+        const cy = pocket.drawY;
+
+        if (dist < POCKET_CAPTURE + BALL_RADIUS * 1.8 && dist > 0.5) {
+            const speed = Math.hypot(ball.vx, ball.vy);
+            const pull = POCKET_MAGNET * (1.2 + speed * 0.06);
+            ball.vx += ((cx - ball.x) / dist) * pull;
+            ball.vy += ((cy - ball.y) / dist) * pull;
         }
-        if (wall === 'right' && (p.wall === 'tr' || p.wall === 'br')) {
-            return pocketDistance(x, y, p) < zone;
+
+        if (dist < POCKET_CAPTURE) {
+            ball.inPocket = true;
+            ball.vx = 0;
+            ball.vy = 0;
+            if (ball.isCueBall) {
+                setTimeout(() => ball.respotCueBall(), 600);
+            }
+            return true;
         }
-        if (wall === 'top' && (p.wall === 'tl' || p.wall === 'tr' || p.wall === 'top')) {
-            return pocketDistance(x, y, p) < zone;
-        }
-        if (wall === 'bottom' && (p.wall === 'bl' || p.wall === 'br' || p.wall === 'bottom')) {
-            return pocketDistance(x, y, p) < zone;
-        }
-        return false;
-    });
+    }
+
+    return false;
 }
 
 function getHeadSpot() {
@@ -279,26 +404,7 @@ class Ball {
 
         const play = getPlayArea();
 
-        for (const pocket of getPockets()) {
-            const dist = pocketDistance(this.x, this.y, pocket);
-
-            if (dist < POCKET_CAPTURE + BALL_RADIUS && dist > 0.5) {
-                const speed = Math.hypot(this.vx, this.vy);
-                const pull = POCKET_MAGNET * (1.2 + speed * 0.06);
-                this.vx += ((pocket.x - this.x) / dist) * pull;
-                this.vy += ((pocket.y - this.y) / dist) * pull;
-            }
-
-            if (dist < POCKET_CAPTURE) {
-                this.inPocket = true;
-                this.vx = 0;
-                this.vy = 0;
-                if (this.isCueBall) {
-                    setTimeout(() => this.respotCueBall(), 600);
-                }
-                return;
-            }
-        }
+        if (tryPocketBall(this)) return;
 
         if (this.x - this.radius < play.left) {
             if (!nearPocketOnWall(this.x, this.y, 'left')) {
@@ -322,6 +428,21 @@ class Ball {
                 this.y = play.bottom - this.radius;
                 this.vy = -this.vy * CUSHION_RESTITUTION;
             }
+        }
+
+        if (tryPocketBall(this)) return;
+
+        const outside =
+            this.x - this.radius < play.left ||
+            this.x + this.radius > play.right ||
+            this.y - this.radius < play.top ||
+            this.y + this.radius > play.bottom;
+
+        if (outside && !getPockets().some(p => isInPocketThroat(this.x, this.y, p))) {
+            if (this.x - this.radius < play.left) this.x = play.left + this.radius;
+            if (this.x + this.radius > play.right) this.x = play.right - this.radius;
+            if (this.y - this.radius < play.top) this.y = play.top + this.radius;
+            if (this.y + this.radius > play.bottom) this.y = play.bottom - this.radius;
         }
     }
 
@@ -691,122 +812,267 @@ function drawTrajectory(angle) {
     ctx.restore();
 }
 
-function drawPocketHole(pocket) {
-    const r = POCKET_OPENING;
+function tracePocketNotch(pocket) {
+    if (pocket.kind === 'corner') traceCornerNotch(ctx, pocket);
+    else traceSideNotch(ctx, pocket);
+}
+
+function drawFeltPocketShadows() {
+    getPockets().forEach(pocket => {
+        const { anchorX: ax, anchorY: ay, wall, kind } = pocket;
+        const spread = kind === 'corner' ? 22 : 16;
+
+        ctx.save();
+        const shade = ctx.createRadialGradient(ax, ay, 0, ax, ay, spread);
+        shade.addColorStop(0, 'rgba(0, 0, 0, 0.18)');
+        shade.addColorStop(0.55, 'rgba(0, 0, 0, 0.05)');
+        shade.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = shade;
+
+        ctx.beginPath();
+        if (kind === 'corner') {
+            if (wall === 'tl') {
+                ctx.moveTo(ax, ay);
+                ctx.arc(ax, ay, spread, 0, Math.PI / 2);
+            } else if (wall === 'tr') {
+                ctx.moveTo(ax, ay);
+                ctx.arc(ax, ay, spread, Math.PI / 2, Math.PI);
+            } else if (wall === 'bl') {
+                ctx.moveTo(ax, ay);
+                ctx.arc(ax, ay, spread, -Math.PI / 2, 0);
+            } else if (wall === 'br') {
+                ctx.moveTo(ax, ay);
+                ctx.arc(ax, ay, spread, Math.PI, Math.PI * 1.5);
+            }
+            ctx.closePath();
+        } else if (wall === 'top') {
+            ctx.ellipse(ax, ay - 2, SIDE_NOTCH_HALF * 0.62, spread * 0.45, 0, 0, Math.PI * 2);
+        } else if (wall === 'bottom') {
+            ctx.ellipse(ax, ay + 2, SIDE_NOTCH_HALF * 0.62, spread * 0.45, 0, 0, Math.PI * 2);
+        }
+        ctx.fill();
+        ctx.restore();
+    });
+}
+
+function drawPocketCavity(pocket) {
+    const { drawX: dx, drawY: dy, anchorX: ax, anchorY: ay, kind, wall } = pocket;
+    const r = POCKET_OPENING * (kind === 'side' ? 0.88 : 0.92);
+    const pad = RAIL_WIDTH + POCKET_RAIL_DEPTH + 8;
 
     ctx.save();
+    tracePocketNotch(pocket);
+    ctx.clip();
+
+    ctx.fillStyle = '#080504';
+    ctx.fillRect(dx - pad, dy - pad, pad * 2, pad * 2);
+
+    const wallSheen = ctx.createLinearGradient(ax, ay, dx, dy);
+    wallSheen.addColorStop(0, 'rgba(92, 58, 32, 0.75)');
+    wallSheen.addColorStop(0.25, 'rgba(48, 28, 16, 0.5)');
+    wallSheen.addColorStop(0.7, 'rgba(14, 8, 5, 0.15)');
+    wallSheen.addColorStop(1, 'rgba(4, 2, 1, 0)');
+    ctx.fillStyle = wallSheen;
+    ctx.fillRect(dx - pad, dy - pad, pad * 2, pad * 2);
+
+    const hole = ctx.createRadialGradient(dx, dy, 0, dx, dy, r + 14);
+    hole.addColorStop(0, '#000000');
+    hole.addColorStop(0.25, '#010101');
+    hole.addColorStop(0.55, '#070504');
+    hole.addColorStop(0.85, '#120c08');
+    hole.addColorStop(1, 'rgba(18, 12, 8, 0)');
 
     ctx.beginPath();
-    if (pocket.kind === 'corner') {
-        traceCornerNotch(ctx, pocket);
+    if (kind === 'side') {
+        ctx.ellipse(dx, dy, r + 2, r + 10, 0, 0, Math.PI * 2);
     } else {
-        traceSideNotch(ctx, pocket);
+        ctx.arc(dx, dy, r + 10, 0, Math.PI * 2);
     }
-    ctx.fillStyle = '#0a0604';
-    ctx.fill();
-
-    const depth = ctx.createRadialGradient(
-        pocket.x, pocket.y, 1,
-        pocket.x, pocket.y, r + 4
-    );
-    depth.addColorStop(0, '#000000');
-    depth.addColorStop(0.55, '#080604');
-    depth.addColorStop(1, '#1a1208');
-
-    ctx.beginPath();
-    ctx.arc(pocket.x, pocket.y, r, 0, Math.PI * 2);
-    ctx.fillStyle = depth;
+    ctx.fillStyle = hole;
     ctx.fill();
 
     ctx.beginPath();
-    ctx.arc(pocket.x, pocket.y, r * 0.42, 0, Math.PI * 2);
+    ctx.arc(dx, dy, r * 0.32, 0, Math.PI * 2);
     ctx.fillStyle = '#000';
     ctx.fill();
 
+    const hx = dx + (kind === 'corner' && (wall === 'tr' || wall === 'br') ? r * 0.12 : -r * 0.12);
+    const hy = dy + (kind === 'corner' && (wall === 'bl' || wall === 'br') ? -r * 0.1 : -r * 0.14);
     ctx.beginPath();
-    ctx.arc(pocket.x, pocket.y, r - 1, 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(30, 18, 10, 0.95)';
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
+    ctx.arc(hx, hy, r * 0.1, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.fill();
 
-    drawPocketJaws(pocket);
+    ctx.restore();
+
+    ctx.save();
+    tracePocketNotch(pocket);
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(145, 95, 52, 0.28)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
     ctx.restore();
 }
 
-function drawPocketJaws(pocket) {
-    const play = getPlayArea();
+function drawPocketThroat(pocket) {
+    const { anchorX: ax, anchorY: ay, drawX: dx, drawY: dy, wall, kind } = pocket;
     const J = CORNER_JAW_ALONG;
     const h = SIDE_NOTCH_HALF;
-    const { anchorX: ax, anchorY: ay, wall } = pocket;
 
-    ctx.strokeStyle = 'rgba(55, 35, 18, 0.95)';
-    ctx.lineWidth = 2.5;
+    ctx.save();
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(8, 4, 2, 0.95)';
+    ctx.lineWidth = 3.2;
 
     if (wall === 'tl') {
         ctx.beginPath();
         ctx.moveTo(ax + J, ay);
-        ctx.lineTo(ax + 10, ay + 10);
-        ctx.lineTo(ax, ay + J);
+        ctx.quadraticCurveTo(ax + 9, ay + 5, ax + 3, ay + 12);
+        ctx.quadraticCurveTo(ax + 1, ay + 18, ax, ay + J);
         ctx.stroke();
     } else if (wall === 'tr') {
         ctx.beginPath();
         ctx.moveTo(ax - J, ay);
-        ctx.lineTo(ax - 10, ay + 10);
-        ctx.lineTo(ax, ay + J);
+        ctx.quadraticCurveTo(ax - 9, ay + 5, ax - 3, ay + 12);
+        ctx.quadraticCurveTo(ax - 1, ay + 18, ax, ay + J);
         ctx.stroke();
     } else if (wall === 'bl') {
         ctx.beginPath();
         ctx.moveTo(ax + J, ay);
-        ctx.lineTo(ax + 10, ay - 10);
-        ctx.lineTo(ax, ay - J);
+        ctx.quadraticCurveTo(ax + 9, ay - 5, ax + 3, ay - 12);
+        ctx.quadraticCurveTo(ax + 1, ay - 18, ax, ay - J);
         ctx.stroke();
     } else if (wall === 'br') {
         ctx.beginPath();
         ctx.moveTo(ax - J, ay);
-        ctx.lineTo(ax - 10, ay - 10);
-        ctx.lineTo(ax, ay - J);
+        ctx.quadraticCurveTo(ax - 9, ay - 5, ax - 3, ay - 12);
+        ctx.quadraticCurveTo(ax - 1, ay - 18, ax, ay - J);
         ctx.stroke();
     } else if (wall === 'top') {
         ctx.beginPath();
         ctx.moveTo(ax - h, ay);
-        ctx.quadraticCurveTo(ax - h * 0.4, ay - POCKET_RECESS * 0.35, ax, ay - POCKET_RECESS * 0.15);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(ax + h, ay);
-        ctx.quadraticCurveTo(ax + h * 0.4, ay - POCKET_RECESS * 0.35, ax, ay - POCKET_RECESS * 0.15);
+        ctx.quadraticCurveTo(ax - h * 0.38, ay - 2, dx - POCKET_OPENING * 0.22, dy + POCKET_OPENING * 0.42);
+        ctx.quadraticCurveTo(ax, ay - 5, dx, dy + POCKET_OPENING * 0.38);
+        ctx.quadraticCurveTo(ax, ay - 5, dx + POCKET_OPENING * 0.22, dy + POCKET_OPENING * 0.42);
+        ctx.quadraticCurveTo(ax + h * 0.38, ay - 2, ax + h, ay);
         ctx.stroke();
     } else if (wall === 'bottom') {
         ctx.beginPath();
         ctx.moveTo(ax - h, ay);
-        ctx.quadraticCurveTo(ax - h * 0.4, ay + POCKET_RECESS * 0.35, ax, ay + POCKET_RECESS * 0.15);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(ax + h, ay);
-        ctx.quadraticCurveTo(ax + h * 0.4, ay + POCKET_RECESS * 0.35, ax, ay + POCKET_RECESS * 0.15);
+        ctx.quadraticCurveTo(ax - h * 0.38, ay + 2, dx - POCKET_OPENING * 0.22, dy - POCKET_OPENING * 0.42);
+        ctx.quadraticCurveTo(ax, ay + 5, dx, dy - POCKET_OPENING * 0.38);
+        ctx.quadraticCurveTo(ax, ay + 5, dx + POCKET_OPENING * 0.22, dy - POCKET_OPENING * 0.42);
+        ctx.quadraticCurveTo(ax + h * 0.38, ay + 2, ax + h, ay);
         ctx.stroke();
     }
 
-    ctx.strokeStyle = 'rgba(200, 165, 110, 0.35)';
-    ctx.lineWidth = 1.2;
-    const inset = 4;
-    if (wall === 'tl' || wall === 'tr') {
-        const x1 = wall === 'tl' ? play.left + inset : play.right - inset;
-        const x2 = wall === 'tl' ? ax + J : ax - J;
+    ctx.strokeStyle = kind === 'corner' ? 'rgba(130, 82, 44, 0.55)' : 'rgba(130, 82, 44, 0.5)';
+    ctx.lineWidth = 1.3;
+    if (wall === 'tl') {
         ctx.beginPath();
-        ctx.moveTo(x2, play.top + inset);
-        ctx.lineTo(x1, play.top + inset);
+        ctx.moveTo(ax + J - 1, ay + 1);
+        ctx.quadraticCurveTo(ax + 7, ay + 6, ax + 2, ay + 13);
+        ctx.quadraticCurveTo(ax, ay + 17, ax + 1, ay + J - 1);
+        ctx.stroke();
+    } else if (wall === 'tr') {
+        ctx.beginPath();
+        ctx.moveTo(ax - J + 1, ay + 1);
+        ctx.quadraticCurveTo(ax - 7, ay + 6, ax - 2, ay + 13);
+        ctx.quadraticCurveTo(ax, ay + 17, ax - 1, ay + J - 1);
+        ctx.stroke();
+    } else if (wall === 'bl') {
+        ctx.beginPath();
+        ctx.moveTo(ax + J - 1, ay - 1);
+        ctx.quadraticCurveTo(ax + 7, ay - 6, ax + 2, ay - 13);
+        ctx.quadraticCurveTo(ax, ay - 17, ax + 1, ay - J + 1);
+        ctx.stroke();
+    } else if (wall === 'br') {
+        ctx.beginPath();
+        ctx.moveTo(ax - J + 1, ay - 1);
+        ctx.quadraticCurveTo(ax - 7, ay - 6, ax - 2, ay - 13);
+        ctx.quadraticCurveTo(ax, ay - 17, ax - 1, ay - J + 1);
+        ctx.stroke();
+    } else if (wall === 'top') {
+        ctx.beginPath();
+        ctx.moveTo(ax - h + 2, ay + 1);
+        ctx.quadraticCurveTo(ax - h * 0.3, ay - 1, dx, dy + POCKET_OPENING * 0.32);
+        ctx.quadraticCurveTo(ax + h * 0.3, ay - 1, ax + h - 2, ay + 1);
+        ctx.stroke();
+    } else if (wall === 'bottom') {
+        ctx.beginPath();
+        ctx.moveTo(ax - h + 2, ay - 1);
+        ctx.quadraticCurveTo(ax - h * 0.3, ay + 1, dx, dy - POCKET_OPENING * 0.32);
+        ctx.quadraticCurveTo(ax + h * 0.3, ay + 1, ax + h - 2, ay - 1);
         ctx.stroke();
     }
-    if (wall === 'bl' || wall === 'br') {
-        const x1 = wall === 'bl' ? play.left + inset : play.right - inset;
-        const x2 = wall === 'bl' ? ax + J : ax - J;
+
+    ctx.restore();
+}
+
+function drawPocketCushionNoses(pocket) {
+    const J = CORNER_JAW_ALONG;
+    const h = SIDE_NOTCH_HALF;
+    const { anchorX: ax, anchorY: ay, drawX: dx, drawY: dy, wall } = pocket;
+    const reach = POCKET_RECESS + POCKET_RAIL_DEPTH * 0.1;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(28, 17, 9, 0.9)';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'round';
+
+    if (wall === 'tl') {
         ctx.beginPath();
-        ctx.moveTo(x2, play.bottom - inset);
-        ctx.lineTo(x1, play.bottom - inset);
+        ctx.moveTo(ax + J, ay);
+        ctx.quadraticCurveTo(ax + 13, ay + 4, ax + 6, ay + 11);
+        ctx.quadraticCurveTo(ax + 2, ay + 19, ax, ay + J);
+        ctx.stroke();
+    } else if (wall === 'tr') {
+        ctx.beginPath();
+        ctx.moveTo(ax - J, ay);
+        ctx.quadraticCurveTo(ax - 13, ay + 4, ax - 6, ay + 11);
+        ctx.quadraticCurveTo(ax - 2, ay + 19, ax, ay + J);
+        ctx.stroke();
+    } else if (wall === 'bl') {
+        ctx.beginPath();
+        ctx.moveTo(ax + J, ay);
+        ctx.quadraticCurveTo(ax + 13, ay - 4, ax + 6, ay - 11);
+        ctx.quadraticCurveTo(ax + 2, ay - 19, ax, ay - J);
+        ctx.stroke();
+    } else if (wall === 'br') {
+        ctx.beginPath();
+        ctx.moveTo(ax - J, ay);
+        ctx.quadraticCurveTo(ax - 13, ay - 4, ax - 6, ay - 11);
+        ctx.quadraticCurveTo(ax - 2, ay - 19, ax, ay - J);
+        ctx.stroke();
+    } else if (wall === 'top') {
+        ctx.beginPath();
+        ctx.moveTo(ax - h, ay);
+        ctx.quadraticCurveTo(ax - h * 0.5, ay - reach * 0.3, dx - POCKET_OPENING * 0.28, dy + reach * 0.12);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(ax + h, ay);
+        ctx.quadraticCurveTo(ax + h * 0.5, ay - reach * 0.3, dx + POCKET_OPENING * 0.28, dy + reach * 0.12);
+        ctx.stroke();
+    } else if (wall === 'bottom') {
+        ctx.beginPath();
+        ctx.moveTo(ax - h, ay);
+        ctx.quadraticCurveTo(ax - h * 0.5, ay + reach * 0.3, dx - POCKET_OPENING * 0.28, dy - reach * 0.12);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(ax + h, ay);
+        ctx.quadraticCurveTo(ax + h * 0.5, ay + reach * 0.3, dx + POCKET_OPENING * 0.28, dy - reach * 0.12);
         ctx.stroke();
     }
+
+    ctx.restore();
+}
+
+function drawPocketOverlay(pocket) {
+    drawPocketThroat(pocket);
+    drawPocketCushionNoses(pocket);
 }
 
 function drawRailFrame() {
@@ -860,12 +1126,16 @@ function drawRailDiamonds() {
 function drawFelt() {
     const play = getPlayArea();
 
+    ctx.beginPath();
+    ctx.rect(play.left, play.top, play.width, play.height);
+    getPockets().forEach(pocket => traceFeltPocketCut(ctx, pocket));
+
     const felt = ctx.createLinearGradient(play.left, play.top, play.left, play.bottom);
     felt.addColorStop(0, '#1a5f7a');
     felt.addColorStop(0.45, '#1a6b85');
     felt.addColorStop(1, '#145a70');
     ctx.fillStyle = felt;
-    ctx.fillRect(play.left, play.top, play.width, play.height);
+    ctx.fill('evenodd');
 
     const head = getHeadSpot();
     const foot = getFootSpot();
@@ -930,7 +1200,37 @@ function drawCushionFacings() {
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.lineWidth = 1;
     ctx.setLineDash([2, 3]);
-    ctx.strokeRect(play.left + 1, play.top + 1, play.width - 2, play.height - 2);
+
+    ctx.beginPath();
+    ctx.moveTo(play.left + J, play.top + inset);
+    ctx.lineTo(mx - h, play.top + inset);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(mx + h, play.top + inset);
+    ctx.lineTo(play.right - J, play.top + inset);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(play.left + J, play.bottom - inset);
+    ctx.lineTo(mx - h, play.bottom - inset);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(mx + h, play.bottom - inset);
+    ctx.lineTo(play.right - J, play.bottom - inset);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(play.left + inset, play.top + J);
+    ctx.lineTo(play.left + inset, play.bottom - J);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(play.right - inset, play.top + J);
+    ctx.lineTo(play.right - inset, play.bottom - J);
+    ctx.stroke();
+
     ctx.setLineDash([]);
     ctx.restore();
 }
@@ -940,10 +1240,12 @@ function drawTable() {
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     drawFelt();
+    drawFeltPocketShadows();
     drawRailFrame();
-    getPockets().forEach(drawPocketHole);
     drawCushionFacings();
     drawRailDiamonds();
+    getPockets().forEach(drawPocketCavity);
+    getPockets().forEach(drawPocketOverlay);
 }
 
 function drawCueScene(angle, pullBack) {

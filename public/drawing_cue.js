@@ -1,9 +1,4 @@
-import { 
-    BALL_RADIUS, 
-    CUE_LENGTH, 
-    CUE_WIDTH, 
-    POCKET_OPENING 
-} from './constants.js';
+import { BALL_RADIUS, CUE_LENGTH, CUE_WIDTH } from './constants.js';
 
 export function drawCueStick(ctx, tipX, tipY, angle) {
     ctx.save();

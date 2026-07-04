@@ -1,29 +1,6 @@
-import { 
-    CANVAS_WIDTH, 
-    CANVAS_HEIGHT, 
-    BALL_RADIUS, 
-    CUE_LENGTH, 
-    CUE_WIDTH, 
-    MAX_PULL, 
-    POWER_FACTOR, 
-    STRIKE_ANIM_BASE_MS, 
-    IMPACT_FLASH_MS, 
-    TRAJECTORY_EXTEND, 
-    BOUNCE_PREVIEW_LEN, 
-    MIN_BOUNCE_DRAW, 
-    MIN_POWER_PERCENT 
-} from './constants.js';
-import { 
-    getHeadSpot,
-    getFootSpot
-} from './utils.js';
-import { 
-    Ball 
-} from './ball.js';
-import { 
-    BALL_DEFS, 
-    RACK_ORDER 
-} from './constants.js';
+import { BALL_RADIUS, BALL_DEFS, RACK_ORDER } from './constants.js';
+import { getFootSpot } from './utils.js';
+import { Ball } from './ball.js';
 
 export function createRack() {
     const foot = getFootSpot();

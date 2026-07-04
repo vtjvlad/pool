@@ -1,101 +1,74 @@
-import { 
-    CANVAS_WIDTH, 
-    CANVAS_HEIGHT, 
-    RAIL_WIDTH, 
-    POCKET_RECESS, 
-    SIDE_NOTCH_HALF, 
-    CORNER_JAW_ALONG, 
-    POCKET_CAPTURE, 
-    BALL_RADIUS 
+import {
+    POCKET_CAPTURE,
+    POCKET_MAGNET,
+    BALL_RADIUS,
+    CORNER_JAW_ALONG,
+    SIDE_NOTCH_HALF
 } from './constants.js';
+import {
+    getPlayArea,
+    getPockets,
+    getPocket,
+    getRailSegments,
+    getStraightSegments,
+    getTableSurface,
+    pocketAffectsWall,
+    traceCornerNotch,
+    traceSideNotch,
+    tracePocketNotch,
+    traceFeltPocketCut,
+    tracePlaySurface,
+    getCushionFacing,
+    getCornerCushionFacings
+} from './table_surface.js';
 
-export function getPlayArea() {
-    return {
-        left: RAIL_WIDTH,
-        top: RAIL_WIDTH,
-        right: CANVAS_WIDTH - RAIL_WIDTH,
-        bottom: CANVAS_HEIGHT - RAIL_WIDTH,
-        width: CANVAS_WIDTH - RAIL_WIDTH * 2,
-        height: CANVAS_HEIGHT - RAIL_WIDTH * 2
-    };
-}
-
-export function getPockets() {
-    const play = getPlayArea();
-    const mx = play.left + play.width / 2;
-    const d = POCKET_RECESS;
-
-    return [
-        { kind: 'corner', wall: 'tl', anchorX: play.left, anchorY: play.top, x: play.left - d * 0.62, y: play.top - d * 0.62 },
-        { kind: 'side', wall: 'top', anchorX: mx, anchorY: play.top, x: mx, y: play.top - d },
-        { kind: 'corner', wall: 'tr', anchorX: play.right, anchorY: play.top, x: play.right + d * 0.62, y: play.top - d * 0.62 },
-        { kind: 'corner', wall: 'bl', anchorX: play.left, anchorY: play.bottom, x: play.left - d * 0.62, y: play.bottom + d * 0.62 },
-        { kind: 'side', wall: 'bottom', anchorX: mx, anchorY: play.bottom, x: mx, y: play.bottom + d },
-        { kind: 'corner', wall: 'br', anchorX: play.right, anchorY: play.bottom, x: play.right + d * 0.62, y: play.bottom + d * 0.62 }
-    ];
-}
-
-export function traceCornerNotch(path, pocket) {
-    const J = CORNER_JAW_ALONG;
-    const d = POCKET_RECESS;
-    const bend = 11;
-    const { anchorX: ax, anchorY: ay, wall } = pocket;
-
-    if (wall === 'tl') {
-        path.moveTo(ax + J, ay);
-        path.lineTo(ax + bend, ay + bend);
-        path.lineTo(ax, ay + J);
-        path.lineTo(ax - d, ay - d);
-        path.closePath();
-    } else if (wall === 'tr') {
-        path.moveTo(ax - J, ay);
-        path.lineTo(ax - bend, ay + bend);
-        path.lineTo(ax, ay + J);
-        path.lineTo(ax + d, ay - d);
-        path.closePath();
-    } else if (wall === 'bl') {
-        path.moveTo(ax + J, ay);
-        path.lineTo(ax + bend, ay - bend);
-        path.lineTo(ax, ay - J);
-        path.lineTo(ax - d, ay + d);
-        path.closePath();
-    } else if (wall === 'br') {
-        path.moveTo(ax - J, ay);
-        path.lineTo(ax - bend, ay - bend);
-        path.lineTo(ax, ay - J);
-        path.lineTo(ax + d, ay + d);
-        path.closePath();
-    }
-}
-
-export function traceSideNotch(path, pocket) {
-    const h = SIDE_NOTCH_HALF;
-    const d = POCKET_RECESS;
-    const { anchorX: ax, anchorY: ay, wall } = pocket;
-
-    if (wall === 'top') {
-        path.moveTo(ax - h, ay);
-        path.lineTo(ax - h * 0.55, ay - d * 0.45);
-        path.lineTo(ax, ay - d);
-        path.lineTo(ax + h * 0.55, ay - d * 0.45);
-        path.lineTo(ax + h, ay);
-        path.closePath();
-    } else if (wall === 'bottom') {
-        path.moveTo(ax - h, ay);
-        path.lineTo(ax - h * 0.55, ay + d * 0.45);
-        path.lineTo(ax, ay + d);
-        path.lineTo(ax + h * 0.55, ay + d * 0.45);
-        path.lineTo(ax + h, ay);
-        path.closePath();
-    }
-}
+export {
+    getPlayArea,
+    getPockets,
+    getPocket,
+    getRailSegments,
+    getStraightSegments,
+    getTableSurface,
+    pocketAffectsWall,
+    traceCornerNotch,
+    traceSideNotch,
+    tracePocketNotch,
+    traceFeltPocketCut,
+    tracePlaySurface,
+    getCushionFacing,
+    getCornerCushionFacings
+};
 
 export function pocketDistance(x, y, pocket) {
     return Math.hypot(x - pocket.x, y - pocket.y);
 }
 
+export function pocketHoleDistance(x, y, pocket) {
+    return Math.hypot(x - pocket.drawX, y - pocket.drawY);
+}
+
+export function isInPocketThroat(x, y, pocket) {
+    const { anchorX: ax, anchorY: ay, wall, kind } = pocket;
+    const J = CORNER_JAW_ALONG;
+    const h = SIDE_NOTCH_HALF;
+    const r = BALL_RADIUS;
+
+    if (kind === 'corner') {
+        if (wall === 'tl') return x < ax + J + r && y < ay + J + r;
+        if (wall === 'tr') return x > ax - J - r && y < ay + J + r;
+        if (wall === 'bl') return x < ax + J + r && y > ay - J - r;
+        if (wall === 'br') return x > ax - J - r && y > ay - J - r;
+    } else {
+        if (wall === 'top') return Math.abs(x - ax) < h + r && y < ay + J * 0.42;
+        if (wall === 'bottom') return Math.abs(x - ax) < h + r && y > ay - J * 0.42;
+    }
+    return false;
+}
+
 export function isInPocketZone(x, y, extra = 0) {
-    return getPockets().some(p => pocketDistance(x, y, p) < POCKET_CAPTURE + extra);
+    return getPockets().some(p =>
+        isInPocketThroat(x, y, p) && pocketHoleDistance(x, y, p) < POCKET_CAPTURE + BALL_RADIUS + extra
+    );
 }
 
 export function isNearPocket(x, y, extra = 0) {
@@ -103,22 +76,38 @@ export function isNearPocket(x, y, extra = 0) {
 }
 
 export function nearPocketOnWall(x, y, wall) {
-    const zone = POCKET_CAPTURE + BALL_RADIUS;
-    return getPockets().some(p => {
-        if (wall === 'left' && (p.wall === 'tl' || p.wall === 'bl')) {
-            return pocketDistance(x, y, p) < zone;
+    return getPockets().some(p => pocketAffectsWall(p, wall) && isInPocketThroat(x, y, p));
+}
+
+export function tryPocketBall(ball, onCueRespotted) {
+    if (ball.inPocket) return true;
+
+    for (const pocket of getPockets()) {
+        if (!isInPocketThroat(ball.x, ball.y, pocket)) continue;
+
+        const dist = pocketHoleDistance(ball.x, ball.y, pocket);
+        const cx = pocket.drawX;
+        const cy = pocket.drawY;
+
+        if (dist < POCKET_CAPTURE + BALL_RADIUS * 1.8 && dist > 0.5) {
+            const speed = Math.hypot(ball.vx, ball.vy);
+            const pull = POCKET_MAGNET * (1.2 + speed * 0.06);
+            ball.vx += ((cx - ball.x) / dist) * pull;
+            ball.vy += ((cy - ball.y) / dist) * pull;
         }
-        if (wall === 'right' && (p.wall === 'tr' || p.wall === 'br')) {
-            return pocketDistance(x, y, p) < zone;
+
+        if (dist < POCKET_CAPTURE) {
+            ball.inPocket = true;
+            ball.vx = 0;
+            ball.vy = 0;
+            if (ball.isCueBall && onCueRespotted) {
+                setTimeout(onCueRespotted, 600);
+            }
+            return true;
         }
-        if (wall === 'top' && (p.wall === 'tl' || p.wall === 'tr' || p.wall === 'top')) {
-            return pocketDistance(x, y, p) < zone;
-        }
-        if (wall === 'bottom' && (p.wall === 'bl' || p.wall === 'br' || p.wall === 'bottom')) {
-            return pocketDistance(x, y, p) < zone;
-        }
-        return false;
-    });
+    }
+
+    return false;
 }
 
 export function getHeadSpot() {
