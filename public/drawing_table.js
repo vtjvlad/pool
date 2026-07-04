@@ -1,19 +1,8 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT, COLORS, DEBUG_DRAW_RUBBER } from './constants.js';
 import { drawCushionSegments, drawCornerBehindSegments } from './cushions.js';
 import { drawRubberGums } from './cushion_rubber.js';
+import { drawPocketTexture, drawPocketRim } from './pocket_texture.js';
 import { getHeadSpot, getFootSpot, getPockets, getPlaySurface } from './utils.js';
-
-function drawPocketCavity(ctx, pocket) {
-    const r = pocket.radius;
-    const grad = ctx.createRadialGradient(pocket.x, pocket.y, 0, pocket.x, pocket.y, r);
-    grad.addColorStop(0, '#000');
-    grad.addColorStop(0.75, COLORS.pocket);
-    grad.addColorStop(1, COLORS.pocketRim);
-    ctx.beginPath();
-    ctx.arc(pocket.x, pocket.y, r, 0, Math.PI * 2);
-    ctx.fillStyle = grad;
-    ctx.fill();
-}
 
 function cutPocketHole(ctx, pocket) {
     ctx.beginPath();
@@ -24,8 +13,6 @@ function cutPocketHole(ctx, pocket) {
 export function drawTable(ctx) {
     ctx.fillStyle = COLORS.background;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-    getPockets().forEach(p => drawPocketCavity(ctx, p));
 
     const surface = getPlaySurface();
     const felt = ctx.createLinearGradient(0, surface.top, 0, surface.bottom);
@@ -47,12 +34,9 @@ export function drawTable(ctx) {
     getPockets().forEach(p => cutPocketHole(ctx, p));
     ctx.restore();
 
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.lineWidth = 1;
     getPockets().forEach(p => {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.stroke();
+        drawPocketTexture(ctx, p);
+        drawPocketRim(ctx, p);
     });
 
     const baulk = surface.left + surface.width * 0.25;
