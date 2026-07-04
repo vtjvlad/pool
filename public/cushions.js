@@ -1,5 +1,6 @@
 import { POCKET_LAYOUT_RADIUS, CUSHION_DEPTH, CUSHION_POCKET_GAP, CUSHION_CHAMFER, COLORS } from './constants.js';
 import { getPlayArea, getPockets } from './utils.js';
+import { fillWoodTexture } from './wood_texture.js';
 
 /** Пары соседних луз на каждой стороне стола — один сегмент борта между ними. */
 const CUSHION_CHAINS = {
@@ -351,29 +352,38 @@ function drawSegmentBody(ctx, segment) {
     const { x, y, width, height, side } = segment;
     const isHorizontal = side === 'top' || side === 'bottom';
 
-    const grad = isHorizontal
+    ctx.save();
+    ctx.beginPath();
+    traceSegmentOutline(ctx, segment);
+    ctx.clip();
+
+    const shade = isHorizontal
         ? ctx.createLinearGradient(x, y, x, y + height)
         : ctx.createLinearGradient(x, y, x + width, y);
 
     if (side === 'top' || side === 'left') {
-        grad.addColorStop(0, COLORS.cushionDark);
-        grad.addColorStop(0.45, COLORS.cushion);
-        grad.addColorStop(1, COLORS.cushionLight);
+        shade.addColorStop(0, COLORS.woodDark);
+        shade.addColorStop(0.4, COLORS.woodBase);
+        shade.addColorStop(1, COLORS.woodLight);
     } else {
-        grad.addColorStop(0, COLORS.cushionLight);
-        grad.addColorStop(0.55, COLORS.cushion);
-        grad.addColorStop(1, COLORS.cushionDark);
+        shade.addColorStop(0, COLORS.woodLight);
+        shade.addColorStop(0.6, COLORS.woodBase);
+        shade.addColorStop(1, COLORS.woodDark);
     }
 
-    ctx.beginPath();
-    traceSegmentOutline(ctx, segment);
-    ctx.fillStyle = grad;
-    ctx.fill();
+    ctx.fillStyle = shade;
+    ctx.fillRect(x, y, width, height);
+
+    ctx.globalAlpha = 0.82;
+    fillWoodTexture(ctx, x, y, width, height, isHorizontal);
+    ctx.globalAlpha = 1;
+
+    ctx.restore();
 }
 
 function drawSegmentInnerEdge(ctx, segment) {
     ctx.save();
-    ctx.strokeStyle = COLORS.cushionEdge;
+    ctx.strokeStyle = COLORS.woodEdge;
     ctx.lineWidth = 1;
     ctx.beginPath();
     traceInnerEdge(ctx, segment);

@@ -36,7 +36,12 @@ export const COLORS = {
     cushion: '#1a5a78',
     cushionLight: '#2d8ab5',
     cushionDark: '#0c3347',
-    cushionEdge: 'rgba(255, 255, 255, 0.18)'
+    cushionEdge: 'rgba(255, 255, 255, 0.18)',
+    woodBase: '#8b5e34',
+    woodLight: '#b8844f',
+    woodDark: '#4a3018',
+    woodGrain: 'rgba(35, 18, 6, 0.14)',
+    woodEdge: 'rgba(0, 0, 0, 0.28)'
 };
 
 export const CUE_LENGTH = 300;
