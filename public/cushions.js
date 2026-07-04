@@ -239,42 +239,52 @@ function innerEdgeLinesForSegment(segment) {
     return lines;
 }
 
+const CENTRAL_POCKETS = new Set(['tm', 'bm']);
+
+function isCentralPocket(id) {
+    return CENTRAL_POCKETS.has(id);
+}
+
 function rubberEdgeLinesForSegment(segment) {
-    const { x, y, width, height, side, chamferStart, chamferEnd } = segment;
+    const { x, y, width, height, side, chamferStart, chamferEnd, pocketIds } = segment;
     const c = chamferSize(segment);
     const w = width;
     const h = height;
+    let line;
 
     if (side === 'top') {
-        return [{
+        line = {
             x1: chamferStart ? x + c : x,
             y1: y + h,
             x2: chamferEnd ? x + w - c : x + w,
             y2: y + h
-        }];
-    }
-    if (side === 'bottom') {
-        return [{
+        };
+    } else if (side === 'bottom') {
+        line = {
             x1: chamferStart ? x + c : x,
             y1: y,
             x2: chamferEnd ? x + w - c : x + w,
             y2: y
-        }];
-    }
-    if (side === 'left') {
-        return [{
+        };
+    } else if (side === 'left') {
+        line = {
             x1: x + w,
             y1: chamferStart ? y + c : y,
             x2: x + w,
             y2: chamferEnd ? y + h - c : y + h
-        }];
+        };
+    } else {
+        line = {
+            x1: x,
+            y1: chamferStart ? y + c : y,
+            x2: x,
+            y2: chamferEnd ? y + h - c : y + h
+        };
     }
-    return [{
-        x1: x,
-        y1: chamferStart ? y + c : y,
-        x2: x,
-        y2: chamferEnd ? y + h - c : y + h
-    }];
+
+    line.chamferStart = isCentralPocket(pocketIds[0]);
+    line.chamferEnd = isCentralPocket(pocketIds[1]);
+    return [line];
 }
 
 export function getRubberInnerEdges() {

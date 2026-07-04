@@ -2,36 +2,41 @@ import {
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
     RUBBER_THICKNESS,
+    RUBBER_CENTER_CHAMFER_ANGLE,
     COLORS
 } from './constants.js';
 import { getRubberInnerEdges } from './cushions.js';
 
 const PLAY_CENTER_X = CANVAS_WIDTH / 2;
 const PLAY_CENTER_Y = CANVAS_HEIGHT / 2;
+const CHAMFER_TAN = Math.tan(RUBBER_CENTER_CHAMFER_ANGLE * Math.PI / 180);
 
 function edgeNormal(x1, y1, x2, y2) {
-    const mx = (x1 + x2) / 2;
-    const my = (y1 + y2) / 2;
+    const len = Math.hypot(x2 - x1, y2 - y1) || 1;
     const edx = x2 - x1;
     const edy = y2 - y1;
-    let nx = -edy;
-    let ny = edx;
-    const len = Math.hypot(nx, ny) || 1;
-    nx /= len;
-    ny /= len;
+    let nx = -edy / len;
+    let ny = edx / len;
+    const mx = (x1 + x2) / 2;
+    const my = (y1 + y2) / 2;
 
     if ((PLAY_CENTER_X - mx) * nx + (PLAY_CENTER_Y - my) * ny < 0) {
         nx = -nx;
         ny = -ny;
     }
 
-    return { nx, ny };
+    return { nx, ny, tx: edx / len, ty: edy / len };
+}
+
+function chamferRunAlongEdge(thickness) {
+    return thickness / CHAMFER_TAN;
 }
 
 function drawRubberStrip(ctx, line) {
-    const { nx, ny } = edgeNormal(line.x1, line.y1, line.x2, line.y2);
+    const { nx, ny, tx, ty } = edgeNormal(line.x1, line.y1, line.x2, line.y2);
     const t = RUBBER_THICKNESS;
-    const { x1, y1, x2, y2 } = line;
+    const run = chamferRunAlongEdge(t);
+    const { x1, y1, x2, y2, chamferStart, chamferEnd } = line;
 
     const ix1 = x1 + nx * t;
     const iy1 = y1 + ny * t;
@@ -46,8 +51,19 @@ function drawRubberStrip(ctx, line) {
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
-    ctx.lineTo(ix2, iy2);
+
+    if (chamferEnd) {
+        ctx.lineTo(ix2 - tx * run, iy2 - ty * run);
+    } else {
+        ctx.lineTo(ix2, iy2);
+    }
+
     ctx.lineTo(ix1, iy1);
+
+    if (chamferStart) {
+        ctx.lineTo(ix1 + tx * run, iy1 + ty * run);
+    }
+
     ctx.closePath();
     ctx.fillStyle = grad;
     ctx.fill();
