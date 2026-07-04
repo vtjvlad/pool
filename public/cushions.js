@@ -1,4 +1,4 @@
-import { POCKET_RADIUS, CUSHION_DEPTH, CUSHION_POCKET_GAP, COLORS } from './constants.js';
+import { POCKET_LAYOUT_RADIUS, CUSHION_DEPTH, CUSHION_POCKET_GAP, CUSHION_CHAMFER, COLORS } from './constants.js';
 import { getPlayArea, getPockets } from './utils.js';
 
 /** Пары соседних луз на каждой стороне стола — один сегмент борта между ними. */
@@ -9,13 +9,19 @@ const CUSHION_CHAINS = {
     right: [['tr', 'br']]
 };
 
+const CORNER_POCKETS = new Set(['tl', 'tr', 'bl', 'br']);
+
 function pocketById() {
     return Object.fromEntries(getPockets().map(pocket => [pocket.id, pocket]));
 }
 
+function isCornerPocket(id) {
+    return CORNER_POCKETS.has(id);
+}
+
 function horizontalSegment(side, pocketA, pocketB, play) {
-    const x = pocketA.x + POCKET_RADIUS + CUSHION_POCKET_GAP;
-    const width = pocketB.x - POCKET_RADIUS - CUSHION_POCKET_GAP - x;
+    const x = pocketA.x + POCKET_LAYOUT_RADIUS + CUSHION_POCKET_GAP;
+    const width = pocketB.x - POCKET_LAYOUT_RADIUS - CUSHION_POCKET_GAP - x;
     const y = side === 'top' ? play.top : play.bottom - CUSHION_DEPTH;
 
     return {
@@ -25,13 +31,15 @@ function horizontalSegment(side, pocketA, pocketB, play) {
         x,
         y,
         width,
-        height: CUSHION_DEPTH
+        height: CUSHION_DEPTH,
+        chamferStart: isCornerPocket(pocketA.id),
+        chamferEnd: isCornerPocket(pocketB.id)
     };
 }
 
 function verticalSegment(side, pocketA, pocketB, play) {
-    const y = pocketA.y + POCKET_RADIUS + CUSHION_POCKET_GAP;
-    const height = pocketB.y - POCKET_RADIUS - CUSHION_POCKET_GAP - y;
+    const y = pocketA.y + POCKET_LAYOUT_RADIUS + CUSHION_POCKET_GAP;
+    const height = pocketB.y - POCKET_LAYOUT_RADIUS - CUSHION_POCKET_GAP - y;
     const x = side === 'left' ? play.left : play.right - CUSHION_DEPTH;
 
     return {
@@ -41,11 +49,13 @@ function verticalSegment(side, pocketA, pocketB, play) {
         x,
         y,
         width: CUSHION_DEPTH,
-        height
+        height,
+        chamferStart: isCornerPocket(pocketA.id),
+        chamferEnd: isCornerPocket(pocketB.id)
     };
 }
 
-/** @returns {Array<{ id: string, side: string, pocketIds: string[], x: number, y: number, width: number, height: number }>} */
+/** @returns {Array<{ id: string, side: string, pocketIds: string[], x: number, y: number, width: number, height: number, chamferStart: boolean, chamferEnd: boolean }>} */
 export function getCushionSegments() {
     const play = getPlayArea();
     const pockets = pocketById();
@@ -67,6 +77,115 @@ export function getCushionSegments() {
     return segments;
 }
 
+function chamferSize(segment) {
+    const limit = Math.min(segment.width, segment.height) / 2 - 0.5;
+    return Math.min(CUSHION_CHAMFER, Math.max(0, limit));
+}
+
+function traceSegmentOutline(ctx, segment) {
+    const { x, y, width, height, side, chamferStart, chamferEnd } = segment;
+    const c = chamferSize(segment);
+    const w = width;
+    const h = height;
+
+    if (side === 'top') {
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + w, y);
+        if (chamferEnd) {
+            ctx.lineTo(x + w, y + h - c);
+            ctx.lineTo(x + w - c, y + h);
+        } else {
+            ctx.lineTo(x + w, y + h);
+        }
+        if (chamferStart) {
+            ctx.lineTo(x + c, y + h);
+            ctx.lineTo(x, y + h - c);
+        } else {
+            ctx.lineTo(x, y + h);
+        }
+    } else if (side === 'bottom') {
+        ctx.moveTo(x, y + h);
+        ctx.lineTo(x + w, y + h);
+        if (chamferEnd) {
+            ctx.lineTo(x + w, y + c);
+            ctx.lineTo(x + w - c, y);
+        } else {
+            ctx.lineTo(x + w, y);
+        }
+        if (chamferStart) {
+            ctx.lineTo(x + c, y);
+            ctx.lineTo(x, y + c);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    } else if (side === 'left') {
+        ctx.moveTo(x, y);
+        ctx.lineTo(x, y + h);
+        if (chamferEnd) {
+            ctx.lineTo(x + w - c, y + h);
+            ctx.lineTo(x + w, y + h - c);
+        } else {
+            ctx.lineTo(x + w, y + h);
+        }
+        if (chamferStart) {
+            ctx.lineTo(x + w, y + c);
+            ctx.lineTo(x + w - c, y);
+        } else {
+            ctx.lineTo(x + w, y);
+        }
+    } else {
+        ctx.moveTo(x + w, y);
+        ctx.lineTo(x + w, y + h);
+        if (chamferEnd) {
+            ctx.lineTo(x + c, y + h);
+            ctx.lineTo(x, y + h - c);
+        } else {
+            ctx.lineTo(x, y + h);
+        }
+        if (chamferStart) {
+            ctx.lineTo(x, y + c);
+            ctx.lineTo(x + c, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+
+    ctx.closePath();
+}
+
+function traceInnerEdge(ctx, segment) {
+    const { x, y, width, height, side, chamferStart, chamferEnd } = segment;
+    const c = chamferSize(segment);
+    const w = width;
+    const h = height;
+
+    if (side === 'top') {
+        if (chamferStart) ctx.moveTo(x, y + h - c);
+        else ctx.moveTo(x, y + h);
+        if (chamferStart) ctx.lineTo(x + c, y + h);
+        ctx.lineTo(chamferEnd ? x + w - c : x + w, y + h);
+        if (chamferEnd) ctx.lineTo(x + w, y + h - c);
+    } else if (side === 'bottom') {
+        if (chamferStart) ctx.moveTo(x, y + c);
+        else ctx.moveTo(x, y);
+        if (chamferStart) ctx.lineTo(x + c, y);
+        ctx.lineTo(chamferEnd ? x + w - c : x + w, y);
+        if (chamferEnd) ctx.lineTo(x + w, y + c);
+    } else if (side === 'left') {
+        if (chamferStart) ctx.moveTo(x + w - c, y);
+        else ctx.moveTo(x + w, y);
+        if (chamferStart) ctx.lineTo(x + w, y + c);
+        ctx.lineTo(x + w, chamferEnd ? y + h - c : y + h);
+        if (chamferEnd) ctx.lineTo(x + w - c, y + h);
+    } else {
+        if (chamferStart) ctx.moveTo(x + c, y);
+        else ctx.moveTo(x, y);
+        if (chamferStart) ctx.lineTo(x, y + c);
+        ctx.lineTo(x, chamferEnd ? y + h - c : y + h);
+        if (chamferEnd) ctx.lineTo(x + c, y + h);
+    }
+}
+
 function drawSegmentBody(ctx, segment) {
     const { x, y, width, height, side } = segment;
     const isHorizontal = side === 'top' || side === 'bottom';
@@ -85,32 +204,18 @@ function drawSegmentBody(ctx, segment) {
         grad.addColorStop(1, COLORS.cushionDark);
     }
 
+    ctx.beginPath();
+    traceSegmentOutline(ctx, segment);
     ctx.fillStyle = grad;
-    ctx.fillRect(x, y, width, height);
+    ctx.fill();
 }
 
 function drawSegmentInnerEdge(ctx, segment) {
-    const { x, y, width, height, side } = segment;
-
     ctx.save();
     ctx.strokeStyle = COLORS.cushionEdge;
     ctx.lineWidth = 1;
     ctx.beginPath();
-
-    if (side === 'top') {
-        ctx.moveTo(x, y + height - 0.5);
-        ctx.lineTo(x + width, y + height - 0.5);
-    } else if (side === 'bottom') {
-        ctx.moveTo(x, y + 0.5);
-        ctx.lineTo(x + width, y + 0.5);
-    } else if (side === 'left') {
-        ctx.moveTo(x + width - 0.5, y);
-        ctx.lineTo(x + width - 0.5, y + height);
-    } else {
-        ctx.moveTo(x + 0.5, y);
-        ctx.lineTo(x + 0.5, y + height);
-    }
-
+    traceInnerEdge(ctx, segment);
     ctx.stroke();
     ctx.restore();
 }
