@@ -26,7 +26,6 @@ export const RUBBER_CORNER_CHAMFER_ANGLE = 45;
 export const DEBUG_DRAW_RUBBER = true;
 export const POCKET_MAGNET = 0.38;
 export const POCKET_MAGNET_RADIUS = POCKET_RADIUS; // базовый; у луз — свой radius
-export const DEBUG_DRAW_POCKET_MAGNET = true;
 export const FRICTION = 0.985;
 export const BALL_RESTITUTION = 0.96;
 export const CUSHION_RESTITUTION = 0.72;

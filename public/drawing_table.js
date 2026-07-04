@@ -1,4 +1,4 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, COLORS, DEBUG_DRAW_POCKET_MAGNET, DEBUG_DRAW_RUBBER } from './constants.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, COLORS, DEBUG_DRAW_RUBBER } from './constants.js';
 import { drawCushionSegments, drawCornerBehindSegments } from './cushions.js';
 import { drawRubberGums } from './cushion_rubber.js';
 import { getHeadSpot, getFootSpot, getPockets, getPlaySurface } from './utils.js';
@@ -19,20 +19,6 @@ function cutPocketHole(ctx, pocket) {
     ctx.beginPath();
     ctx.arc(pocket.x, pocket.y, pocket.radius, 0, Math.PI * 2);
     ctx.fill();
-}
-
-function drawPocketMagnetDebug(ctx) {
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255, 70, 180, 0.7)';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([6, 4]);
-    for (const pocket of getPockets()) {
-        ctx.beginPath();
-        ctx.arc(pocket.x, pocket.y, pocket.radius, 0, Math.PI * 2);
-        ctx.stroke();
-    }
-    ctx.setLineDash([]);
-    ctx.restore();
 }
 
 export function drawTable(ctx) {
@@ -83,8 +69,4 @@ export function drawTable(ctx) {
         ctx.arc(s.x, s.y, 2.5, 0, Math.PI * 2);
         ctx.fill();
     });
-
-    if (DEBUG_DRAW_POCKET_MAGNET) {
-        drawPocketMagnetDebug(ctx);
-    }
 }
