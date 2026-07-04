@@ -1,4 +1,4 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, CUSHION_RESTITUTION } from './constants.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, CUSHION_RESTITUTION, CUSHION_FRICTION } from './constants.js';
 import { getCushionInnerEdges } from './cushions.js';
 import { getRubberCollisionEdges } from './cushion_rubber.js';
 
@@ -79,25 +79,36 @@ export function resolveBallCushionCollision(ball) {
     let vy = ball.vy;
     const r = ball.radius;
 
-    for (let iter = 0; iter < 4; iter++) {
-        let hit = false;
+    for (let iter = 0; iter < 5; iter++) {
+        let best = null;
 
         for (const edge of edges) {
             const collision = circleSegmentCollision(bx, by, r, edge);
             if (!collision) continue;
-
-            hit = true;
-            bx += collision.nx * collision.overlap;
-            by += collision.ny * collision.overlap;
-
-            const dot = vx * collision.nx + vy * collision.ny;
-            if (dot < 0) {
-                vx -= (1 + CUSHION_RESTITUTION) * dot * collision.nx;
-                vy -= (1 + CUSHION_RESTITUTION) * dot * collision.ny;
+            if (!best || collision.overlap > best.collision.overlap) {
+                best = { edge, collision };
             }
         }
 
-        if (!hit) break;
+        if (!best) break;
+
+        const { collision } = best;
+        bx += collision.nx * collision.overlap;
+        by += collision.ny * collision.overlap;
+
+        const nx = collision.nx;
+        const ny = collision.ny;
+        const dot = vx * nx + vy * ny;
+        if (dot < 0) {
+            vx -= (1 + CUSHION_RESTITUTION) * dot * nx;
+            vy -= (1 + CUSHION_RESTITUTION) * dot * ny;
+
+            const tx = -ny;
+            const ty = nx;
+            const vTan = vx * tx + vy * ty;
+            vx -= vTan * CUSHION_FRICTION * tx;
+            vy -= vTan * CUSHION_FRICTION * ty;
+        }
     }
 
     ball.x = bx;

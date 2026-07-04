@@ -10,7 +10,7 @@ import {
 } from './constants.js';
 import { Ball } from './ball.js';
 import { createRack } from './game_logic.js';
-import { resolveCollision } from './physics_engine.js';
+import { stepPhysics } from './physics_engine.js';
 import { predictCueTrajectory } from './physics.js';
 import { drawTable } from './drawing_table.js';
 import { drawCueStick, drawTrajectory } from './drawing_cue.js';
@@ -178,15 +178,7 @@ function update() {
     updateStrikeAnim();
     updateImpactFlash();
 
-    for (const ball of balls) ball.update(balls);
-
-    for (let i = 0; i < balls.length; i++) {
-        for (let j = i + 1; j < balls.length; j++) {
-            if (!balls[i].inPocket && !balls[j].inPocket) {
-                resolveCollision(balls[i], balls[j]);
-            }
-        }
-    }
+    stepPhysics(balls);
 
     balls.forEach(ball => {
         if (ball.inPocket && !ball.isCueBall && !scoredBalls.has(ball)) {

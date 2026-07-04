@@ -26,10 +26,12 @@ export const RUBBER_CORNER_CHAMFER_ANGLE = 45;
 export const DEBUG_DRAW_RUBBER = true;
 export const POCKET_MAGNET = 0.38;
 export const POCKET_MAGNET_RADIUS = POCKET_RADIUS; // базовый; у луз — свой radius
-export const FRICTION = 0.985;
-export const BALL_RESTITUTION = 0.96;
-export const CUSHION_RESTITUTION = 0.72;
-export const MIN_SPEED = 0.08;
+export const PHYSICS_SUBSTEPS = 5;
+export const ROLLING_FRICTION = 0.992;
+export const BALL_RESTITUTION = 0.95;
+export const CUSHION_RESTITUTION = 0.78;
+export const CUSHION_FRICTION = 0.12;
+export const MIN_SPEED = 0.05;
 
 export const COLORS = {
     felt: '#2a8cb8',
