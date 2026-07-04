@@ -4,7 +4,7 @@ import {
     MIN_SPEED,
     CUSHION_RESTITUTION
 } from './constants.js';
-import { getPlayArea, lighten, darken } from './utils.js';
+import { getPlayArea, getHeadSpot, tryPocketBall, nearPocketOnWall, lighten, darken } from './utils.js';
 
 export class Ball {
     constructor(x, y, options = {}) {
@@ -17,9 +17,12 @@ export class Ball {
         this.number = options.number || 0;
         this.ballType = options.ballType || (this.isCueBall ? 'cue' : 'solid');
         this.color = options.color || '#ffffff';
+        this.inPocket = false;
     }
 
     draw(ctx) {
+        if (this.inPocket) return;
+
         const r = this.radius;
 
         ctx.save();
@@ -85,7 +88,9 @@ export class Ball {
         ctx.fill();
     }
 
-    update() {
+    update(balls) {
+        if (this.inPocket) return;
+
         this.x += this.vx;
         this.y += this.vy;
         this.vx *= FRICTION;
@@ -94,26 +99,64 @@ export class Ball {
         if (Math.abs(this.vx) < MIN_SPEED) this.vx = 0;
         if (Math.abs(this.vy) < MIN_SPEED) this.vy = 0;
 
+        if (tryPocketBall(this)) {
+            if (this.isCueBall) {
+                setTimeout(() => this.respotCueBall(balls), 600);
+            }
+            return;
+        }
+
         const play = getPlayArea();
 
         if (this.x - this.radius < play.left) {
-            this.x = play.left + this.radius;
-            this.vx = -this.vx * CUSHION_RESTITUTION;
+            if (!nearPocketOnWall(this.x, this.y, 'left')) {
+                this.x = play.left + this.radius;
+                this.vx = -this.vx * CUSHION_RESTITUTION;
+            }
         } else if (this.x + this.radius > play.right) {
-            this.x = play.right - this.radius;
-            this.vx = -this.vx * CUSHION_RESTITUTION;
+            if (!nearPocketOnWall(this.x, this.y, 'right')) {
+                this.x = play.right - this.radius;
+                this.vx = -this.vx * CUSHION_RESTITUTION;
+            }
         }
 
         if (this.y - this.radius < play.top) {
-            this.y = play.top + this.radius;
-            this.vy = -this.vy * CUSHION_RESTITUTION;
+            if (!nearPocketOnWall(this.x, this.y, 'top')) {
+                this.y = play.top + this.radius;
+                this.vy = -this.vy * CUSHION_RESTITUTION;
+            }
         } else if (this.y + this.radius > play.bottom) {
-            this.y = play.bottom - this.radius;
-            this.vy = -this.vy * CUSHION_RESTITUTION;
+            if (!nearPocketOnWall(this.x, this.y, 'bottom')) {
+                this.y = play.bottom - this.radius;
+                this.vy = -this.vy * CUSHION_RESTITUTION;
+            }
+        }
+
+        tryPocketBall(this);
+    }
+
+    respotCueBall(balls) {
+        const spot = getHeadSpot();
+        this.x = spot.x;
+        this.y = spot.y;
+        this.vx = 0;
+        this.vy = 0;
+        this.inPocket = false;
+
+        for (const ball of balls) {
+            if (ball === this || ball.inPocket) continue;
+            const dx = ball.x - this.x;
+            const dy = ball.y - this.y;
+            const dist = Math.hypot(dx, dy);
+            const minDist = this.radius + ball.radius + 2;
+            if (dist < minDist && dist > 0) {
+                this.x -= (dx / dist) * (minDist - dist);
+                this.y -= (dy / dist) * (minDist - dist);
+            }
         }
     }
 
     isMoving() {
-        return Math.hypot(this.vx, this.vy) > MIN_SPEED;
+        return !this.inPocket && Math.hypot(this.vx, this.vy) > MIN_SPEED;
     }
 }

@@ -6,7 +6,7 @@ import {
     CANVAS_WIDTH,
     CANVAS_HEIGHT
 } from './constants.js';
-import { getPlayArea } from './utils.js';
+import { getPlayArea, nearPocketOnWall } from './utils.js';
 
 export function rayCircleHit(ox, oy, dx, dy, cx, cy, hitRadius) {
     const fx = ox - cx;
@@ -28,17 +28,35 @@ export function rayWallHit(ox, oy, dx, dy, radius) {
     let bestT = Infinity;
     let wall = null;
 
-    const consider = (t, wallName) => {
-        if (t > 0 && t < bestT) {
+    const consider = (t, wallName, valid) => {
+        if (t > 0 && valid && t < bestT) {
             bestT = t;
             wall = wallName;
         }
     };
 
-    if (dx < -0.0001) consider((play.left + radius - ox) / dx, 'left');
-    else if (dx > 0.0001) consider((play.right - radius - ox) / dx, 'right');
-    if (dy < -0.0001) consider((play.top + radius - oy) / dy, 'top');
-    else if (dy > 0.0001) consider((play.bottom - radius - oy) / dy, 'bottom');
+    if (dx < -0.0001) {
+        const t = (play.left + radius - ox) / dx;
+        const hitX = ox + dx * t;
+        const hitY = oy + dy * t;
+        consider(t, 'left', hitY >= play.top + radius && hitY <= play.bottom - radius && !nearPocketOnWall(hitX, hitY, 'left'));
+    } else if (dx > 0.0001) {
+        const t = (play.right - radius - ox) / dx;
+        const hitX = ox + dx * t;
+        const hitY = oy + dy * t;
+        consider(t, 'right', hitY >= play.top + radius && hitY <= play.bottom - radius && !nearPocketOnWall(hitX, hitY, 'right'));
+    }
+    if (dy < -0.0001) {
+        const t = (play.top + radius - oy) / dy;
+        const hitX = ox + dx * t;
+        const hitY = oy + dy * t;
+        consider(t, 'top', hitX >= play.left + radius && hitX <= play.right - radius && !nearPocketOnWall(hitX, hitY, 'top'));
+    } else if (dy > 0.0001) {
+        const t = (play.bottom - radius - oy) / dy;
+        const hitX = ox + dx * t;
+        const hitY = oy + dy * t;
+        consider(t, 'bottom', hitX >= play.left + radius && hitX <= play.right - radius && !nearPocketOnWall(hitX, hitY, 'bottom'));
+    }
 
     return bestT === Infinity ? null : { t: bestT, wall };
 }
@@ -56,7 +74,7 @@ export function predictCueTrajectory(angle, cueBall, balls) {
     let hitBall = null;
 
     for (const ball of balls) {
-        if (ball === cueBall) continue;
+        if (ball === cueBall || ball.inPocket) continue;
         const t = rayCircleHit(ox, oy, dx, dy, ball.x, ball.y, BALL_RADIUS * 2);
         if (t !== null && (hitT === null || t < hitT)) {
             hitT = t;
