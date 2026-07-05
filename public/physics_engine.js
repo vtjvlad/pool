@@ -7,65 +7,79 @@ import {
     MIN_SPEED,
     PHYSICS_SUBSTEPS,
     COLLISION_PASSES,
-    SPIN_DECAY
+    SPIN_DECAY,
+    TOP_SPIN_ROLLING_ASSIST,
+    TOP_SPIN_ROLLING_DRAG
 } from './constants.js';
 import { resolveBallCushionCollision } from './cushion_collision.js';
 import { tryPocketBall } from './utils.js';
+
+function setSpeed(ball, speed, directionX, directionY) {
+    ball.vx = directionX * speed;
+    ball.vy = directionY * speed;
+}
 
 export function applyRollingFriction(ball, frameFraction) {
     if (ball.inPocket) return;
 
     const speed = Math.hypot(ball.vx, ball.vy);
+    const spinFactor = Math.pow(SPIN_DECAY, frameFraction);
+
+    ball.spin *= spinFactor;
+    ball.topSpin *= spinFactor;
+
+    if (speed <= 0) return;
+
+    const dirX = ball.vx / speed;
+    const dirY = ball.vy / speed;
     const friction = speed < LOW_SPEED_THRESHOLD ? LOW_SPEED_FRICTION : ROLLING_FRICTION;
-    const factor = Math.pow(friction, frameFraction);
+    let factor = Math.pow(friction, frameFraction);
 
-    ball.vx *= factor;
-    ball.vy *= factor;
+    if (ball.topSpin > 0) {
+        factor += ball.topSpin * TOP_SPIN_ROLLING_ASSIST * frameFraction;
+    } else if (ball.topSpin < 0) {
+        factor *= Math.max(0, 1 + ball.topSpin * TOP_SPIN_ROLLING_DRAG * frameFraction);
+    }
 
-    const newSpeed = Math.hypot(ball.vx, ball.vy);
-    if (newSpeed > 0 && newSpeed < MIN_SPEED) {
+    const nextSpeed = speed * Math.min(factor, 0.999);
+    if (nextSpeed < MIN_SPEED) {
         ball.vx = 0;
         ball.vy = 0;
         ball.spin = 0;
         ball.topSpin = 0;
+        return;
     }
 
-    const spinFactor = Math.pow(SPIN_DECAY, frameFraction);
-    ball.spin *= spinFactor;
-    ball.topSpin *= spinFactor;
-
-    if (ball.topSpin !== 0 && newSpeed > 0) {
-        const topAdj = 1 + ball.topSpin * 0.006;
-        const topFactor = Math.pow(ROLLING_FRICTION / topAdj, frameFraction);
-        const ratio = topFactor / factor;
-        ball.vx *= ratio;
-        ball.vy *= ratio;
-    }
+    setSpeed(ball, nextSpeed, dirX, dirY);
 }
 
 export function resolveCollision(b1, b2) {
-    const dx = b2.x - b1.x;
-    const dy = b2.y - b1.y;
+    let dx = b2.x - b1.x;
+    let dy = b2.y - b1.y;
     const dist = Math.hypot(dx, dy);
     const minDist = b1.radius + b2.radius;
-    if (dist >= minDist || dist === 0) return;
+    if (dist >= minDist) return;
 
-    const nx = dx / dist;
-    const ny = dy / dist;
+    let normalDist = dist;
+    if (dist === 0) {
+        dx = b2.px - b1.px;
+        dy = b2.py - b1.py;
+        normalDist = Math.hypot(dx, dy);
+        if (normalDist === 0) {
+            dx = 1;
+            dy = 0;
+            normalDist = 1;
+        }
+    }
+
+    const nx = dx / normalDist;
+    const ny = dy / normalDist;
     const overlap = minDist - dist;
 
-    const v1n = b1.vx * nx + b1.vy * ny;
-    const v2n = b2.vx * nx + b2.vy * ny;
-    const approach1 = Math.max(0, -v1n);
-    const approach2 = Math.max(0, v2n);
-    const approachSum = approach1 + approach2 + 0.001;
-    const share1 = approach1 / approachSum;
-    const share2 = approach2 / approachSum;
-
-    b1.x -= nx * overlap * share1;
-    b1.y -= ny * overlap * share1;
-    b2.x += nx * overlap * share2;
-    b2.y += ny * overlap * share2;
+    b1.x -= nx * overlap * 0.5;
+    b1.y -= ny * overlap * 0.5;
+    b2.x += nx * overlap * 0.5;
+    b2.y += ny * overlap * 0.5;
 
     const rvx = b2.vx - b1.vx;
     const rvy = b2.vy - b1.vy;
@@ -80,7 +94,9 @@ export function resolveCollision(b1, b2) {
 
     const tx = -ny;
     const ty = nx;
-    const velT = rvx * tx + rvy * ty;
+    const postRvx = b2.vx - b1.vx;
+    const postRvy = b2.vy - b1.vy;
+    const velT = postRvx * tx + postRvy * ty;
     const frictionImpulse = velT * BALL_FRICTION;
     b1.vx += frictionImpulse * tx * 0.5;
     b1.vy += frictionImpulse * ty * 0.5;

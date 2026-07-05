@@ -100,6 +100,7 @@ function resolveAtPosition(bx, by, vx, vy, r, edges, ball) {
         const ny = collision.ny;
         const dot = vx * nx + vy * ny;
         if (dot < 0) {
+            const preImpactSpeed = Math.hypot(vx, vy);
             vx -= (1 + CUSHION_RESTITUTION) * dot * nx;
             vy -= (1 + CUSHION_RESTITUTION) * dot * ny;
 
@@ -114,6 +115,14 @@ function resolveAtPosition(bx, by, vx, vy, r, edges, ball) {
                 vx += throwV * tx;
                 vy += throwV * ty;
                 ball.spin *= SPIN_CUSHION_RETAIN;
+            }
+
+            const exitSpeed = Math.hypot(vx, vy);
+            const maxExitSpeed = preImpactSpeed * 0.995;
+            if (exitSpeed > maxExitSpeed && exitSpeed > 0) {
+                const limit = maxExitSpeed / exitSpeed;
+                vx *= limit;
+                vy *= limit;
             }
         }
     }
