@@ -1,4 +1,4 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, BALL_RADIUS, POCKET_INSET, MID_POCKET_INSET, POCKET_CENTER_SHIFT, CORNER_POCKET_CENTER_SHIFT, CORNER_POCKET_RADIUS, CENTRAL_POCKET_RADIUS, POCKET_MAGNET, PLAY_SURFACE_INSET } from './constants.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, BALL_RADIUS, POCKET_INSET, MID_POCKET_INSET, POCKET_CENTER_SHIFT, CORNER_POCKET_CENTER_SHIFT, CORNER_POCKET_RADIUS, CENTRAL_POCKET_RADIUS, POCKET_MAGNET, POCKET_CAPTURE_BOOST, POCKET_SLOW_SPEED, POCKET_JAW_BIAS, PLAY_SURFACE_INSET } from './constants.js';
 
 const CENTRAL_POCKET_IDS = new Set(['tm', 'bm']);
 
@@ -69,20 +69,38 @@ export function nearPocketOnWall(x, y, wall) {
     });
 }
 
-export function tryPocketBall(ball) {
+export function tryPocketBall(ball, timeScale = 1) {
     if (ball.inPocket || ball.isPocketing()) return true;
+
+    const speed = Math.hypot(ball.vx, ball.vy);
 
     for (const pocket of getPockets()) {
         const dx = pocket.x - ball.x;
         const dy = pocket.y - ball.y;
         const dist = Math.hypot(dx, dy);
-        if (dist < pocket.radius && dist > 0.5) {
-            const speed = Math.hypot(ball.vx, ball.vy);
-            ball.vx += (dx / dist) * POCKET_MAGNET * (1 + speed * 0.05);
-            ball.vy += (dy / dist) * POCKET_MAGNET * (1 + speed * 0.05);
+        if (dist < 0.5) {
+            ball.startPocketFall(pocket);
+            return true;
         }
 
-        if (dist < pocket.radius) {
+        let captureRadius = pocket.radius;
+        if (speed < POCKET_SLOW_SPEED) {
+            captureRadius *= POCKET_CAPTURE_BOOST;
+        }
+        if (speed > 0.1) {
+            const approach = (ball.vx * dx + ball.vy * dy) / (dist * speed);
+            if (approach > 0) {
+                captureRadius *= 1 + POCKET_JAW_BIAS * approach;
+            }
+        }
+
+        if (dist < captureRadius) {
+            const pull = POCKET_MAGNET * timeScale * (1 + speed * 0.04);
+            ball.vx += (dx / dist) * pull;
+            ball.vy += (dy / dist) * pull;
+        }
+
+        if (dist < captureRadius * 0.72) {
             ball.startPocketFall(pocket);
             return true;
         }

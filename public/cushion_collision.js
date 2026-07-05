@@ -1,4 +1,14 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, CUSHION_RESTITUTION, CUSHION_FRICTION, SPIN_CUSHION_THROW, SPIN_CUSHION_RETAIN } from './constants.js';
+import {
+    CANVAS_WIDTH,
+    CANVAS_HEIGHT,
+    CUSHION_BOUNCE,
+    CUSHION_TANGENTIAL_DAMPING,
+    LOW_SPEED_THRESHOLD,
+    SIDE_SPIN_THROW,
+    SPIN_CUSHION_RETAIN,
+    TOP_SPIN_CUSHION_KICK,
+    MAX_SPIN_SPEED_CHANGE
+} from './constants.js';
 import { getCushionInnerEdges } from './cushions.js';
 import { getRubberCollisionEdges } from './cushion_rubber.js';
 
@@ -45,6 +55,10 @@ function getCollisionEdges() {
     return cachedCollisionEdges;
 }
 
+function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+}
+
 function circleSegmentCollision(bx, by, radius, line) {
     const dx = line.x2 - line.x1;
     const dy = line.y2 - line.y1;
@@ -78,7 +92,9 @@ function circleSegmentCollision(bx, by, radius, line) {
     };
 }
 
-function resolveAtPosition(bx, by, vx, vy, r, edges, ball) {
+function resolveAtPosition(bx, by, vx, vy, r, edges, ball, allowBounce) {
+    let bounced = false;
+
     for (let iter = 0; iter < 5; iter++) {
         let best = null;
 
@@ -99,31 +115,49 @@ function resolveAtPosition(bx, by, vx, vy, r, edges, ball) {
         const nx = collision.nx;
         const ny = collision.ny;
         const dot = vx * nx + vy * ny;
-        if (dot < 0) {
+        if (allowBounce && !bounced && dot < 0) {
             const preImpactSpeed = Math.hypot(vx, vy);
-            vx -= (1 + CUSHION_RESTITUTION) * dot * nx;
-            vy -= (1 + CUSHION_RESTITUTION) * dot * ny;
+            const bounce = -dot < LOW_SPEED_THRESHOLD ? CUSHION_BOUNCE * 0.72 : CUSHION_BOUNCE;
+            vx -= (1 + bounce) * dot * nx;
+            vy -= (1 + bounce) * dot * ny;
 
             const tx = -ny;
             const ty = nx;
             const vTan = vx * tx + vy * ty;
-            vx -= vTan * CUSHION_FRICTION * tx;
-            vy -= vTan * CUSHION_FRICTION * ty;
+            vx -= vTan * CUSHION_TANGENTIAL_DAMPING * tx;
+            vy -= vTan * CUSHION_TANGENTIAL_DAMPING * ty;
 
-            if (ball && ball.spin) {
-                const throwV = ball.spin * SPIN_CUSHION_THROW;
-                vx += throwV * tx;
-                vy += throwV * ty;
-                ball.spin *= SPIN_CUSHION_RETAIN;
+            if (ball) {
+                const spinCap = preImpactSpeed * MAX_SPIN_SPEED_CHANGE;
+                if (ball.spin) {
+                    const throwV = clamp(ball.spin * SIDE_SPIN_THROW * preImpactSpeed, -spinCap, spinCap);
+                    vx += throwV * tx;
+                    vy += throwV * ty;
+                    ball.spin *= SPIN_CUSHION_RETAIN;
+                }
+                if (ball.topSpin) {
+                    const inSpeed = Math.hypot(vx, vy) || 1;
+                    const inDirX = vx / inSpeed;
+                    const inDirY = vy / inSpeed;
+                    const topKick = clamp(ball.topSpin * TOP_SPIN_CUSHION_KICK * preImpactSpeed, -spinCap, spinCap);
+                    vx += topKick * inDirX;
+                    vy += topKick * inDirY;
+                    ball.topSpin *= SPIN_CUSHION_RETAIN;
+                }
+                ball.slide = Math.min(ball.slide || 0, 0.25);
             }
 
             const exitSpeed = Math.hypot(vx, vy);
-            const maxExitSpeed = preImpactSpeed * 0.995;
+            const maxExitSpeed = preImpactSpeed * 1.015;
             if (exitSpeed > maxExitSpeed && exitSpeed > 0) {
                 const limit = maxExitSpeed / exitSpeed;
                 vx *= limit;
                 vy *= limit;
             }
+            bounced = true;
+        } else if (dot < 0) {
+            vx -= dot * nx;
+            vy -= dot * ny;
         }
     }
 
@@ -149,7 +183,8 @@ export function resolveBallCushionCollision(ball, prevX, prevY) {
         const t = i / samples;
         const sx = prevX + (endX - prevX) * t;
         const sy = prevY + (endY - prevY) * t;
-        const result = resolveAtPosition(sx, sy, vx, vy, r, edges, ball);
+        const allowBounce = i === samples;
+        const result = resolveAtPosition(sx, sy, vx, vy, r, edges, ball, allowBounce);
         bx = result.bx;
         by = result.by;
         vx = result.vx;

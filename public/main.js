@@ -12,7 +12,9 @@ import {
     MAX_SPIN_OFFSET,
     SPIN_SIDE_POWER,
     SPIN_TOP_POWER,
-    SPIN_MASSE_FACTOR,
+    SLIDE_FROM_OFFSET,
+    REFERENCE_FPS,
+    MAX_PHYSICS_DT,
     AIM_TAP_THRESHOLD_PX,
     AIM_TAP_MAX_MS,
     AIM_MARKER_MIN_DIST,
@@ -89,6 +91,7 @@ let isDraggingAimSlider = false;
 let activeAimSliderPointerId = null;
 let aimSliderLastY = null;
 let aimPointer = null;
+let lastFrameTime = performance.now();
 
 const TRAY_CAPACITY = 15;
 
@@ -158,12 +161,10 @@ function spinFromPadEvent(e) {
 }
 
 function applySpinToCueBall(power, angle) {
-    const perpX = -Math.sin(angle);
-    const perpY = Math.cos(angle);
     cueBall.spin = spinOffsetX * SPIN_SIDE_POWER * power;
-    cueBall.topSpin = spinOffsetY * SPIN_TOP_POWER * power;
-    cueBall.vx += perpX * spinOffsetX * SPIN_MASSE_FACTOR * power;
-    cueBall.vy += perpY * spinOffsetX * SPIN_MASSE_FACTOR * power;
+    cueBall.topSpin = -spinOffsetY * SPIN_TOP_POWER * power;
+    const offCenter = Math.hypot(spinOffsetX, spinOffsetY) / MAX_SPIN_OFFSET;
+    cueBall.slide = Math.min(1, offCenter * SLIDE_FROM_OFFSET);
     resetSpin();
 }
 
@@ -342,13 +343,18 @@ function initGame() {
     resetSpin();
     isPullingPower = false;
     activePullPointerId = null;
+    lastFrameTime = performance.now();
 }
 
-function update() {
+function update(now = performance.now()) {
+    const deltaMs = Math.min(now - lastFrameTime, MAX_PHYSICS_DT * 1000);
+    lastFrameTime = now;
+    const frameScale = (deltaMs / 1000) * REFERENCE_FPS;
+
     updateStrikeAnim();
     updateImpactFlash();
 
-    stepPhysics(balls);
+    stepPhysics(balls, frameScale);
     updatePocketAnimations(balls);
 
     balls.forEach(ball => {
@@ -395,8 +401,8 @@ function draw() {
     }
 }
 
-function gameLoop() {
-    update();
+function gameLoop(now) {
+    update(now);
     draw();
     requestAnimationFrame(gameLoop);
 }

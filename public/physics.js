@@ -4,7 +4,11 @@ import {
     BOUNCE_PREVIEW_LEN,
     MIN_BOUNCE_DRAW,
     CANVAS_WIDTH,
-    CANVAS_HEIGHT
+    CANVAS_HEIGHT,
+    BALL_BOUNCE,
+    BALL_SURFACE_FRICTION,
+    CUSHION_BOUNCE,
+    CUSHION_TANGENTIAL_DAMPING
 } from './constants.js';
 import { rayCushionHit } from './cushion_collision.js';
 
@@ -84,9 +88,19 @@ export function predictCueTrajectory(angle, cueBall, balls) {
 
     if (hitType === 'wall' && hitWall) {
         const dot = dx * hitWallNx + dy * hitWallNy;
-        bounceDx = dx - 2 * dot * hitWallNx;
-        bounceDy = dy - 2 * dot * hitWallNy;
-        hasBounce = true;
+        bounceDx = dx - (1 + CUSHION_BOUNCE) * dot * hitWallNx;
+        bounceDy = dy - (1 + CUSHION_BOUNCE) * dot * hitWallNy;
+        const tx = -hitWallNy;
+        const ty = hitWallNx;
+        const vTan = bounceDx * tx + bounceDy * ty;
+        bounceDx -= vTan * CUSHION_TANGENTIAL_DAMPING * tx;
+        bounceDy -= vTan * CUSHION_TANGENTIAL_DAMPING * ty;
+        const bl = Math.hypot(bounceDx, bounceDy);
+        if (bl > MIN_BOUNCE_DRAW) {
+            bounceDx /= bl;
+            bounceDy /= bl;
+            hasBounce = true;
+        }
     } else if (hitType === 'ball' && hitBall) {
         const nx = hitBall.x - contactX;
         const ny = hitBall.y - contactY;
@@ -94,10 +108,15 @@ export function predictCueTrajectory(angle, cueBall, balls) {
         const nxu = nx / len;
         const nyu = ny / len;
         const dot = dx * nxu + dy * nyu;
-        bounceDx = dx - dot * nxu;
-        bounceDy = dy - dot * nyu;
-        targetDx = dot * nxu;
-        targetDy = dot * nyu;
+        bounceDx = dx - (1 + BALL_BOUNCE) * 0.5 * dot * nxu;
+        bounceDy = dy - (1 + BALL_BOUNCE) * 0.5 * dot * nyu;
+        const tx = -nyu;
+        const ty = nxu;
+        const vTan = bounceDx * tx + bounceDy * ty;
+        bounceDx -= vTan * BALL_SURFACE_FRICTION * tx;
+        bounceDy -= vTan * BALL_SURFACE_FRICTION * ty;
+        targetDx = (1 + BALL_BOUNCE) * 0.5 * dot * nxu;
+        targetDy = (1 + BALL_BOUNCE) * 0.5 * dot * nyu;
         const bl = Math.hypot(bounceDx, bounceDy);
         if (bl > MIN_BOUNCE_DRAW) {
             bounceDx /= bl;

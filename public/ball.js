@@ -1,8 +1,9 @@
 import {
     BALL_RADIUS,
-    MIN_SPEED,
+    SLEEP_SPEED,
     POCKET_FALL_MS,
-    CUE_RESPOT_DELAY_MS
+    CUE_RESPOT_DELAY_MS,
+    SPIN_VISUAL_SCALE
 } from './constants.js';
 import { getHeadSpot } from './utils.js';
 
@@ -68,9 +69,11 @@ export class Ball {
         this.pocketFall = null;
         this.spin = 0;
         this.topSpin = 0;
+        this.slide = 0;
         this.orientation = { ...IDENTITY_QUAT };
         this.px = x;
         this.py = y;
+        this.sleepFrames = 0;
     }
 
     startPocketFall(pocket) {
@@ -88,6 +91,7 @@ export class Ball {
         this.vy = 0;
         this.spin = 0;
         this.topSpin = 0;
+        this.slide = 0;
     }
 
     updatePocketFall(balls) {
@@ -135,6 +139,13 @@ export class Ball {
         const delta = { w: c, x: axisX * s, y: axisY * s, z: 0 };
 
         this.orientation = quatNormalize(quatMultiply(delta, this.orientation));
+
+        const spinAngle = this.spin * SPIN_VISUAL_SCALE * frameFraction;
+        if (Math.abs(spinAngle) > 1e-8) {
+            const half = spinAngle * 0.5;
+            const spinDelta = { w: Math.cos(half), x: 0, y: 0, z: Math.sin(half) };
+            this.orientation = quatNormalize(quatMultiply(spinDelta, this.orientation));
+        }
     }
 
     projectSurfacePoint(lx, ly, lz) {
@@ -352,7 +363,7 @@ export class Ball {
     }
 
     isMoving() {
-        return !this.inPocket && !this.isPocketing() && Math.hypot(this.vx, this.vy) > MIN_SPEED;
+        return !this.inPocket && !this.isPocketing() && Math.hypot(this.vx, this.vy) > SLEEP_SPEED;
     }
 
     respotCueBall(balls) {
@@ -365,6 +376,8 @@ export class Ball {
         this.pocketFall = null;
         this.spin = 0;
         this.topSpin = 0;
+        this.slide = 0;
+        this.sleepFrames = 0;
         this.orientation = { ...IDENTITY_QUAT };
 
         for (const ball of balls) {
