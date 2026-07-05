@@ -30,7 +30,7 @@ import { stepPhysics, updatePocketAnimations } from './physics_engine.js';
 import { predictCueTrajectory } from './physics.js';
 import { drawTable } from './drawing_table.js';
 import { drawCueStick, drawTrajectory, drawSpinMark, getCueTipPosition } from './drawing_cue.js';
-import { getHeadSpot, lighten, darken } from './utils.js';
+import { getHeadSpot, lighten, darken, getPockets, getPlaySurface } from './utils.js';
 
 const canvas = document.getElementById('billiard-canvas');
 const ctx = canvas.getContext('2d');
@@ -610,3 +610,138 @@ updateAimSliderVisual();
 initGame();
 fitGameLayout();
 gameLoop();
+
+window.__poolTest = {
+    state() {
+        const cue = cueBall;
+        return {
+            balls: balls.map(b => ({
+                x: b.x, y: b.y, vx: b.vx, vy: b.vy,
+                spin: b.spin, topSpin: b.topSpin, slide: b.slide || 0,
+                inPocket: b.inPocket, isCueBall: b.isCueBall, number: b.number,
+                moving: b.isMoving(), pocketing: b.isPocketing()
+            })),
+            score: scoreElement?.textContent ?? '0',
+            cue: cue ? {
+                x: cue.x, y: cue.y, vx: cue.vx, vy: cue.vy,
+                spin: cue.spin, topSpin: cue.topSpin, slide: cue.slide || 0,
+                moving: cue.isMoving(), inPocket: cue.inPocket, pocketing: cue.isPocketing()
+            } : null
+        };
+    },
+
+    pockets() {
+        return getPockets().map(p => ({ id: p.id, x: p.x, y: p.y, r: p.radius }));
+    },
+
+    playSurface() {
+        const s = getPlaySurface();
+        return { left: s.left, top: s.top, right: s.right, bottom: s.bottom };
+    },
+
+    setup({ cueX, cueY, withRack = false, extraBalls = [] } = {}) {
+        initGame();
+        if (!withRack) {
+            balls = balls.filter(b => b.isCueBall);
+        }
+        cueBall.x = cueX ?? cueBall.x;
+        cueBall.y = cueY ?? cueBall.y;
+        cueBall.vx = 0;
+        cueBall.vy = 0;
+        cueBall.spin = 0;
+        cueBall.topSpin = 0;
+        cueBall.slide = 0;
+        cueBall.inPocket = false;
+        cueBall.pocketFall = null;
+        strikeAnim = null;
+        for (const b of extraBalls) {
+            balls.push(new Ball(b.x, b.y, { number: b.number ?? 1, color: b.color }));
+        }
+        resetSpin();
+        resetPowerPull();
+    },
+
+    fire({ angle, power = 60, spinX = 0, spinY = 0 }) {
+        spinOffsetX = spinX * MAX_SPIN_OFFSET;
+        spinOffsetY = spinY * MAX_SPIN_OFFSET;
+        const pullBack = (power / 100) * MAX_PULL;
+        const p = pullBack * POWER_FACTOR;
+        cueBall.vx = Math.cos(angle) * p;
+        cueBall.vy = Math.sin(angle) * p;
+        applySpinToCueBall(p, angle);
+    },
+
+    simulate(maxSteps = 4000) {
+        const surface = getPlaySurface();
+        const r = BALL_RADIUS;
+        const events = [];
+        const path = [];
+        let prevVx = cueBall.vx;
+        let prevVy = cueBall.vy;
+        let bounceCount = 0;
+
+        for (let step = 0; step < maxSteps; step++) {
+            const preX = cueBall.x;
+            const preY = cueBall.y;
+            stepPhysics(balls, 1);
+            updatePocketAnimations(balls);
+
+            const outOfBounds =
+                cueBall.x < surface.left - r * 0.5 ||
+                cueBall.x > surface.right + r * 0.5 ||
+                cueBall.y < surface.top - r * 0.5 ||
+                cueBall.y > surface.bottom + r * 0.5;
+
+            if (outOfBounds) {
+                events.push({ type: 'escaped', step, x: cueBall.x, y: cueBall.y });
+                break;
+            }
+
+            const speedBefore = Math.hypot(prevVx, prevVy);
+            const dotPrev = prevVx * cueBall.vx + prevVy * cueBall.vy;
+            if (speedBefore > 1.2 && dotPrev < 0 && Math.hypot(cueBall.vx, cueBall.vy) > 0.4) {
+                bounceCount++;
+                events.push({
+                    type: 'bounce',
+                    step,
+                    x: cueBall.x,
+                    y: cueBall.y,
+                    vx: cueBall.vx,
+                    vy: cueBall.vy,
+                    n: bounceCount
+                });
+            }
+
+            if (cueBall.inPocket || cueBall.isPocketing()) {
+                events.push({ type: 'pocketed', step, x: cueBall.x, y: cueBall.y });
+                break;
+            }
+
+            for (const b of balls) {
+                if (!b.isCueBall && (b.inPocket || b.isPocketing())) {
+                    events.push({ type: 'object_pocketed', step, number: b.number, x: b.x, y: b.y });
+                }
+            }
+
+            prevVx = cueBall.vx;
+            prevVy = cueBall.vy;
+
+            if (step % 8 === 0) {
+                path.push({ x: +cueBall.x.toFixed(1), y: +cueBall.y.toFixed(1) });
+            }
+
+            const anyMoving = balls.some(b => !b.inPocket && b.isMoving());
+            if (!anyMoving) break;
+        }
+
+        return {
+            events,
+            path,
+            bounces: events.filter(e => e.type === 'bounce').length,
+            pocketed: events.some(e => e.type === 'pocketed'),
+            objectPocketed: events.some(e => e.type === 'object_pocketed'),
+            escaped: events.some(e => e.type === 'escaped'),
+            final: this.state()
+        };
+    }
+};
