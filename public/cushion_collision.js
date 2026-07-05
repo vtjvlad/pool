@@ -5,8 +5,10 @@ import {
     CUSHION_TANGENTIAL_DAMPING,
     LOW_SPEED_THRESHOLD,
     SIDE_SPIN_THROW,
+    SPIN_CUSHION_SIDE_THROW,
     SPIN_CUSHION_RETAIN,
     TOP_SPIN_CUSHION_KICK,
+    DRAW_SPIN_CUSHION_KICK,
     MAX_SPIN_SPEED_CHANGE
 } from './constants.js';
 import { getCushionInnerEdges } from './cushions.js';
@@ -130,7 +132,7 @@ function resolveAtPosition(bx, by, vx, vy, r, edges, ball, allowBounce) {
             if (ball) {
                 const spinCap = preImpactSpeed * MAX_SPIN_SPEED_CHANGE;
                 if (ball.spin) {
-                    const throwV = clamp(ball.spin * SIDE_SPIN_THROW * preImpactSpeed, -spinCap, spinCap);
+                    const throwV = clamp(ball.spin * SPIN_CUSHION_SIDE_THROW * preImpactSpeed, -spinCap, spinCap);
                     vx += throwV * tx;
                     vy += throwV * ty;
                     ball.spin *= SPIN_CUSHION_RETAIN;
@@ -139,7 +141,8 @@ function resolveAtPosition(bx, by, vx, vy, r, edges, ball, allowBounce) {
                     const inSpeed = Math.hypot(vx, vy) || 1;
                     const inDirX = vx / inSpeed;
                     const inDirY = vy / inSpeed;
-                    const topKick = clamp(ball.topSpin * TOP_SPIN_CUSHION_KICK * preImpactSpeed, -spinCap, spinCap);
+                    const topScale = ball.topSpin >= 0 ? TOP_SPIN_CUSHION_KICK : DRAW_SPIN_CUSHION_KICK;
+                    const topKick = clamp(ball.topSpin * topScale * preImpactSpeed, -spinCap, spinCap);
                     vx += topKick * inDirX;
                     vy += topKick * inDirY;
                     ball.topSpin *= SPIN_CUSHION_RETAIN;

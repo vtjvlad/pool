@@ -19,7 +19,11 @@ import {
     SIDE_SPIN_THROW,
     TOP_SPIN_ACCEL,
     DRAW_SPIN_BRAKE,
+    TOP_SPIN_ROLLING_ACCEL,
+    DRAW_SPIN_ROLLING_ACCEL,
+    TOP_SPIN_CONVERSION,
     SPIN_TRANSFER,
+    MAX_SIDE_SPIN_SPEED_CHANGE,
     MAX_SPIN_SPEED_CHANGE
 } from './constants.js';
 import { resolveBallCushionCollision } from './cushion_collision.js';
@@ -63,28 +67,39 @@ function applySideSpinCurve(ball, frameFraction) {
 
     const dirX = ball.vx / speed;
     const dirY = ball.vy / speed;
-    const slideBoost = 1 + (ball.slide || 0) * 1.6;
+    const slideBoost = 1 + (ball.slide || 0) * 0.3;
     const curve = clamp(
         ball.spin * SIDE_SPIN_CURVE * speed * frameFraction * slideBoost,
-        -speed * MAX_SPIN_SPEED_CHANGE * frameFraction,
-        speed * MAX_SPIN_SPEED_CHANGE * frameFraction
+        -speed * MAX_SIDE_SPIN_SPEED_CHANGE * frameFraction,
+        speed * MAX_SIDE_SPIN_SPEED_CHANGE * frameFraction
     );
     ball.vx += -dirY * curve;
     ball.vy += dirX * curve;
     return Math.hypot(ball.vx, ball.vy);
 }
 
+function applyTopSpinToMotion(ball, speed, dt) {
+    if (Math.abs(ball.topSpin) < SLEEP_SPIN || speed <= SLEEP_SPEED) return speed;
+
+    const dirX = ball.vx / speed;
+    const dirY = ball.vy / speed;
+    const rollAccel = ball.topSpin >= 0 ? TOP_SPIN_ROLLING_ACCEL : DRAW_SPIN_ROLLING_ACCEL;
+    const dv = clamp(
+        ball.topSpin * rollAccel * dt,
+        -speed * MAX_SPIN_SPEED_CHANGE * dt,
+        speed * MAX_SPIN_SPEED_CHANGE * dt
+    );
+    const newSpeed = Math.max(0, speed + dv);
+    ball.vx = dirX * newSpeed;
+    ball.vy = dirY * newSpeed;
+    ball.topSpin -= dv * TOP_SPIN_CONVERSION;
+    return newSpeed;
+}
+
 function rollingDeceleration(ball, speed, dt) {
     const speedRatio = clamp(speed / LOW_SPEED_THRESHOLD, 0, 1);
     const blend = speedRatio * speedRatio * (3 - 2 * speedRatio);
-    let deceleration = LOW_SPEED_DECELERATION + (ROLLING_DECELERATION - LOW_SPEED_DECELERATION) * blend;
-
-    if (ball.topSpin > SLEEP_SPIN) {
-        deceleration *= Math.max(0.5, 1 - ball.topSpin * TOP_SPIN_ACCEL);
-    } else if (ball.topSpin < -SLEEP_SPIN) {
-        deceleration += Math.min(0.1, -ball.topSpin * DRAW_SPIN_BRAKE);
-    }
-
+    const deceleration = LOW_SPEED_DECELERATION + (ROLLING_DECELERATION - LOW_SPEED_DECELERATION) * blend;
     return deceleration * dt * (0.55 + 0.85 * speedRatio);
 }
 
@@ -102,6 +117,7 @@ export function applyMotionForces(ball, dt) {
     }
 
     speed = applySideSpinCurve(ball, dt);
+    speed = applyTopSpinToMotion(ball, speed, dt);
 
     const sliding = (ball.slide || 0) > SLIDE_TO_ROLL_THRESHOLD;
     if (sliding) {

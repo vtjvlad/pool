@@ -71,17 +71,25 @@ export const SLEEP_FRAMES = 12;
 export const MIN_SPEED = SLEEP_SPEED;
 
 export const MAX_SPIN_OFFSET = 0.72;
-export const SPIN_SIDE_POWER = 0.52;
-export const SPIN_TOP_POWER = 0.46;
+export const SPIN_SIDE_POWER = 0.28;
+export const SPIN_TOP_POWER = 0.31;
 export const SPIN_DECAY = 0.987;
-export const SIDE_SPIN_CURVE = 0.0045;
-export const SIDE_SPIN_THROW = 0.036;
-export const TOP_SPIN_ACCEL = 0.05;
-export const DRAW_SPIN_BRAKE = 0.075;
+export const SIDE_SPIN_CURVE = 0.00185;
+export const SIDE_SPIN_THROW = 0.015;
+export const SPIN_CUSHION_SIDE_THROW = 0.009;
+export const TOP_SPIN_ACCEL = 0.093;
+export const DRAW_SPIN_BRAKE = 0.27;
+export const SPIN_TOP_MASSE_FACTOR = 0.06;
+export const DRAW_SPIN_MASSE_FACTOR = 0.135;
+export const TOP_SPIN_ROLLING_ACCEL = 0.016;
+export const DRAW_SPIN_ROLLING_ACCEL = 0.036;
+export const TOP_SPIN_CONVERSION = 0.82;
 export const SPIN_TRANSFER = 0.18;
-export const SPIN_CUSHION_RETAIN = 0.42;
-export const TOP_SPIN_CUSHION_KICK = 0.14;
-export const MAX_SPIN_SPEED_CHANGE = 0.38;
+export const SPIN_CUSHION_RETAIN = 0.48;
+export const TOP_SPIN_CUSHION_KICK = 0.13;
+export const DRAW_SPIN_CUSHION_KICK = 0.36;
+export const MAX_SPIN_SPEED_CHANGE = 0.28;
+export const MAX_SIDE_SPIN_SPEED_CHANGE = 0.19;
 export const SPIN_VISUAL_SCALE = 0.065;
 
 /** Алиасы для превью прицела */

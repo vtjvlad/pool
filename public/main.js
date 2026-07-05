@@ -13,6 +13,8 @@ import {
     SPIN_SIDE_POWER,
     SPIN_TOP_POWER,
     SLIDE_FROM_OFFSET,
+    SPIN_TOP_MASSE_FACTOR,
+    DRAW_SPIN_MASSE_FACTOR,
     REFERENCE_FPS,
     MAX_PHYSICS_DT,
     AIM_TAP_THRESHOLD_PX,
@@ -161,8 +163,13 @@ function spinFromPadEvent(e) {
 }
 
 function applySpinToCueBall(power, angle) {
+    const fwdX = Math.cos(angle);
+    const fwdY = Math.sin(angle);
     cueBall.spin = spinOffsetX * SPIN_SIDE_POWER * power;
     cueBall.topSpin = -spinOffsetY * SPIN_TOP_POWER * power;
+    const masseFactor = cueBall.topSpin >= 0 ? SPIN_TOP_MASSE_FACTOR : DRAW_SPIN_MASSE_FACTOR;
+    cueBall.vx += fwdX * cueBall.topSpin * masseFactor;
+    cueBall.vy += fwdY * cueBall.topSpin * masseFactor;
     const offCenter = Math.hypot(spinOffsetX, spinOffsetY) / MAX_SPIN_OFFSET;
     cueBall.slide = Math.min(1, offCenter * SLIDE_FROM_OFFSET);
     resetSpin();
