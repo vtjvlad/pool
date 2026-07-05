@@ -2,8 +2,8 @@ export const CANVAS_WIDTH = 1040;
 export const CANVAS_HEIGHT = 520;
 
 /** Эталонный размер всего UI для пропорционального масштабирования */
-export const LAYOUT_SIDE_PANEL = 84;
-export const LAYOUT_AIM_PANEL = 52;
+export const LAYOUT_SIDE_PANEL = 67;
+export const LAYOUT_AIM_PANEL = 67;
 /** Минимальный отступ между столом и остальными элементами UI */
 export const LAYOUT_TABLE_MARGIN = 24;
 export const LAYOUT_TOP_BAR = 46;
@@ -105,7 +105,9 @@ export const AIM_TAP_THRESHOLD_PX = 12;
 export const AIM_TAP_MAX_MS = 280;
 export const AIM_MARKER_MIN_DIST = 48;
 export const AIM_BALL_DEAD_ZONE = BALL_RADIUS * 1.4;
-export const AIM_SLIDER_SENSITIVITY = 0.0056;
+/** Во сколько раз колесо прицела менее чувствительно, чем прицеливание по столу */
+export const AIM_WHEEL_FINE_FACTOR = 3;
+export const AIM_SLIDER_SENSITIVITY = 0.0037 / AIM_WHEEL_FINE_FACTOR;
 export const AIM_WHEEL_SCROLL_PX = 12;
 export const MAX_PULL = 115;
 export const MIN_POWER_PERCENT = 5;
