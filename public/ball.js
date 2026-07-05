@@ -58,12 +58,8 @@ function rotateVec(q, x, y, z) {
 }
 
 function shadeStripePixel(lx, ly, lz, baseRgb) {
-    const light = 0.56 + 0.44 * clamp01(lz * 0.52 - lx * 0.36 - ly * 0.34);
-    return [
-        Math.min(255, baseRgb[0] * light),
-        Math.min(255, baseRgb[1] * light),
-        Math.min(255, baseRgb[2] * light)
-    ];
+    /* Тень на шаре убрана — цвет без затенения */
+    return baseRgb;
 }
 
 export class Ball {
@@ -320,32 +316,21 @@ export class Ball {
         ctx.fill();
         ctx.restore();
 
-        const grad = ctx.createRadialGradient(
-            this.x - r * 0.35, this.y - r * 0.35, r * 0.1,
-            this.x, this.y, r
-        );
-
+        /* Тень (затемнение) на самом шаре убрана — заливка ровным цветом */
+        let fillColor;
         if (this.isCueBall) {
-            grad.addColorStop(0, '#ffffff');
-            grad.addColorStop(0.7, '#f0f0f0');
-            grad.addColorStop(1, '#d0d0d0');
+            fillColor = '#ffffff';
         } else if (this.ballType === 'eight') {
-            grad.addColorStop(0, '#444');
-            grad.addColorStop(0.5, '#1a1a1a');
-            grad.addColorStop(1, '#000');
+            fillColor = '#1a1a1a';
         } else if (this.ballType === 'stripe') {
-            grad.addColorStop(0, '#ffffff');
-            grad.addColorStop(0.7, '#f8f8f8');
-            grad.addColorStop(1, '#e8e8e8');
+            fillColor = '#fcfcfa';
         } else {
-            grad.addColorStop(0, lighten(this.color, 40));
-            grad.addColorStop(0.55, this.color);
-            grad.addColorStop(1, darken(this.color, 30));
+            fillColor = this.color;
         }
 
         ctx.beginPath();
         ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
+        ctx.fillStyle = fillColor;
         ctx.fill();
 
         ctx.save();
