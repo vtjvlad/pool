@@ -2,16 +2,16 @@ export const CANVAS_WIDTH = 1040;
 export const CANVAS_HEIGHT = 520;
 
 /** Эталонный размер всего UI для пропорционального масштабирования */
-export const LAYOUT_SIDE_PANEL = 56;
+export const LAYOUT_SIDE_PANEL = 84;
 export const LAYOUT_AIM_PANEL = 52;
-export const LAYOUT_PANEL_GAP = 10;
+/** Минимальный отступ между столом и остальными элементами UI */
+export const LAYOUT_TABLE_MARGIN = 24;
 export const LAYOUT_TOP_BAR = 46;
-export const LAYOUT_TOP_GAP = 8;
 export const LAYOUT_HINT = 40;
 export const LAYOUT_WIDTH =
-    LAYOUT_SIDE_PANEL + LAYOUT_PANEL_GAP + CANVAS_WIDTH + LAYOUT_PANEL_GAP + LAYOUT_AIM_PANEL;
+    LAYOUT_SIDE_PANEL + LAYOUT_TABLE_MARGIN + CANVAS_WIDTH + LAYOUT_TABLE_MARGIN + LAYOUT_AIM_PANEL;
 export const LAYOUT_HEIGHT =
-    LAYOUT_TOP_BAR + LAYOUT_TOP_GAP + CANVAS_HEIGHT + LAYOUT_HINT;
+    LAYOUT_TOP_BAR + LAYOUT_TABLE_MARGIN + CANVAS_HEIGHT + LAYOUT_TABLE_MARGIN + LAYOUT_HINT;
 
 export const BALL_RADIUS = 11;
 export const POCKET_DIAMETER = 47.52;
