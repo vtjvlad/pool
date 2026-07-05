@@ -4,7 +4,7 @@ import {
     POCKET_FALL_MS,
     CUE_RESPOT_DELAY_MS
 } from './constants.js';
-import { getHeadSpot, lighten, darken } from './utils.js';
+import { getHeadSpot } from './utils.js';
 
 const IDENTITY_QUAT = { w: 1, x: 0, y: 0, z: 0 };
 const stripeCanvasCache = new Map();
@@ -42,10 +42,6 @@ function hexToRgb(hex) {
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-function clamp01(v) {
-    return Math.max(0, Math.min(1, v));
-}
-
 function rotateVec(q, x, y, z) {
     const tx = 2 * (q.y * z - q.z * y);
     const ty = 2 * (q.z * x - q.x * z);
@@ -55,11 +51,6 @@ function rotateVec(q, x, y, z) {
         y + q.w * ty + (q.z * tx - q.x * tz),
         z + q.w * tz + (q.x * ty - q.y * tx)
     ];
-}
-
-function shadeStripePixel(lx, ly, lz, baseRgb) {
-    /* Тень на шаре убрана — цвет без затенения */
-    return baseRgb;
 }
 
 export class Ball {
@@ -215,8 +206,7 @@ export class Ball {
                 const [lx, ly, lz] = rotateVec(invQ, sx, sy, sz);
 
                 const inStripe = Math.abs(ly) <= stripeSin;
-                const base = inStripe ? color : white;
-                let rgb = shadeStripePixel(lx, ly, lz, base);
+                let rgb = inStripe ? color : white;
 
                 const edgeDist = Math.abs(Math.abs(ly) - stripeSin);
                 if (edgeDist < stripeEdge) {
