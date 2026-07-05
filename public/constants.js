@@ -7,7 +7,7 @@ export const LAYOUT_AIM_PANEL = 52;
 export const LAYOUT_PANEL_GAP = 10;
 export const LAYOUT_TOP_BAR = 46;
 export const LAYOUT_TOP_GAP = 8;
-export const LAYOUT_HINT = 26;
+export const LAYOUT_HINT = 40;
 export const LAYOUT_WIDTH =
     LAYOUT_SIDE_PANEL + LAYOUT_PANEL_GAP + CANVAS_WIDTH + LAYOUT_PANEL_GAP + LAYOUT_AIM_PANEL;
 export const LAYOUT_HEIGHT =

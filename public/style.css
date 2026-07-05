@@ -59,6 +59,7 @@ body {
     50% { transform: rotate(0deg); }
 }
 
+/* Отключено требование альбомной ориентации
 @media (orientation: portrait) {
     #rotate-hint {
         display: flex;
@@ -69,6 +70,7 @@ body {
         pointer-events: none;
     }
 }
+*/
 
 #game-container {
     display: flex;
@@ -92,7 +94,7 @@ body {
 
 #game-stage {
     width: 1168px;
-    height: 600px;
+    height: 614px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -525,12 +527,90 @@ body {
     color: #7ec8ff;
 }
 
-#hint {
-    flex: 0 0 26px;
-    height: 26px;
+#bottom-bar {
+    flex: 0 0 40px;
+    height: 40px;
     margin: 0;
     padding-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+#pocketed-tray {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 4px 12px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 17px;
+}
+
+#pocketed-tray-label {
+    font-size: 0.58rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.65;
+}
+
+#pocketed-tray-slots {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tray-slot {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed rgba(255, 255, 255, 0.16);
+}
+
+.tray-slot.filled {
+    border: none;
+    box-shadow:
+        inset -2px -3px 5px rgba(0, 0, 0, 0.35),
+        0 2px 5px rgba(0, 0, 0, 0.4);
+    animation: tray-ball-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes tray-ball-pop {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+}
+
+.mini-ball-number {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #f6f2ea;
+    color: #1a1a1a;
+    font-size: 8px;
+    font-weight: 700;
+    line-height: 12px;
+    text-align: center;
+    pointer-events: none;
+}
+
+#hint {
+    flex: 1;
+    margin: 0;
+    min-width: 0;
     text-align: center;
     font-size: 0.72rem;
     opacity: 0.55;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

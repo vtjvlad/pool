@@ -26,7 +26,7 @@ import { stepPhysics, updatePocketAnimations } from './physics_engine.js';
 import { predictCueTrajectory } from './physics.js';
 import { drawTable } from './drawing_table.js';
 import { drawCueStick, drawTrajectory, drawSpinMark, getCueTipPosition } from './drawing_cue.js';
-import { getHeadSpot } from './utils.js';
+import { getHeadSpot, lighten, darken } from './utils.js';
 
 const canvas = document.getElementById('billiard-canvas');
 const ctx = canvas.getContext('2d');
@@ -44,6 +44,7 @@ const aimWheelNotches = document.getElementById('aim-wheel-notches');
 const aimDegrees = document.getElementById('aim-degrees');
 const gameContainer = document.getElementById('game-container');
 const gameStage = document.getElementById('game-stage');
+const traySlots = document.getElementById('pocketed-tray-slots');
 
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
@@ -54,7 +55,7 @@ function fitGameLayout() {
     const availH = gameContainer.clientHeight;
     if (availW <= 0 || availH <= 0) return;
 
-    const scale = Math.min(availW / LAYOUT_WIDTH, availH / LAYOUT_HEIGHT);
+    const scale = Math.min(availW / LAYOUT_WIDTH, availH / LAYOUT_HEIGHT) * 0.9;
     gameStage.style.transform = `scale(${scale})`;
 }
 
@@ -63,7 +64,8 @@ let landscapeLockTried = false;
 function tryLockLandscape() {
     if (landscapeLockTried) return;
     landscapeLockTried = true;
-    screen.orientation?.lock?.('landscape')?.catch(() => {});
+    // Отключено требование альбомной ориентации
+    // screen.orientation?.lock?.('landscape')?.catch(() => {});
 }
 
 let balls = [];
@@ -87,6 +89,38 @@ let isDraggingAimSlider = false;
 let activeAimSliderPointerId = null;
 let aimSliderLastY = null;
 let aimPointer = null;
+
+const TRAY_CAPACITY = 15;
+
+function resetTray() {
+    traySlots.innerHTML = '';
+    for (let i = 0; i < TRAY_CAPACITY; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'tray-slot';
+        traySlots.appendChild(slot);
+    }
+}
+
+function miniBallBackground(ball) {
+    if (ball.ballType === 'stripe') {
+        return `linear-gradient(180deg,
+            #f6f2ea 0%, #f6f2ea 22%,
+            ${ball.color} 22%, ${ball.color} 78%,
+            #f6f2ea 78%, #f6f2ea 100%)`;
+    }
+    return `radial-gradient(circle at 32% 28%, ${lighten(ball.color, 70)}, ${ball.color} 60%, ${darken(ball.color, 40)})`;
+}
+
+function addBallToTray(ball) {
+    const slot = traySlots.querySelector('.tray-slot:not(.filled)');
+    if (!slot) return;
+    slot.classList.add('filled');
+    slot.style.background = miniBallBackground(ball);
+    const num = document.createElement('span');
+    num.className = 'mini-ball-number';
+    num.textContent = ball.number;
+    slot.appendChild(num);
+}
 
 function updateSpinPadVisual() {
     const percentX = 50 + (spinOffsetX / MAX_SPIN_OFFSET) * 38;
@@ -296,6 +330,7 @@ function initGame() {
     activeAimSliderPointerId = null;
     aimSliderLastY = null;
     scoreElement.textContent = score;
+    resetTray();
 
     const head = getHeadSpot();
     cueBall = new Ball(head.x, head.y, { isCueBall: true });
@@ -321,6 +356,7 @@ function update() {
             scoredBalls.add(ball);
             score++;
             scoreElement.textContent = score;
+            addBallToTray(ball);
         }
     });
 
