@@ -6,7 +6,7 @@ import { getHeadSpot, getFootSpot, getPockets, getPlaySurface } from './utils.js
 
 function cutPocketHole(ctx, pocket) {
     ctx.beginPath();
-    ctx.arc(pocket.x, pocket.y, pocket.radius, 0, Math.PI * 2);
+    ctx.arc(pocket.x, pocket.y, pocket.drawRadius, 0, Math.PI * 2);
     ctx.fill();
 }
 

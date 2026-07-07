@@ -17,6 +17,10 @@ import {
     AIM_BALL_DEAD_ZONE,
     AIM_SLIDER_SENSITIVITY,
     AIM_WHEEL_SCROLL_PX,
+    AIM_SMOOTH_RATE,
+    AIM_SMOOTH_RATE_DRAG,
+    POWER_SMOOTH_RATE,
+    POWER_SMOOTH_RATE_DRAG,
     AIM_LINE_VARIANTS,
     AIM_LINE_LABELS,
     AIM_MODIFIER_STORAGE_KEY,
@@ -94,7 +98,9 @@ let cueBall;
 let aimX = CANVAS_WIDTH / 2;
 let aimY = CANVAS_HEIGHT / 2;
 let aimAngle = 0;
+let aimAngleTarget = 0;
 let shotPower = 0;
+let shotPowerTarget = 0;
 let isPullingPower = false;
 let activePullPointerId = null;
 let activeCanvasPointerId = null;
@@ -361,11 +367,44 @@ function updateAimSliderVisual() {
     }
 }
 
-function setAimAngle(angle) {
-    aimAngle = normalizeAngle(angle);
+function shortestAngleDelta(from, to) {
+    let delta = normalizeAngle(to) - normalizeAngle(from);
+    if (delta > Math.PI) delta -= Math.PI * 2;
+    if (delta < -Math.PI) delta += Math.PI * 2;
+    return delta;
+}
+
+function syncAimMarkerFromAngle() {
     const dist = getAimMarkerDistance();
     aimX = cueBall.x + Math.cos(aimAngle) * dist;
     aimY = cueBall.y + Math.sin(aimAngle) * dist;
+}
+
+function snapAimAngle() {
+    aimAngle = aimAngleTarget;
+    syncAimMarkerFromAngle();
+    updateAimSliderVisual();
+}
+
+function setAimAngleTarget(angle, instant = false) {
+    aimAngleTarget = normalizeAngle(angle);
+    if (instant) snapAimAngle();
+}
+
+function updateAimSmoothing(frameScale) {
+    if (!canShowCue()) return;
+
+    const delta = shortestAngleDelta(aimAngle, aimAngleTarget);
+    if (Math.abs(delta) < 0.00005) {
+        if (aimAngle !== aimAngleTarget) snapAimAngle();
+        return;
+    }
+
+    const dragging = isDraggingAimSlider || aimPointer?.mode === 'rotate';
+    const rate = dragging ? AIM_SMOOTH_RATE_DRAG : AIM_SMOOTH_RATE;
+    const t = 1 - Math.exp(-rate * frameScale / REFERENCE_FPS);
+    aimAngle = normalizeAngle(aimAngle + delta * t);
+    syncAimMarkerFromAngle();
     updateAimSliderVisual();
 }
 
@@ -375,8 +414,8 @@ function updateAimFromPoint(x, y) {
     if (dx * dx + dy * dy < AIM_BALL_DEAD_ZONE * AIM_BALL_DEAD_ZONE) return;
     aimX = x;
     aimY = y;
-    aimAngle = Math.atan2(dy, dx);
-    updateAimSliderVisual();
+    aimAngleTarget = Math.atan2(dy, dx);
+    snapAimAngle();
 }
 
 function canAdjustAim() {
@@ -387,15 +426,40 @@ function getPullFromPower() {
     return (shotPower / 100) * MAX_PULL;
 }
 
-function updatePowerVisual(percent) {
-    shotPower = Math.max(0, Math.min(100, Math.round(percent)));
-    powerValue.textContent = `${shotPower}%`;
-    powerFill.style.height = `${shotPower}%`;
-    powerThumb.style.top = `${shotPower}%`;
+function updatePowerVisual() {
+    const display = Math.max(0, Math.min(100, shotPower));
+    powerValue.textContent = `${Math.round(display)}%`;
+    powerFill.style.height = `${display}%`;
+    powerThumb.style.top = `${display}%`;
+}
+
+function snapPower() {
+    shotPower = shotPowerTarget;
+    updatePowerVisual();
+}
+
+function setPowerTarget(percent, instant = false) {
+    shotPowerTarget = Math.max(0, Math.min(100, percent));
+    if (instant) snapPower();
+}
+
+function updatePowerSmoothing(frameScale) {
+    if (strikeAnim) return;
+
+    const delta = shotPowerTarget - shotPower;
+    if (Math.abs(delta) < 0.01) {
+        if (shotPower !== shotPowerTarget) snapPower();
+        return;
+    }
+
+    const rate = isPullingPower ? POWER_SMOOTH_RATE_DRAG : POWER_SMOOTH_RATE;
+    const t = 1 - Math.exp(-rate * frameScale / REFERENCE_FPS);
+    shotPower += delta * t;
+    updatePowerVisual();
 }
 
 function resetPowerPull() {
-    updatePowerVisual(0);
+    setPowerTarget(0, true);
     powerTrack.classList.remove('is-pulling');
 }
 
@@ -430,14 +494,16 @@ function startStrike(pullBack, angle) {
 
 function releasePowerPull() {
     if (!isPullingPower) return;
-    const power = shotPower;
     isPullingPower = false;
     activePullPointerId = null;
     powerTrack.classList.remove('is-pulling');
+    snapPower();
+    const power = shotPower;
     if (power >= MIN_POWER_PERCENT && canShowCue()) {
+        snapAimAngle();
         startStrike(getPullFromPower(), getAimAngle());
     } else {
-        resetPowerPull();
+        setPowerTarget(0);
     }
 }
 
@@ -538,6 +604,8 @@ function update(now = performance.now()) {
 
     updateStrikeAnim();
     updateImpactFlash();
+    updateAimSmoothing(frameScale);
+    updatePowerSmoothing(frameScale);
 
     stepPhysics(balls, frameScale);
     updatePocketAnimations(balls);
@@ -618,7 +686,7 @@ function handleCanvasAimMove(e) {
         let delta = pointerAngle - aimPointer.lastAngle;
         if (delta > Math.PI) delta -= Math.PI * 2;
         if (delta < -Math.PI) delta += Math.PI * 2;
-        setAimAngle(aimAngle + delta);
+        setAimAngleTarget(aimAngleTarget + delta);
         aimPointer.lastAngle = pointerAngle;
     }
 }
@@ -708,12 +776,12 @@ powerTrack.addEventListener('pointerdown', (e) => {
     isPullingPower = true;
     activePullPointerId = e.pointerId;
     powerTrack.classList.add('is-pulling');
-    updatePowerVisual(powerFromClientY(e.clientY));
+    setPowerTarget(powerFromClientY(e.clientY));
 });
 
 powerTrack.addEventListener('pointermove', (e) => {
     if (!isPullingPower || e.pointerId !== activePullPointerId) return;
-    updatePowerVisual(powerFromClientY(e.clientY));
+    setPowerTarget(powerFromClientY(e.clientY));
 });
 
 function finishPowerPull(e) {
@@ -739,7 +807,7 @@ aimTrack.addEventListener('pointermove', (e) => {
     if (!isDraggingAimSlider || e.pointerId !== activeAimSliderPointerId || aimSliderLastY === null) return;
     const deltaY = e.clientY - aimSliderLastY;
     aimSliderLastY = e.clientY;
-    setAimAngle(aimAngle + deltaY * AIM_SLIDER_SENSITIVITY);
+    setAimAngleTarget(aimAngleTarget + deltaY * AIM_SLIDER_SENSITIVITY);
 });
 
 function finishAimSliderDrag(e) {

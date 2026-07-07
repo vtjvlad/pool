@@ -1,9 +1,13 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT, BALL_RADIUS, POCKET_INSET, MID_POCKET_INSET, POCKET_CENTER_SHIFT, CORNER_POCKET_CENTER_SHIFT, CORNER_POCKET_RADIUS, CENTRAL_POCKET_RADIUS, POCKET_MAGNET, POCKET_CAPTURE_BOOST, POCKET_SLOW_SPEED, POCKET_JAW_BIAS, PLAY_SURFACE_INSET } from './constants.js';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, BALL_RADIUS, POCKET_INSET, MID_POCKET_INSET, POCKET_CENTER_SHIFT, CORNER_POCKET_CENTER_SHIFT, CORNER_POCKET_RADIUS, CENTRAL_POCKET_RADIUS, CORNER_POCKET_DRAW_RADIUS, CENTRAL_POCKET_DRAW_RADIUS, POCKET_MAGNET, POCKET_CAPTURE_BOOST, POCKET_SLOW_SPEED, POCKET_JAW_BIAS, PLAY_SURFACE_INSET } from './constants.js';
 
 const CENTRAL_POCKET_IDS = new Set(['tm', 'bm']);
 
 function pocketRadius(id) {
     return CENTRAL_POCKET_IDS.has(id) ? CENTRAL_POCKET_RADIUS : CORNER_POCKET_RADIUS;
+}
+
+function pocketDrawRadius(id) {
+    return CENTRAL_POCKET_IDS.has(id) ? CENTRAL_POCKET_DRAW_RADIUS : CORNER_POCKET_DRAW_RADIUS;
 }
 
 export function getPlayArea() {
@@ -34,12 +38,12 @@ function buildPockets(cornerShift = 0) {
     const cornerInset = POCKET_INSET + POCKET_CENTER_SHIFT + cornerShift;
     const midInset = MID_POCKET_INSET + POCKET_CENTER_SHIFT;
     return [
-        { id: 'tl', x: play.left + cornerInset, y: play.top + cornerInset, wall: 'left', radius: pocketRadius('tl') },
-        { id: 'tm', x: mx, y: play.top + midInset, wall: 'top', radius: pocketRadius('tm') },
-        { id: 'tr', x: play.right - cornerInset, y: play.top + cornerInset, wall: 'right', radius: pocketRadius('tr') },
-        { id: 'bl', x: play.left + cornerInset, y: play.bottom - cornerInset, wall: 'left', radius: pocketRadius('bl') },
-        { id: 'bm', x: mx, y: play.bottom - midInset, wall: 'bottom', radius: pocketRadius('bm') },
-        { id: 'br', x: play.right - cornerInset, y: play.bottom - cornerInset, wall: 'right', radius: pocketRadius('br') }
+        { id: 'tl', x: play.left + cornerInset, y: play.top + cornerInset, wall: 'left', radius: pocketRadius('tl'), drawRadius: pocketDrawRadius('tl') },
+        { id: 'tm', x: mx, y: play.top + midInset, wall: 'top', radius: pocketRadius('tm'), drawRadius: pocketDrawRadius('tm') },
+        { id: 'tr', x: play.right - cornerInset, y: play.top + cornerInset, wall: 'right', radius: pocketRadius('tr'), drawRadius: pocketDrawRadius('tr') },
+        { id: 'bl', x: play.left + cornerInset, y: play.bottom - cornerInset, wall: 'left', radius: pocketRadius('bl'), drawRadius: pocketDrawRadius('bl') },
+        { id: 'bm', x: mx, y: play.bottom - midInset, wall: 'bottom', radius: pocketRadius('bm'), drawRadius: pocketDrawRadius('bm') },
+        { id: 'br', x: play.right - cornerInset, y: play.bottom - cornerInset, wall: 'right', radius: pocketRadius('br'), drawRadius: pocketDrawRadius('br') }
     ];
 }
 

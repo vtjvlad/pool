@@ -231,7 +231,7 @@ function drawRubberStrip(ctx, line) {
     const innerStartX = chamferStartAngle != null ? ix1 + tx * runStart : ix1;
     const innerStartY = chamferStartAngle != null ? iy1 + ty * runStart : iy1;
     const minCurve = 0.5;
-    const maxCurve = t * 0.85;
+    const maxCurve = t * 0.35;
     const startCurve = chamferStartAngle != null ? Math.min(runStart * 0.65, maxCurve) : 0;
     const endCurve = chamferEndAngle != null ? Math.min(runEnd * 0.65, maxCurve) : 0;
     const hasStartCurve = startCurve >= minCurve;

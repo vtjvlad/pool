@@ -99,7 +99,7 @@ function getPocketSprite(radius) {
 }
 
 export function drawPocketTexture(ctx, pocket) {
-    const { x, y, radius: r } = pocket;
+    const { x, y, drawRadius: r } = pocket;
     const sprite = getPocketSprite(r);
     const size = r * 2 + 1;
 
@@ -111,7 +111,7 @@ export function drawPocketTexture(ctx, pocket) {
 }
 
 export function drawPocketRim(ctx, pocket) {
-    const { x, y, radius: r } = pocket;
+    const { x, y, drawRadius: r } = pocket;
 
     ctx.save();
     ctx.beginPath();

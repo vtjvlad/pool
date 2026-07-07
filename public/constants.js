@@ -14,10 +14,16 @@ export const LAYOUT_HEIGHT =
     LAYOUT_TOP_BAR + LAYOUT_TABLE_MARGIN + CANVAS_HEIGHT + LAYOUT_TABLE_MARGIN + LAYOUT_HINT;
 
 export const BALL_RADIUS = 11;
-export const POCKET_DIAMETER = 47.52;
+export const POCKET_DIAMETER = 40;
 export const POCKET_RADIUS = POCKET_DIAMETER / 2;
 export const CORNER_POCKET_RADIUS = POCKET_RADIUS * 1.1;
 export const CENTRAL_POCKET_RADIUS = POCKET_RADIUS * 0.99225;
+
+/** Визуальный размер лузы — не влияет на физику захвата */
+export const POCKET_DRAW_DIAMETER = 47.52;
+export const POCKET_DRAW_RADIUS = POCKET_DRAW_DIAMETER / 2;
+export const CORNER_POCKET_DRAW_RADIUS = POCKET_DRAW_RADIUS * 1.1;
+export const CENTRAL_POCKET_DRAW_RADIUS = POCKET_DRAW_RADIUS * 0.99225;
 
 /** Геометрия бортов и позиций луз — не меняется при изменении POCKET_DIAMETER */
 export const POCKET_LAYOUT_DIAMETER = 33;
@@ -40,10 +46,10 @@ export let RUBBER_THICKNESS = BALL_RADIUS * 2 * 0.75 * 1.28 * CUSHION_LIP_SCALE;
 export const RUBBER_CENTER_CHAMFER_ANGLE = 60;
 export const RUBBER_CORNER_CHAMFER_ANGLE = 45;
 export const DEBUG_DRAW_RUBBER = true;
-export const POCKET_MAGNET = 0.42;
-export const POCKET_CAPTURE_BOOST = 1.28;
+export const POCKET_MAGNET = 0.28;
+export const POCKET_CAPTURE_BOOST = 1.15;
 export const POCKET_SLOW_SPEED = 5.0;
-export const POCKET_JAW_BIAS = 0.62;
+export const POCKET_JAW_BIAS = 0.45;
 export const POCKET_MAGNET_RADIUS = POCKET_RADIUS;
 export const POCKET_FALL_MS = 520;
 export const CUE_RESPOT_DELAY_MS = 400;
@@ -248,9 +254,15 @@ export const AIM_BALL_DEAD_ZONE = BALL_RADIUS * 1.4;
 export const AIM_WHEEL_FINE_FACTOR = 3;
 export const AIM_SLIDER_SENSITIVITY = 0.0037 / AIM_WHEEL_FINE_FACTOR;
 export const AIM_WHEEL_SCROLL_PX = 12;
+/** Плавность прицеливания: скорость догонки целевого угла (кадры эталонного FPS) */
+export const AIM_SMOOTH_RATE = 10;
+export const AIM_SMOOTH_RATE_DRAG = 24;
 export const MAX_PULL = 115;
 export const MIN_POWER_PERCENT = 5;
 export const POWER_FACTOR = 0.22;
+/** Плавность изменения силы удара */
+export const POWER_SMOOTH_RATE = 10;
+export const POWER_SMOOTH_RATE_DRAG = 24;
 export const STRIKE_ANIM_BASE_MS = 85;
 export const IMPACT_FLASH_MS = 180;
 export const TRAJECTORY_EXTEND = 18;
