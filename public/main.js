@@ -463,6 +463,9 @@ function updatePowerVisual() {
     powerValue.textContent = `${Math.round(power)}%`;
     powerFill.style.height = `${sliderPos}%`;
     powerThumb.style.top = `${sliderPos}%`;
+    powerTrack.style.setProperty('--pull-pos', `${sliderPos}%`);
+    powerTrack.style.setProperty('--power-pct', String(power / 100));
+    powerTrack.classList.toggle('has-power', power > 0.5 || isPullingPower);
 }
 
 function initPowerMarks() {
