@@ -102,10 +102,16 @@ export class Ball {
         this.pocketFall = {
             pocketX: pocket.x,
             pocketY: pocket.y,
+            pocketDrawRadius: pocket.drawRadius ?? pocket.radius,
             startX: this.x,
             startY: this.y,
             startTime: performance.now(),
-            duration: POCKET_FALL_MS
+            duration: POCKET_FALL_MS,
+            entryAngle: Math.atan2(this.y - pocket.y, this.x - pocket.x),
+            depth: 0,
+            scale: 1,
+            alpha: 1,
+            progress: 0
         };
         this.vx = 0;
         this.vy = 0;
@@ -114,15 +120,32 @@ export class Ball {
     updatePocketFall(balls) {
         if (!this.pocketFall) return false;
 
-        const { pocketX, pocketY, startX, startY, startTime, duration } = this.pocketFall;
+        const {
+            pocketX, pocketY, startX, startY, startTime, duration, entryAngle
+        } = this.pocketFall;
         const t = Math.min((performance.now() - startTime) / duration, 1);
-        const sink = t * t * (3 - 2 * t);
 
-        this.x = startX + (pocketX - startX) * sink;
-        this.y = startY + (pocketY - startY) * sink;
-        this.pocketFall.scale = 1 - sink * 0.88;
-        this.pocketFall.alpha = 1 - sink * 0.92;
-        this.advanceRoll(sink * 0.08);
+        const rollT = Math.min(t / 0.36, 1);
+        const rollEase = rollT * rollT * (3 - 2 * rollT);
+        const dropT = t < 0.26 ? 0 : Math.min((t - 0.26) / 0.74, 1);
+        const dropEase = dropT * dropT * dropT;
+
+        const perpX = -Math.sin(entryAngle);
+        const perpY = Math.cos(entryAngle);
+        const wobble = Math.sin(t * Math.PI * 3.4) * (1 - t) * 2.6;
+
+        const baseX = startX + (pocketX - startX) * rollEase;
+        const baseY = startY + (pocketY - startY) * rollEase;
+        const sinkPull = dropEase * 4.5;
+
+        this.x = baseX + perpX * wobble + Math.cos(entryAngle) * sinkPull * 0.25;
+        this.y = baseY + perpY * wobble + Math.sin(entryAngle) * sinkPull * 0.25;
+
+        this.pocketFall.depth = dropEase;
+        this.pocketFall.scale = 1 - dropEase * 0.91;
+        this.pocketFall.alpha = 1 - dropEase * 0.97;
+        this.pocketFall.progress = t;
+        this.advanceRoll(0.1 + dropEase * 0.42);
 
         if (t < 1) return false;
 
@@ -304,23 +327,34 @@ export class Ball {
         const fall = this.pocketFall;
         const scale = fall ? fall.scale : 1;
         const alpha = fall ? fall.alpha : 1;
-        const squash = fall ? 1 - (1 - scale) * 0.3 : 1;
+        const depth = fall ? fall.depth : 0;
+        const squash = fall ? 1 - depth * 0.28 : 1;
+        const shadowAlpha = fall ? 0.35 * (1 - depth * 0.85) : 0.35;
 
         ctx.save();
-        ctx.globalAlpha = alpha;
 
         if (fall) {
-            ctx.translate(this.x, this.y);
-            ctx.scale(scale, scale * squash);
-            ctx.translate(-this.x, -this.y);
+            const clipR = fall.pocketDrawRadius * (1.04 - depth * 0.1);
+            ctx.beginPath();
+            ctx.arc(fall.pocketX, fall.pocketY, clipR, 0, Math.PI * 2);
+            ctx.clip();
         }
 
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(this.x + 1.5, this.y + 2, r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-        ctx.fill();
-        ctx.restore();
+        ctx.globalAlpha = alpha * (1 - depth * 0.4);
+
+        ctx.translate(this.x, this.y);
+        ctx.scale(scale, scale * squash);
+        ctx.translate(-this.x, -this.y);
+
+        if (shadowAlpha > 0.02) {
+            ctx.save();
+            ctx.globalAlpha = shadowAlpha * (1 - depth * 0.4);
+            ctx.beginPath();
+            ctx.arc(this.x + 1.5, this.y + 2, r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+            ctx.fill();
+            ctx.restore();
+        }
 
         let fillColor;
         if (this.isCueBall) {
@@ -331,6 +365,17 @@ export class Ball {
             fillColor = '#fcfcfa';
         } else {
             fillColor = this.color;
+        }
+
+        if (depth > 0.15) {
+            const darken = 1 - depth * 0.45;
+            if (fillColor.startsWith('#')) {
+                const n = parseInt(fillColor.slice(1), 16);
+                const rr = Math.round(((n >> 16) & 255) * darken);
+                const gg = Math.round(((n >> 8) & 255) * darken);
+                const bb = Math.round((n & 255) * darken);
+                fillColor = `rgb(${rr},${gg},${bb})`;
+            }
         }
 
         ctx.beginPath();
@@ -355,10 +400,13 @@ export class Ball {
 
         ctx.restore();
 
-        ctx.beginPath();
-        ctx.arc(this.x - r * 0.32, this.y - r * 0.32, r * 0.18, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-        ctx.fill();
+        const highlightAlpha = 0.55 * (1 - depth * 0.7);
+        if (highlightAlpha > 0.05) {
+            ctx.beginPath();
+            ctx.arc(this.x - r * 0.32, this.y - r * 0.32, r * 0.18, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha})`;
+            ctx.fill();
+        }
 
         ctx.restore();
     }

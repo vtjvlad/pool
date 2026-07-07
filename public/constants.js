@@ -51,7 +51,7 @@ export const POCKET_CAPTURE_BOOST = 1.15;
 export const POCKET_SLOW_SPEED = 5.0;
 export const POCKET_JAW_BIAS = 0.45;
 export const POCKET_MAGNET_RADIUS = POCKET_RADIUS;
-export const POCKET_FALL_MS = 520;
+export const POCKET_FALL_MS = 600;
 export const CUE_RESPOT_DELAY_MS = 400;
 
 /** Базовая физика: импульсные столкновения, отскоки от бортов, торможение сукна */
