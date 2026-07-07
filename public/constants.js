@@ -121,6 +121,16 @@ export const SLEEP_SPEED = 0.014;
 export const SLEEP_FRAMES = 10;
 export const MIN_SPEED = SLEEP_SPEED;
 
+/** Микро-джиттер угла нормали при столкновениях (только runtime-физика) */
+export const COLLISION_NORMAL_JITTER = {
+    enabled: true,
+    cushionMaxDeg: 0.30,
+    ballMaxDeg: 0.22,
+    minSpeedFactor: 0.2,
+    slowSpeedScale: 0.4,
+    minImpactSpeed: SLEEP_SPEED * 3
+};
+
 /** Алиасы для превью прицела и совместимости */
 export let BALL_BOUNCE = BALL_RESTITUTION;
 export let BALL_SURFACE_FRICTION = BALL_FRICTION;

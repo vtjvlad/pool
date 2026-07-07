@@ -103,7 +103,7 @@ function stepCueOnly(cue, obstacles, frameScale) {
         const staticHit = resolveStaticBallCollisions(cue, obstacles);
         if (staticHit) ballContact = staticHit;
 
-        resolveBallCushionCollision(cue, cue.px, cue.py);
+        resolveBallCushionCollision(cue, cue.px, cue.py, { applyJitter: false });
         const staticHit2 = resolveStaticBallCollisions(cue, obstacles);
         if (staticHit2) ballContact = staticHit2;
 

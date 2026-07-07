@@ -8,6 +8,7 @@ import {
 } from './constants.js';
 import { getCushionInnerEdges } from './cushions.js';
 import { getRubberCollisionEdges } from './cushion_rubber.js';
+import { jitterCollisionNormal } from './collision_noise.js';
 
 const PLAY_CENTER_X = CANVAS_WIDTH / 2;
 const PLAY_CENTER_Y = CANVAS_HEIGHT / 2;
@@ -89,7 +90,7 @@ function circleSegmentCollision(bx, by, radius, line) {
     };
 }
 
-function resolveAtPosition(bx, by, vx, vy, r, edges, allowBounce) {
+function resolveAtPosition(bx, by, vx, vy, r, edges, allowBounce, applyJitter = true) {
     let bounced = false;
 
     for (let iter = 0; iter < 5; iter++) {
@@ -109,15 +110,19 @@ function resolveAtPosition(bx, by, vx, vy, r, edges, allowBounce) {
         bx += collision.nx * collision.overlap;
         by += collision.ny * collision.overlap;
 
-        const nx = collision.nx;
-        const ny = collision.ny;
+        let nx = collision.nx;
+        let ny = collision.ny;
         const dot = vx * nx + vy * ny;
         if (allowBounce && !bounced && dot < 0) {
-            const restitution = -dot < LOW_SPEED_THRESHOLD
+            const impactSpeed = -dot;
+            ({ nx, ny } = jitterCollisionNormal(nx, ny, 'cushion', impactSpeed, applyJitter));
+
+            const restitution = impactSpeed < LOW_SPEED_THRESHOLD
                 ? CUSHION_RESTITUTION_SLOW
                 : CUSHION_RESTITUTION;
-            vx -= (1 + restitution) * dot * nx;
-            vy -= (1 + restitution) * dot * ny;
+            const dotJ = vx * nx + vy * ny;
+            vx -= (1 + restitution) * dotJ * nx;
+            vy -= (1 + restitution) * dotJ * ny;
 
             const tx = -ny;
             const ty = nx;
@@ -134,8 +139,10 @@ function resolveAtPosition(bx, by, vx, vy, r, edges, allowBounce) {
     return { bx, by, vx, vy };
 }
 
-export function resolveBallCushionCollision(ball, prevX, prevY) {
+export function resolveBallCushionCollision(ball, prevX, prevY, options = {}) {
     if (ball.inPocket) return;
+
+    const applyJitter = options.applyJitter !== false;
 
     const edges = getCollisionEdges();
     const r = ball.radius;
@@ -154,7 +161,7 @@ export function resolveBallCushionCollision(ball, prevX, prevY) {
         const sx = prevX + (endX - prevX) * t;
         const sy = prevY + (endY - prevY) * t;
         const allowBounce = i === samples;
-        const result = resolveAtPosition(sx, sy, vx, vy, r, edges, allowBounce);
+        const result = resolveAtPosition(sx, sy, vx, vy, r, edges, allowBounce, applyJitter);
         bx = result.bx;
         by = result.by;
         vx = result.vx;

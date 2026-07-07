@@ -11,6 +11,7 @@ import {
     COLLISION_PASSES
 } from './constants.js';
 import { resolveBallCushionCollision } from './cushion_collision.js';
+import { jitterCollisionNormal } from './collision_noise.js';
 import { tryPocketBall } from './utils.js';
 
 function clamp(value, min, max) {
@@ -93,17 +94,24 @@ function separateBalls(b1, b2, nx, ny, dist) {
 }
 
 export function resolveCollision(b1, b2) {
-    const { nx, ny, dist } = collisionNormal(b1, b2);
-    if (!separateBalls(b1, b2, nx, ny, dist)) return;
+    const { nx: baseNx, ny: baseNy, dist } = collisionNormal(b1, b2);
+    if (!separateBalls(b1, b2, baseNx, baseNy, dist)) return;
 
     const rvx = b2.vx - b1.vx;
     const rvy = b2.vy - b1.vy;
-    const velN = rvx * nx + rvy * ny;
+    const velN = rvx * baseNx + rvy * baseNy;
     if (velN >= 0) return;
 
     const impactSpeed = -velN;
+    let nx = baseNx;
+    let ny = baseNy;
+    ({ nx, ny } = jitterCollisionNormal(nx, ny, 'ball', impactSpeed));
+
+    const velNJ = rvx * nx + rvy * ny;
+    if (velNJ >= 0) return;
+
     const restitution = impactSpeed < LOW_SPEED_THRESHOLD ? BALL_RESTITUTION_SLOW : BALL_RESTITUTION;
-    const jn = -(1 + restitution) * velN * 0.5;
+    const jn = -(1 + restitution) * velNJ * 0.5;
 
     b1.vx -= jn * nx;
     b1.vy -= jn * ny;
