@@ -246,8 +246,8 @@ export const COLORS = {
     metalShadow: 'rgba(18, 22, 30, 0.42)'
 };
 
-export const CUE_LENGTH = 300;
-export const CUE_WIDTH = 6;
+export const CUE_LENGTH = 380;
+export const CUE_WIDTH = 6.5;
 export const AIM_TAP_THRESHOLD_PX = 12;
 export const AIM_TAP_MAX_MS = 280;
 export const AIM_MARKER_MIN_DIST = 48;

@@ -7,27 +7,224 @@ import {
     OFF_TARGET_PREVIEW_LEN
 } from './constants.js';
 
+function taperedSegmentPath(ctx, x0, x1, halfW0, halfW1) {
+    ctx.beginPath();
+    ctx.moveTo(x0, -halfW0);
+    ctx.lineTo(x1, -halfW1);
+    ctx.lineTo(x1, halfW1);
+    ctx.lineTo(x0, halfW0);
+    ctx.closePath();
+}
+
+function fillTaperedSegment(ctx, x0, x1, halfW0, halfW1, fillStyle) {
+    taperedSegmentPath(ctx, x0, x1, halfW0, halfW1);
+    ctx.fillStyle = fillStyle;
+    ctx.fill();
+}
+
+function strokeTaperedSegment(ctx, x0, x1, halfW0, halfW1, strokeStyle, lineWidth) {
+    taperedSegmentPath(ctx, x0, x1, halfW0, halfW1);
+    ctx.strokeStyle = strokeStyle;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+}
+
+function drawCueWoodGrain(ctx, x0, x1, halfW) {
+    const span = x1 - x0;
+    if (span < 8) return;
+
+    ctx.save();
+    taperedSegmentPath(ctx, x0, x1, halfW * 0.92, halfW * 1.02);
+    ctx.clip();
+
+    const grainCount = Math.max(6, Math.floor(span / 24));
+    for (let i = 0; i < grainCount; i++) {
+        const t = (i + 0.5) / grainCount;
+        const gx = x0 + span * t;
+        const wave = Math.sin(t * Math.PI * 3.6) * halfW * 0.2;
+        ctx.beginPath();
+        ctx.moveTo(gx, -halfW * 0.75 + wave);
+        ctx.lineTo(gx + span * 0.07, halfW * 0.75 + wave * 0.35);
+        ctx.strokeStyle = 'rgba(58, 32, 8, 0.14)';
+        ctx.lineWidth = 0.55;
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+function drawCueWrapTexture(ctx, x0, x1, halfW) {
+    ctx.save();
+    taperedSegmentPath(ctx, x0, x1, halfW * 0.96, halfW * 1.04);
+    ctx.clip();
+
+    const rings = Math.max(6, Math.floor((x1 - x0) / 6.5));
+    for (let i = 0; i <= rings; i++) {
+        const t = i / rings;
+        const rx = x0 + (x1 - x0) * t;
+        const rw = halfW * (0.9 + t * 0.16);
+        ctx.beginPath();
+        ctx.moveTo(rx, -rw);
+        ctx.lineTo(rx, rw);
+        ctx.strokeStyle = i % 2 === 0 ? 'rgba(0, 0, 0, 0.32)' : 'rgba(255, 255, 255, 0.07)';
+        ctx.lineWidth = 0.65;
+        ctx.stroke();
+    }
+
+    const diamonds = Math.max(3, Math.floor((x1 - x0) / 22));
+    for (let i = 0; i < diamonds; i++) {
+        const t = (i + 0.5) / diamonds;
+        const dx = x0 + (x1 - x0) * t;
+        const ds = halfW * 0.22;
+        ctx.beginPath();
+        ctx.moveTo(dx, -ds);
+        ctx.lineTo(dx + ds * 0.7, 0);
+        ctx.lineTo(dx, ds);
+        ctx.lineTo(dx - ds * 0.7, 0);
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(196, 30, 58, 0.35)';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 220, 180, 0.18)';
+        ctx.lineWidth = 0.4;
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+function drawMetalRing(ctx, x, halfW0, halfW1, width = 3) {
+    const ringGrad = ctx.createLinearGradient(0, -halfW1, 0, halfW1);
+    ringGrad.addColorStop(0, COLORS.metalLight);
+    ringGrad.addColorStop(0.4, COLORS.metalBase);
+    ringGrad.addColorStop(0.75, COLORS.metalDark);
+    ringGrad.addColorStop(1, 'rgba(255,255,255,0.35)');
+    fillTaperedSegment(ctx, x, x + width, halfW0, halfW1, ringGrad);
+    strokeTaperedSegment(ctx, x, x + width, halfW0, halfW1, 'rgba(255,255,255,0.28)', 0.45);
+}
+
+function drawButtJewel(ctx, x, halfW) {
+    const r = halfW * 0.42;
+    const jewelGrad = ctx.createRadialGradient(x - r * 0.25, -r * 0.25, r * 0.1, x, 0, r);
+    jewelGrad.addColorStop(0, '#ff6b8a');
+    jewelGrad.addColorStop(0.45, '#c41e3a');
+    jewelGrad.addColorStop(0.85, '#6b0f1f');
+    jewelGrad.addColorStop(1, '#2a0810');
+    ctx.beginPath();
+    ctx.arc(x, 0, r, 0, Math.PI * 2);
+    ctx.fillStyle = jewelGrad;
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 220, 200, 0.45)';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(x - r * 0.28, -r * 0.28, r * 0.18, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+    ctx.fill();
+}
+
 export function drawCueStick(ctx, tipX, tipY, angle) {
+    const len = CUE_LENGTH;
+    const tipHalf = CUE_WIDTH * 0.27;
+    const ferruleHalf = CUE_WIDTH * 0.35;
+    const shaftHalf = CUE_WIDTH * 0.44;
+    const wrapHalf = CUE_WIDTH * 0.52;
+    const buttHalf = CUE_WIDTH * 0.62;
+
+    const tipLen = 10;
+    const ferruleLen = 15;
+    const ferruleStart = tipLen;
+    const ferruleEnd = ferruleStart + ferruleLen;
+    const wrapStart = len * 0.64;
+    const wrapEnd = len * 0.88;
+    const buttStart = wrapEnd;
+    const jewelX = len - 5;
+
     ctx.save();
     ctx.translate(tipX, tipY);
     ctx.rotate(angle + Math.PI);
 
-    ctx.fillStyle = 'rgba(0,0,0,0.2)';
-    ctx.fillRect(2, -CUE_WIDTH / 2 + 2, CUE_LENGTH, CUE_WIDTH);
+    ctx.save();
+    ctx.translate(4, 3);
+    ctx.globalAlpha = 0.18;
+    taperedSegmentPath(ctx, 0, len, tipHalf, buttHalf);
+    ctx.fillStyle = '#000';
+    ctx.fill();
+    ctx.globalAlpha = 0.08;
+    taperedSegmentPath(ctx, 2, len + 2, tipHalf * 0.9, buttHalf * 0.95);
+    ctx.fill();
+    ctx.restore();
 
-    const bodyGrad = ctx.createLinearGradient(0, -CUE_WIDTH / 2, 0, CUE_WIDTH / 2);
-    bodyGrad.addColorStop(0, COLORS.cueStick);
-    bodyGrad.addColorStop(0.5, '#f5deb3');
-    bodyGrad.addColorStop(1, COLORS.cueStickDark);
-    ctx.fillStyle = bodyGrad;
-    ctx.fillRect(0, -CUE_WIDTH / 2, CUE_LENGTH, CUE_WIDTH);
+    const tipGrad = ctx.createLinearGradient(0, -tipHalf, 0, tipHalf);
+    tipGrad.addColorStop(0, '#8ed8ff');
+    tipGrad.addColorStop(0.4, '#4db5e8');
+    tipGrad.addColorStop(0.75, '#2a8ec4');
+    tipGrad.addColorStop(1, '#1a6a96');
+    fillTaperedSegment(ctx, 0, ferruleStart, tipHalf * 0.8, tipHalf, tipGrad);
 
-    ctx.fillStyle = '#111';
-    ctx.fillRect(CUE_LENGTH * 0.7, -CUE_WIDTH / 2 - 1, CUE_LENGTH * 0.22, CUE_WIDTH + 2);
+    const ferruleGrad = ctx.createLinearGradient(0, -ferruleHalf, 0, ferruleHalf);
+    ferruleGrad.addColorStop(0, COLORS.metalLight);
+    ferruleGrad.addColorStop(0.3, COLORS.metalBase);
+    ferruleGrad.addColorStop(0.65, COLORS.metalDark);
+    ferruleGrad.addColorStop(1, COLORS.metalEdge);
+    fillTaperedSegment(ctx, ferruleStart, ferruleEnd, tipHalf, ferruleHalf, ferruleGrad);
+    drawMetalRing(ctx, ferruleEnd - 2.5, ferruleHalf * 0.98, ferruleHalf, 2.5);
 
-    const tipLen = 12;
-    ctx.fillStyle = '#4aa3d8';
-    ctx.fillRect(-tipLen, -CUE_WIDTH / 2 + 1, tipLen, CUE_WIDTH - 2);
+    const woodGrad = ctx.createLinearGradient(0, -shaftHalf, 0, shaftHalf);
+    woodGrad.addColorStop(0, '#b8844a');
+    woodGrad.addColorStop(0.22, COLORS.cueStick);
+    woodGrad.addColorStop(0.48, '#f8e8c8');
+    woodGrad.addColorStop(0.72, '#e0c090');
+    woodGrad.addColorStop(1, COLORS.cueStickDark);
+    fillTaperedSegment(ctx, ferruleEnd, wrapStart, ferruleHalf, shaftHalf, woodGrad);
+    drawCueWoodGrain(ctx, ferruleEnd + 8, wrapStart - 6, shaftHalf);
+
+    const wrapGrad = ctx.createLinearGradient(0, -wrapHalf, 0, wrapHalf);
+    wrapGrad.addColorStop(0, '#2a2218');
+    wrapGrad.addColorStop(0.35, '#12100e');
+    wrapGrad.addColorStop(0.65, '#0a0908');
+    wrapGrad.addColorStop(1, '#302820');
+    fillTaperedSegment(ctx, wrapStart, wrapEnd, shaftHalf, wrapHalf, wrapGrad);
+    drawCueWrapTexture(ctx, wrapStart, wrapEnd, wrapHalf);
+    drawMetalRing(ctx, wrapStart - 1.5, shaftHalf * 1.02, shaftHalf * 1.04, 2);
+    drawMetalRing(ctx, wrapEnd - 1, wrapHalf * 1.02, wrapHalf * 1.04, 2);
+
+    const buttGrad = ctx.createLinearGradient(0, -buttHalf, 0, buttHalf);
+    buttGrad.addColorStop(0, '#9a6838');
+    buttGrad.addColorStop(0.35, COLORS.woodLight);
+    buttGrad.addColorStop(0.7, '#c99552');
+    buttGrad.addColorStop(1, COLORS.woodDark);
+    fillTaperedSegment(ctx, buttStart, len, wrapHalf, buttHalf, buttGrad);
+    drawButtJewel(ctx, jewelX, buttHalf);
+
+    ctx.save();
+    taperedSegmentPath(ctx, ferruleEnd, wrapStart, ferruleHalf * 0.5, shaftHalf * 0.5);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.moveTo(ferruleEnd + 6, -shaftHalf * 0.32);
+    ctx.lineTo(len * 0.52, -shaftHalf * 0.32);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.lineWidth = 0.9;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(ferruleEnd + 20, shaftHalf * 0.18);
+    ctx.lineTo(len * 0.45, shaftHalf * 0.18);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+    ctx.restore();
+
+    taperedSegmentPath(ctx, 0, len, tipHalf, buttHalf);
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
+    ctx.lineWidth = 0.6;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, tipHalf * 0.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#6ec8f0';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 0.4;
+    ctx.stroke();
+
     ctx.restore();
 }
 
