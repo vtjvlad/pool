@@ -44,7 +44,7 @@ export const POCKET_MAGNET_RADIUS = POCKET_RADIUS;
 export const POCKET_FALL_MS = 520;
 export const CUE_RESPOT_DELAY_MS = 400;
 
-/** Реалистичная физика: скольжение → качение, импульсные столкновения, винт через скорость контакта */
+/** Базовая физика: импульсные столкновения, отскоки от бортов, торможение сукна */
 export const REFERENCE_FPS = 60;
 export const MAX_PHYSICS_DT = 0.05;
 export const PHYSICS_SUBSTEPS = 10;
@@ -62,49 +62,12 @@ export const CUSHION_FRICTION = 0.20;
 
 export const CLOTH_ROLL_DECEL = 0.019;
 export const CLOTH_ROLL_SPEED_SCALE = 0.0031;
-export const CLOTH_SLIDE_DECEL = 0.068;
-export const SLIP_RESOLVE_RATE = 0.058;
-export const SLIDE_RESOLVE_RATE = 0.052;
-export const SLIDE_THRESHOLD = 0.035;
-
-export const SPIN_ROLL_DAMP = 0.0018;
-export const SPIN_SLIDE_DAMP = 0.0037;
-/** Затухание винта, когда шар уже стоит на месте */
-export const SPIN_STATIONARY_DAMP = 0.085;
-export const SPIN_CURVE_WHILE_SLIDING = 0.0029;
-export const SPIN_CURVE_WHILE_ROLLING = 0.00145;
 
 export const LOW_SPEED_THRESHOLD = 1.4;
 
 export const SLEEP_SPEED = 0.014;
-export const SLEEP_SPIN = 0.007;
 export const SLEEP_FRAMES = 10;
 export const MIN_SPEED = SLEEP_SPEED;
-
-export const MAX_SPIN_OFFSET = 0.72;
-export const SPIN_SIDE_POWER = 2.45;
-export const SPIN_TOP_POWER = 0.80;
-export const SLIDE_FROM_OFFSET = 0.94;
-export const SPIN_VISUAL_SCALE = 0.06;
-/** Доля english-вращения поверх естественного качения v/r */
-export const SPIN_VISUAL_ROLLING_FACTOR = 0.38;
-
-export const CUSHION_THROW = 0.13;
-export const CUSHION_SPIN_RETAIN = 0.76;
-export const BALL_SPIN_CONTACT = 0.38;
-export const DRAW_COLLISION_KICK = 0.34;
-export const DRAW_COLLISION_MAX = 0.52;
-export const DRAW_SPIN_TRANSFER = 0.62;
-export const DRAW_REVERSE_FACTOR = 0.32;
-export const DRAW_FORWARD_BRAKE = 0.34;
-export const DRAW_REVERSE_SPEED_THRESHOLD = 0.52;
-export const DRAW_MAX_REVERSE_SPEED_SCALE = 1.05;
-export const CUE_DRAW_BACK_RATIO = 1.08;
-export const OBJECT_DRAW_BRAKE_RATIO = 0.38;
-export const FOLLOW_COLLISION_KICK = 0.09;
-export const CUSHION_DRAW_KICK = 0.052;
-export const COLLISION_SLIDE_MIN = 0.38;
-export const CUSHION_SLIDE = 0.58;
 
 /** Алиасы для превью прицела и совместимости */
 export const BALL_BOUNCE = BALL_RESTITUTION;

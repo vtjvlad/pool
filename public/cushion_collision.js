@@ -4,13 +4,7 @@ import {
     CUSHION_RESTITUTION,
     CUSHION_RESTITUTION_SLOW,
     CUSHION_FRICTION,
-    LOW_SPEED_THRESHOLD,
-    CUSHION_THROW,
-    CUSHION_SPIN_RETAIN,
-    CUSHION_DRAW_KICK,
-    SLEEP_SPIN,
-    COLLISION_SLIDE_MIN,
-    CUSHION_SLIDE
+    LOW_SPEED_THRESHOLD
 } from './constants.js';
 import { getCushionInnerEdges } from './cushions.js';
 import { getRubberCollisionEdges } from './cushion_rubber.js';
@@ -58,10 +52,6 @@ function getCollisionEdges() {
     return cachedCollisionEdges;
 }
 
-function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
-}
-
 function circleSegmentCollision(bx, by, radius, line) {
     const dx = line.x2 - line.x1;
     const dy = line.y2 - line.y1;
@@ -95,45 +85,7 @@ function circleSegmentCollision(bx, by, radius, line) {
     };
 }
 
-function applyCushionSpin(ball, nx, ny, preImpactSpeed, vx, vy) {
-    if (!ball) return { vx, vy };
-
-    const tx = -ny;
-    const ty = nx;
-    const spin = ball.spin || 0;
-    const topSpin = ball.topSpin || 0;
-
-    if (Math.abs(spin) > 1e-6) {
-        const throwCap = preImpactSpeed * 0.24;
-        const throwV = clamp(spin * CUSHION_THROW * preImpactSpeed, -throwCap, throwCap);
-        vx += throwV * tx;
-        vy += throwV * ty;
-        ball.spin = spin * CUSHION_SPIN_RETAIN;
-    }
-
-    if (Math.abs(topSpin) > SLEEP_SPIN) {
-        const inSpeed = Math.hypot(vx, vy) || 1;
-        const inDirX = vx / inSpeed;
-        const inDirY = vy / inSpeed;
-        if (topSpin > 0) {
-            const followKick = clamp(topSpin * 0.048, 0, preImpactSpeed * 0.07);
-            vx += followKick * inDirX;
-            vy += followKick * inDirY;
-            ball.topSpin = topSpin * 0.68;
-        } else {
-            const drawKick = clamp(topSpin * CUSHION_DRAW_KICK, -preImpactSpeed * 0.085, 0);
-            vx += drawKick * inDirX;
-            vy += drawKick * inDirY;
-            ball.topSpin = topSpin * 0.72;
-        }
-    }
-
-    ball.slide = Math.max(ball.slide || 0, CUSHION_SLIDE);
-
-    return { vx, vy };
-}
-
-function resolveAtPosition(bx, by, vx, vy, r, edges, ball, allowBounce) {
+function resolveAtPosition(bx, by, vx, vy, r, edges, allowBounce) {
     let bounced = false;
 
     for (let iter = 0; iter < 5; iter++) {
@@ -157,7 +109,6 @@ function resolveAtPosition(bx, by, vx, vy, r, edges, ball, allowBounce) {
         const ny = collision.ny;
         const dot = vx * nx + vy * ny;
         if (allowBounce && !bounced && dot < 0) {
-            const preImpactSpeed = Math.hypot(vx, vy);
             const restitution = -dot < LOW_SPEED_THRESHOLD
                 ? CUSHION_RESTITUTION_SLOW
                 : CUSHION_RESTITUTION;
@@ -169,16 +120,6 @@ function resolveAtPosition(bx, by, vx, vy, r, edges, ball, allowBounce) {
             const vTan = vx * tx + vy * ty;
             vx -= vTan * CUSHION_FRICTION * tx;
             vy -= vTan * CUSHION_FRICTION * ty;
-
-            ({ vx, vy } = applyCushionSpin(ball, nx, ny, preImpactSpeed, vx, vy));
-
-            const exitSpeed = Math.hypot(vx, vy);
-            const maxExitSpeed = preImpactSpeed * 1.012;
-            if (exitSpeed > maxExitSpeed && exitSpeed > 0) {
-                const limit = maxExitSpeed / exitSpeed;
-                vx *= limit;
-                vy *= limit;
-            }
             bounced = true;
         } else if (dot < 0) {
             vx -= dot * nx;
@@ -209,7 +150,7 @@ export function resolveBallCushionCollision(ball, prevX, prevY) {
         const sx = prevX + (endX - prevX) * t;
         const sy = prevY + (endY - prevY) * t;
         const allowBounce = i === samples;
-        const result = resolveAtPosition(sx, sy, vx, vy, r, edges, ball, allowBounce);
+        const result = resolveAtPosition(sx, sy, vx, vy, r, edges, allowBounce);
         bx = result.bx;
         by = result.by;
         vx = result.vx;

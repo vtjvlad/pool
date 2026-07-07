@@ -1,37 +1,14 @@
 import {
-    BALL_RADIUS,
     BALL_RESTITUTION,
     BALL_RESTITUTION_SLOW,
     BALL_FRICTION,
     CLOTH_ROLL_DECEL,
     CLOTH_ROLL_SPEED_SCALE,
-    CLOTH_SLIDE_DECEL,
-    SLIP_RESOLVE_RATE,
-    SLIDE_RESOLVE_RATE,
-    SLIDE_THRESHOLD,
-    SPIN_ROLL_DAMP,
-    SPIN_SLIDE_DAMP,
-    SPIN_STATIONARY_DAMP,
-    SPIN_CURVE_WHILE_SLIDING,
-    SPIN_CURVE_WHILE_ROLLING,
     LOW_SPEED_THRESHOLD,
     SLEEP_SPEED,
-    SLEEP_SPIN,
     SLEEP_FRAMES,
     PHYSICS_SUBSTEPS,
-    COLLISION_PASSES,
-    BALL_SPIN_CONTACT,
-    COLLISION_SLIDE_MIN,
-    DRAW_COLLISION_KICK,
-    DRAW_COLLISION_MAX,
-    DRAW_SPIN_TRANSFER,
-    DRAW_REVERSE_FACTOR,
-    DRAW_FORWARD_BRAKE,
-    DRAW_REVERSE_SPEED_THRESHOLD,
-    DRAW_MAX_REVERSE_SPEED_SCALE,
-    CUE_DRAW_BACK_RATIO,
-    OBJECT_DRAW_BRAKE_RATIO,
-    FOLLOW_COLLISION_KICK
+    COLLISION_PASSES
 } from './constants.js';
 import { resolveBallCushionCollision } from './cushion_collision.js';
 import { tryPocketBall } from './utils.js';
@@ -40,53 +17,18 @@ function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
 }
 
-function settleLinearMotion(ball) {
-    const speed = Math.hypot(ball.vx, ball.vy);
-    if (speed > SLEEP_SPEED) {
-        ball.lastDirX = ball.vx / speed;
-        ball.lastDirY = ball.vy / speed;
-    }
+function stopBall(ball) {
     ball.vx = 0;
     ball.vy = 0;
-}
-
-function stopBall(ball) {
-    settleLinearMotion(ball);
-    ball.spin = 0;
-    ball.topSpin = 0;
-    ball.slide = 0;
 }
 
 function wakeBall(ball) {
     ball.sleepFrames = 0;
 }
 
-function decayResidualSpin(ball, dt) {
-    const speed = Math.hypot(ball.vx, ball.vy);
-    const stationary = speed <= SLEEP_SPEED;
-    const sideDamp = stationary ? SPIN_STATIONARY_DAMP : SPIN_ROLL_DAMP;
-    const topDamp = stationary ? SPIN_STATIONARY_DAMP : SPIN_SLIDE_DAMP;
-
-    if (Math.abs(ball.spin || 0) > SLEEP_SPIN) {
-        ball.spin *= Math.exp(-sideDamp * dt);
-        if (Math.abs(ball.spin) <= SLEEP_SPIN) ball.spin = 0;
-    }
-    if (Math.abs(ball.topSpin || 0) > SLEEP_SPIN) {
-        ball.topSpin *= Math.exp(-topDamp * dt);
-        if (Math.abs(ball.topSpin) <= SLEEP_SPIN) ball.topSpin = 0;
-    }
-    if ((ball.slide || 0) > SLIDE_THRESHOLD) {
-        ball.slide = Math.max(0, (ball.slide || 0) - SLIDE_RESOLVE_RATE * dt);
-    } else if (ball.slide > 0) {
-        ball.slide = 0;
-    }
-}
-
 function updateSleepState(ball) {
     const speed = Math.hypot(ball.vx, ball.vy);
-    const spin = Math.max(Math.abs(ball.spin), Math.abs(ball.topSpin));
-    const sliding = (ball.slide || 0) > SLIDE_THRESHOLD;
-    if (speed < SLEEP_SPEED && spin < SLEEP_SPIN && !sliding) {
+    if (speed < SLEEP_SPEED) {
         ball.sleepFrames = (ball.sleepFrames || 0) + 1;
         if (ball.sleepFrames >= SLEEP_FRAMES) stopBall(ball);
     } else {
@@ -100,142 +42,11 @@ function rollingLoss(speed, dt) {
     return base * dt * (0.62 + 0.38 * speedRatio);
 }
 
-function isSliding(ball, speed) {
-    if ((ball.slide || 0) > SLIDE_THRESHOLD) return true;
-    if (speed <= SLEEP_SPEED) return false;
-    return Math.abs(ball.topSpin || 0) > SLEEP_SPIN * 3;
-}
-
-function applySideSpinCurve(ball, speed, tanX, tanY, dt, strength, maxTurn) {
-    if (Math.abs(ball.spin) <= SLEEP_SPIN || speed <= SLEEP_SPEED) return speed;
-
-    const curve = clamp(
-        ball.spin * strength * speed * dt,
-        -speed * maxTurn * dt,
-        speed * maxTurn * dt
-    );
-    ball.vx += tanX * curve;
-    ball.vy += tanY * curve;
-
-    const newSpeed = Math.hypot(ball.vx, ball.vy);
-    if (newSpeed > 1e-8) {
-        const scale = speed / newSpeed;
-        ball.vx *= scale;
-        ball.vy *= scale;
-    }
-    return speed;
-}
-
-function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
-    const slideFactor = clamp(ball.slide || 0, 0, 1);
-    let loss = rollingLoss(speed, dt) + CLOTH_SLIDE_DECEL * slideFactor * dt;
-
-    const topSpin = ball.topSpin || 0;
-    if (topSpin < -SLEEP_SPIN) {
-        loss += CLOTH_SLIDE_DECEL * clamp(-topSpin / LOW_SPEED_THRESHOLD, 0, 0.38) * dt;
-    } else if (topSpin > SLEEP_SPIN) {
-        loss *= Math.max(0.35, 1 - topSpin / (LOW_SPEED_THRESHOLD * 2.2));
-    }
-
-    let nextSpeed = Math.max(0, speed - loss);
-
-    ball.vx = dirX * nextSpeed;
-    ball.vy = dirY * nextSpeed;
-    nextSpeed = applySideSpinCurve(ball, nextSpeed, tanX, tanY, dt, SPIN_CURVE_WHILE_SLIDING, 0.12);
-
-    if (nextSpeed > 0) {
-        const len = Math.hypot(ball.vx, ball.vy) || 1;
-        ball.vx = (ball.vx / len) * nextSpeed;
-        ball.vy = (ball.vy / len) * nextSpeed;
-    } else {
-        settleLinearMotion(ball);
-        decayResidualSpin(ball, dt);
-        return;
-    }
-
-    if (Math.abs(topSpin) > SLEEP_SPIN) {
-        const speedFactor = 1 / (1 + nextSpeed / (LOW_SPEED_THRESHOLD * 3.0));
-        const resolve = SLIP_RESOLVE_RATE * dt * (1 + slideFactor * 0.6) * speedFactor;
-        const delta = Math.min(Math.abs(topSpin), resolve) * Math.sign(topSpin);
-        ball.topSpin = topSpin - delta;
-
-        if (topSpin < 0) {
-            nextSpeed = Math.max(0, nextSpeed - Math.abs(delta) * DRAW_FORWARD_BRAKE);
-            if (nextSpeed > SLEEP_SPEED) {
-                ball.vx = dirX * nextSpeed;
-                ball.vy = dirY * nextSpeed;
-            }
-
-            const reverseThreshold = LOW_SPEED_THRESHOLD * DRAW_REVERSE_SPEED_THRESHOLD;
-            const spinLeft = Math.abs(ball.topSpin);
-            if (spinLeft > SLEEP_SPIN * 1.5 && nextSpeed < reverseThreshold) {
-                const backSpeed = Math.min(
-                    spinLeft * DRAW_REVERSE_FACTOR + (reverseThreshold - nextSpeed) * 0.35,
-                    LOW_SPEED_THRESHOLD * DRAW_MAX_REVERSE_SPEED_SCALE
-                );
-                ball.vx = -dirX * backSpeed;
-                ball.vy = -dirY * backSpeed;
-                ball.slide = Math.max(ball.slide || 0, 0.34);
-                ball.topSpin *= 0.72;
-                return;
-            }
-        } else if (topSpin > 0) {
-            nextSpeed = Math.max(0, nextSpeed + delta * 0.18);
-            ball.vx = dirX * nextSpeed;
-            ball.vy = dirY * nextSpeed;
-        }
-    }
-
-    ball.slide = Math.max(0, slideFactor - SLIDE_RESOLVE_RATE * dt);
-    ball.spin *= Math.exp(-SPIN_SLIDE_DAMP * dt);
-    if (Math.abs(ball.spin) <= SLEEP_SPIN) ball.spin = 0;
-}
-
-function integrateRolling(ball, speed, dirX, dirY, dt) {
-    const loss = rollingLoss(speed, dt);
-    let nextSpeed = Math.max(0, speed - loss);
-
-    if (nextSpeed <= 0) {
-        settleLinearMotion(ball);
-        decayResidualSpin(ball, dt);
-        return;
-    }
-
-    const tanX = -dirY;
-    const tanY = dirX;
-    ball.vx = dirX * nextSpeed;
-    ball.vy = dirY * nextSpeed;
-    nextSpeed = applySideSpinCurve(ball, nextSpeed, tanX, tanY, dt, SPIN_CURVE_WHILE_ROLLING, 0.05);
-
-    if (nextSpeed > SLEEP_SPEED) {
-        const len = Math.hypot(ball.vx, ball.vy) || 1;
-        ball.vx = (ball.vx / len) * nextSpeed;
-        ball.vy = (ball.vy / len) * nextSpeed;
-    } else {
-        settleLinearMotion(ball);
-        decayResidualSpin(ball, dt);
-        return;
-    }
-
-    ball.spin *= Math.exp(-SPIN_ROLL_DAMP * dt);
-    if (Math.abs(ball.spin) <= SLEEP_SPIN) ball.spin = 0;
-    if (Math.abs(ball.topSpin || 0) > SLEEP_SPIN) {
-        ball.topSpin *= Math.exp(-SPIN_SLIDE_DAMP * dt);
-        if (Math.abs(ball.topSpin) <= SLEEP_SPIN) ball.topSpin = 0;
-    }
-    if ((ball.slide || 0) > SLIDE_THRESHOLD) {
-        ball.slide = Math.max(0, (ball.slide || 0) - SLIDE_RESOLVE_RATE * dt);
-    } else if (ball.slide > 0) {
-        ball.slide = 0;
-    }
-}
-
 export function applyMotionForces(ball, dt) {
     if (ball.inPocket || ball.isPocketing()) return;
 
-    let speed = Math.hypot(ball.vx, ball.vy);
-    if (speed <= 0) {
-        decayResidualSpin(ball, dt);
+    const speed = Math.hypot(ball.vx, ball.vy);
+    if (speed <= SLEEP_SPEED) {
         updateSleepState(ball);
         return;
     }
@@ -243,15 +54,12 @@ export function applyMotionForces(ball, dt) {
     ball.lastDirX = ball.vx / speed;
     ball.lastDirY = ball.vy / speed;
 
-    const dirX = ball.lastDirX;
-    const dirY = ball.lastDirY;
-    const tanX = -dirY;
-    const tanY = dirX;
-
-    if (isSliding(ball, speed)) {
-        integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt);
+    const nextSpeed = Math.max(0, speed - rollingLoss(speed, dt));
+    if (nextSpeed <= SLEEP_SPEED) {
+        stopBall(ball);
     } else {
-        integrateRolling(ball, speed, dirX, dirY, dt);
+        ball.vx = ball.lastDirX * nextSpeed;
+        ball.vy = ball.lastDirY * nextSpeed;
     }
 
     updateSleepState(ball);
@@ -284,61 +92,9 @@ function separateBalls(b1, b2, nx, ny, dist) {
     return true;
 }
 
-function applyTopSpinCollision(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed) {
-    const topSpin = striker.topSpin || 0;
-    const preSpeed = Math.hypot(strikerPreVx, strikerPreVy);
-    let shotX = nx;
-    let shotY = ny;
-    if (strikerPreVx * nx + strikerPreVy * ny < 0) {
-        shotX = -nx;
-        shotY = -ny;
-    }
-    if (preSpeed > SLEEP_SPEED) {
-        shotX = strikerPreVx / preSpeed;
-        shotY = strikerPreVy / preSpeed;
-    }
-    const headOn = Math.abs(shotX * nx + shotY * ny);
-
-    if (topSpin < -SLEEP_SPIN) {
-        const drawMag = clamp(-topSpin * DRAW_COLLISION_KICK * headOn, 0, impactSpeed * DRAW_COLLISION_MAX);
-        if (drawMag <= SLEEP_SPIN) return;
-
-        const transferred = topSpin * DRAW_SPIN_TRANSFER * Math.max(0.45, headOn);
-        other.topSpin = (other.topSpin || 0) + transferred;
-        striker.topSpin = topSpin - transferred;
-
-        const cueDraw = drawMag * CUE_DRAW_BACK_RATIO;
-        striker.vx -= cueDraw * shotX;
-        striker.vy -= cueDraw * shotY;
-
-        const objBrake = drawMag * OBJECT_DRAW_BRAKE_RATIO;
-        other.vx -= objBrake * shotX;
-        other.vy -= objBrake * shotY;
-
-        const slideBoost = clamp(0.28 + drawMag / Math.max(impactSpeed, 0.1) * 0.42, 0.28, 0.78);
-        other.slide = Math.max(other.slide || 0, slideBoost);
-        striker.slide = Math.max(striker.slide || 0, slideBoost * 0.72);
-        return;
-    }
-
-    if (topSpin > SLEEP_SPIN) {
-        const followMag = clamp(topSpin * FOLLOW_COLLISION_KICK * headOn, 0, impactSpeed * 0.14);
-        other.vx += followMag * shotX;
-        other.vy += followMag * shotY;
-        striker.topSpin = topSpin * 0.55;
-    }
-}
-
 export function resolveCollision(b1, b2) {
     const { nx, ny, dist } = collisionNormal(b1, b2);
     if (!separateBalls(b1, b2, nx, ny, dist)) return;
-
-    const b1PreVx = b1.vx;
-    const b1PreVy = b1.vy;
-    const b2PreVx = b2.vx;
-    const b2PreVy = b2.vy;
-    const v1nPre = b1PreVx * nx + b1PreVy * ny;
-    const v2nPre = b2PreVx * nx + b2PreVy * ny;
 
     const rvx = b2.vx - b1.vx;
     const rvy = b2.vy - b1.vy;
@@ -358,31 +114,15 @@ export function resolveCollision(b1, b2) {
     const ty = nx;
     const v1t = b1.vx * tx + b1.vy * ty;
     const v2t = b2.vx * tx + b2.vy * ty;
-    const spinContact = BALL_SPIN_CONTACT;
-    const surf1 = v1t + (b1.spin || 0) * spinContact;
-    const surf2 = v2t + (b2.spin || 0) * spinContact;
-    const relSurf = surf2 - surf1;
+    const relT = v2t - v1t;
 
     const jtMax = BALL_FRICTION * jn;
-    let jt = clamp(-relSurf / (1 + spinContact), -jtMax, jtMax);
+    const jt = clamp(-relT * 0.5, -jtMax, jtMax);
 
     b1.vx -= jt * tx;
     b1.vy -= jt * ty;
     b2.vx += jt * tx;
     b2.vy += jt * ty;
-
-    b1.spin = (b1.spin || 0) + jt * spinContact;
-    b2.spin = (b2.spin || 0) - jt * spinContact;
-
-    const striker = v1nPre > v2nPre ? b1 : b2;
-    const other = striker === b1 ? b2 : b1;
-    const strikerPreVx = striker === b1 ? b1PreVx : b2PreVx;
-    const strikerPreVy = striker === b1 ? b1PreVy : b2PreVy;
-    applyTopSpinCollision(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed);
-
-    const slideBoost = clamp(COLLISION_SLIDE_MIN + impactSpeed * 0.018, COLLISION_SLIDE_MIN, 0.55);
-    b1.slide = Math.max(b1.slide || 0, slideBoost);
-    b2.slide = Math.max(b2.slide || 0, slideBoost);
 
     wakeBall(b1);
     wakeBall(b2);

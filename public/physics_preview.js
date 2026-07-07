@@ -7,10 +7,6 @@ import {
     BALL_RESTITUTION,
     BALL_FRICTION,
     PHYSICS_SUBSTEPS,
-    MAX_SPIN_OFFSET,
-    SPIN_SIDE_POWER,
-    SPIN_TOP_POWER,
-    SLIDE_FROM_OFFSET,
     MIN_BOUNCE_DRAW
 } from './constants.js';
 import { ballBounceDirs } from './physics.js';
@@ -24,9 +20,6 @@ function cloneCueBall(cueBall) {
     const c = new Ball(cueBall.x, cueBall.y, { isCueBall: true });
     c.vx = cueBall.vx;
     c.vy = cueBall.vy;
-    c.spin = cueBall.spin;
-    c.topSpin = cueBall.topSpin;
-    c.slide = cueBall.slide;
     c.px = cueBall.px;
     c.py = cueBall.py;
     c.sleepFrames = cueBall.sleepFrames;
@@ -39,23 +32,9 @@ function staticObstacles(balls, cueBall) {
         .map(b => ({ x: b.x, y: b.y, ball: b }));
 }
 
-function applyStrike(simCue, angle, power, spinOffsetX, spinOffsetY) {
+function applyStrike(simCue, angle, power) {
     simCue.vx = Math.cos(angle) * power;
     simCue.vy = Math.sin(angle) * power;
-
-    const offX = spinOffsetX / MAX_SPIN_OFFSET;
-    const offY = spinOffsetY / MAX_SPIN_OFFSET;
-    const offCenter = Math.hypot(offX, offY);
-
-    simCue.spin = offX * SPIN_SIDE_POWER * power;
-    simCue.topSpin = -offY * SPIN_TOP_POWER * power;
-
-    if (offCenter > 0.04) {
-        simCue.slide = Math.min(1, offCenter * SLIDE_FROM_OFFSET + Math.abs(simCue.topSpin) * 0.08);
-    } else {
-        simCue.slide = 0;
-        simCue.topSpin = 0;
-    }
 }
 
 function resolveCueStaticBallCollision(cue, obstacle) {
@@ -271,11 +250,11 @@ function buildOffPath(sim, angle) {
 }
 
 export function predictPowerTrajectory(angle, cueBall, balls, options) {
-    const { power, spinOffsetX, spinOffsetY } = options;
+    const { power } = options;
 
     const simCue = cloneCueBall(cueBall);
     const obstacles = staticObstacles(balls, cueBall);
-    applyStrike(simCue, angle, power, spinOffsetX, spinOffsetY);
+    applyStrike(simCue, angle, power);
 
     const sim = runCueSimulation(simCue, obstacles);
     return buildOffPath(sim, angle);

@@ -1,12 +1,8 @@
 import {
     BALL_RADIUS,
     SLEEP_SPEED,
-    SLEEP_SPIN,
-    SLIDE_THRESHOLD,
     POCKET_FALL_MS,
-    CUE_RESPOT_DELAY_MS,
-    SPIN_VISUAL_SCALE,
-    SPIN_VISUAL_ROLLING_FACTOR
+    CUE_RESPOT_DELAY_MS
 } from './constants.js';
 import { getHeadSpot } from './utils.js';
 
@@ -83,9 +79,6 @@ export class Ball {
         this.color = options.color || '#ffffff';
         this.inPocket = false;
         this.pocketFall = null;
-        this.spin = 0;
-        this.topSpin = 0;
-        this.slide = 0;
         this.orientation = { ...IDENTITY_QUAT };
         this.px = x;
         this.py = y;
@@ -107,9 +100,6 @@ export class Ball {
         };
         this.vx = 0;
         this.vy = 0;
-        this.spin = 0;
-        this.topSpin = 0;
-        this.slide = 0;
     }
 
     updatePocketFall(balls) {
@@ -143,54 +133,18 @@ export class Ball {
     advanceRoll(frameFraction) {
         if (this.inPocket) return;
 
-        const vx = this.vx;
-        const vy = this.vy;
-        const speed = Math.hypot(vx, vy);
-        const sliding = (this.slide || 0) > SLIDE_THRESHOLD;
-        const rollingClean = speed > SLEEP_SPEED && !sliding;
-        const spinScale = rollingClean
-            ? SPIN_VISUAL_SCALE * SPIN_VISUAL_ROLLING_FACTOR
-            : SPIN_VISUAL_SCALE;
+        const speed = Math.hypot(this.vx, this.vy);
+        if (speed < 1e-8) return;
 
-        if (speed >= 1e-8) {
-            const angle = (speed * frameFraction) / this.radius;
-            const half = angle * 0.5;
-            const s = Math.sin(half);
-            const c = Math.cos(half);
-            const axisX = -vy / speed;
-            const axisY = vx / speed;
-            const delta = { w: c, x: axisX * s, y: axisY * s, z: 0 };
+        const angle = (speed * frameFraction) / this.radius;
+        const half = angle * 0.5;
+        const s = Math.sin(half);
+        const c = Math.cos(half);
+        const axisX = -this.vy / speed;
+        const axisY = this.vx / speed;
+        const delta = { w: c, x: axisX * s, y: axisY * s, z: 0 };
 
-            this.orientation = quatNormalize(quatMultiply(delta, this.orientation));
-        }
-
-        const spinAngle = (this.spin || 0) * spinScale * frameFraction;
-        if (Math.abs(spinAngle) > 1e-8) {
-            const half = spinAngle * 0.5;
-            const spinDelta = { w: Math.cos(half), x: 0, y: 0, z: Math.sin(half) };
-            this.orientation = quatNormalize(quatMultiply(spinDelta, this.orientation));
-        }
-
-        const topSpinAngle = (this.topSpin || 0) * spinScale * frameFraction;
-        if (Math.abs(topSpinAngle) > 1e-8) {
-            let axisX;
-            let axisY;
-            if (speed >= 1e-8) {
-                axisX = -vy / speed;
-                axisY = vx / speed;
-            } else {
-                axisX = -(this.lastDirY ?? 0);
-                axisY = this.lastDirX ?? 1;
-            }
-            const axisLen = Math.hypot(axisX, axisY) || 1;
-            axisX /= axisLen;
-            axisY /= axisLen;
-            const half = topSpinAngle * 0.5;
-            const s = Math.sin(half);
-            const c = Math.cos(half);
-            const topDelta = { w: c, x: axisX * s, y: axisY * s, z: 0 };
-            this.orientation = quatNormalize(quatMultiply(topDelta, this.orientation));
-        }
+        this.orientation = quatNormalize(quatMultiply(delta, this.orientation));
     }
 
     projectSurfacePoint(lx, ly, lz) {
@@ -420,10 +374,7 @@ export class Ball {
     isMoving() {
         if (this.inPocket) return false;
         if (this.isPocketing()) return true;
-        if (Math.hypot(this.vx, this.vy) > SLEEP_SPEED) return true;
-        if (Math.max(Math.abs(this.spin || 0), Math.abs(this.topSpin || 0)) > SLEEP_SPIN) return true;
-        if ((this.slide || 0) > SLIDE_THRESHOLD) return true;
-        return false;
+        return Math.hypot(this.vx, this.vy) > SLEEP_SPEED;
     }
 
     respotCueBall(balls) {
@@ -434,9 +385,6 @@ export class Ball {
         this.vy = 0;
         this.inPocket = false;
         this.pocketFall = null;
-        this.spin = 0;
-        this.topSpin = 0;
-        this.slide = 0;
         this.sleepFrames = 0;
         this.orientation = { ...IDENTITY_QUAT };
         this.lastDirX = 1;
