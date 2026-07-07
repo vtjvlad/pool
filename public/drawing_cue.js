@@ -61,25 +61,6 @@ export function getCueTipPosition(cueBall, angle, pullBack, spinOffsetX, spinOff
     };
 }
 
-function drawCueBallGhost(ctx, x, y) {
-    const r = BALL_RADIUS;
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.72)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(x + r * 0.35, y, r * 0.11, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(196, 30, 58, 0.55)';
-    ctx.fill();
-    ctx.restore();
-}
-
 export function drawTrajectory(ctx, angle, cueBall, aimX, aimY, path) {
     const startX = cueBall.x + Math.cos(angle) * BALL_RADIUS;
     const startY = cueBall.y + Math.sin(angle) * BALL_RADIUS;
@@ -97,7 +78,9 @@ export function drawTrajectory(ctx, angle, cueBall, aimX, aimY, path) {
     ctx.lineTo(path.endX, path.endY);
     ctx.strokeStyle = COLORS.aimLineGhost;
     ctx.lineWidth = 1;
+    ctx.setLineDash([4, 5]);
     ctx.stroke();
+    ctx.setLineDash([]);
 
     if (path.hasBounce) {
         ctx.beginPath();
@@ -105,7 +88,9 @@ export function drawTrajectory(ctx, angle, cueBall, aimX, aimY, path) {
         ctx.lineTo(path.bounceEndX, path.bounceEndY);
         ctx.strokeStyle = 'rgba(120, 210, 255, 0.8)';
         ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 4]);
         ctx.stroke();
+        ctx.setLineDash([]);
     }
 
     if (path.hasTargetLine) {
@@ -114,11 +99,9 @@ export function drawTrajectory(ctx, angle, cueBall, aimX, aimY, path) {
         ctx.lineTo(path.targetEndX, path.targetEndY);
         ctx.strokeStyle = 'rgba(255, 210, 80, 0.75)';
         ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 4]);
         ctx.stroke();
-    }
-
-    if (path.hitType === 'ball' || path.hitType === 'wall') {
-        drawCueBallGhost(ctx, path.contactX, path.contactY);
+        ctx.setLineDash([]);
     }
 
     ctx.beginPath();

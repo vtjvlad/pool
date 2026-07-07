@@ -32,7 +32,7 @@ export const POCKET_CENTER_SHIFT = 0;
 export const CORNER_POCKET_CENTER_SHIFT = POCKET_INSET * 0.24;
 export const CUSHION_DEPTH = Math.max(16 + POCKET_LAYOUT_DIAMETER / 4, POCKET_INSET + POCKET_LAYOUT_RADIUS) * 0.75 * 0.75 * 1.1;
 export const PLAY_SURFACE_INSET = POCKET_LAYOUT_DIAMETER / 4;
-export const RUBBER_THICKNESS = BALL_RADIUS * 2 * 0.75 * 1.18;
+export const RUBBER_THICKNESS = BALL_RADIUS * 2 * 0.75 * 1.28;
 export const RUBBER_CENTER_CHAMFER_ANGLE = 60;
 export const RUBBER_CORNER_CHAMFER_ANGLE = 45;
 export const DEBUG_DRAW_RUBBER = true;
@@ -180,7 +180,7 @@ export const POWER_FACTOR = 0.22;
 export const STRIKE_ANIM_BASE_MS = 85;
 export const IMPACT_FLASH_MS = 180;
 export const TRAJECTORY_EXTEND = 18;
-export const BOUNCE_PREVIEW_LEN = 72;
+export const BOUNCE_PREVIEW_LEN = 52;
 export const MIN_BOUNCE_DRAW = 0.08;
 
 export const BALL_DEFS = {
