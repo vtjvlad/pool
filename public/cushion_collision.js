@@ -1,15 +1,14 @@
 import {
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
-    CUSHION_BOUNCE,
-    CUSHION_TANGENTIAL_DAMPING,
+    CUSHION_RESTITUTION,
+    CUSHION_RESTITUTION_SLOW,
+    CUSHION_FRICTION,
     LOW_SPEED_THRESHOLD,
-    SIDE_SPIN_THROW,
-    SPIN_CUSHION_SIDE_THROW,
-    SPIN_CUSHION_RETAIN,
-    TOP_SPIN_CUSHION_KICK,
-    DRAW_SPIN_CUSHION_KICK,
-    MAX_SPIN_SPEED_CHANGE
+    CUSHION_THROW,
+    CUSHION_SPIN_RETAIN,
+    COLLISION_SLIDE_MIN,
+    CUSHION_SLIDE
 } from './constants.js';
 import { getCushionInnerEdges } from './cushions.js';
 import { getRubberCollisionEdges } from './cushion_rubber.js';
@@ -94,6 +93,37 @@ function circleSegmentCollision(bx, by, radius, line) {
     };
 }
 
+function applyCushionSpin(ball, nx, ny, preImpactSpeed, vx, vy) {
+    if (!ball) return { vx, vy };
+
+    const tx = -ny;
+    const ty = nx;
+    const spin = ball.spin || 0;
+    const topSpin = ball.topSpin || 0;
+
+    if (Math.abs(spin) > 1e-6) {
+        const throwCap = preImpactSpeed * 0.12;
+        const throwV = clamp(spin * CUSHION_THROW * preImpactSpeed, -throwCap, throwCap);
+        vx += throwV * tx;
+        vy += throwV * ty;
+        ball.spin = spin * CUSHION_SPIN_RETAIN;
+    }
+
+    if (Math.abs(topSpin) > 1e-6) {
+        const inSpeed = Math.hypot(vx, vy) || 1;
+        const inDirX = vx / inSpeed;
+        const inDirY = vy / inSpeed;
+        const followKick = clamp(topSpin * 0.048, -preImpactSpeed * 0.07, preImpactSpeed * 0.07);
+        vx += followKick * inDirX;
+        vy += followKick * inDirY;
+        ball.topSpin = topSpin * 0.45;
+    }
+
+    ball.slide = Math.max(ball.slide || 0, CUSHION_SLIDE);
+
+    return { vx, vy };
+}
+
 function resolveAtPosition(bx, by, vx, vy, r, edges, ball, allowBounce) {
     let bounced = false;
 
@@ -119,39 +149,22 @@ function resolveAtPosition(bx, by, vx, vy, r, edges, ball, allowBounce) {
         const dot = vx * nx + vy * ny;
         if (allowBounce && !bounced && dot < 0) {
             const preImpactSpeed = Math.hypot(vx, vy);
-            const bounce = -dot < LOW_SPEED_THRESHOLD ? CUSHION_BOUNCE * 0.72 : CUSHION_BOUNCE;
-            vx -= (1 + bounce) * dot * nx;
-            vy -= (1 + bounce) * dot * ny;
+            const restitution = -dot < LOW_SPEED_THRESHOLD
+                ? CUSHION_RESTITUTION_SLOW
+                : CUSHION_RESTITUTION;
+            vx -= (1 + restitution) * dot * nx;
+            vy -= (1 + restitution) * dot * ny;
 
             const tx = -ny;
             const ty = nx;
             const vTan = vx * tx + vy * ty;
-            vx -= vTan * CUSHION_TANGENTIAL_DAMPING * tx;
-            vy -= vTan * CUSHION_TANGENTIAL_DAMPING * ty;
+            vx -= vTan * CUSHION_FRICTION * tx;
+            vy -= vTan * CUSHION_FRICTION * ty;
 
-            if (ball) {
-                const spinCap = preImpactSpeed * MAX_SPIN_SPEED_CHANGE;
-                if (ball.spin) {
-                    const throwV = clamp(ball.spin * SPIN_CUSHION_SIDE_THROW * preImpactSpeed, -spinCap, spinCap);
-                    vx += throwV * tx;
-                    vy += throwV * ty;
-                    ball.spin *= SPIN_CUSHION_RETAIN;
-                }
-                if (ball.topSpin) {
-                    const inSpeed = Math.hypot(vx, vy) || 1;
-                    const inDirX = vx / inSpeed;
-                    const inDirY = vy / inSpeed;
-                    const topScale = ball.topSpin >= 0 ? TOP_SPIN_CUSHION_KICK : DRAW_SPIN_CUSHION_KICK;
-                    const topKick = clamp(ball.topSpin * topScale * preImpactSpeed, -spinCap, spinCap);
-                    vx += topKick * inDirX;
-                    vy += topKick * inDirY;
-                    ball.topSpin *= SPIN_CUSHION_RETAIN;
-                }
-                ball.slide = Math.min(ball.slide || 0, 0.25);
-            }
+            ({ vx, vy } = applyCushionSpin(ball, nx, ny, preImpactSpeed, vx, vy));
 
             const exitSpeed = Math.hypot(vx, vy);
-            const maxExitSpeed = preImpactSpeed * 1.015;
+            const maxExitSpeed = preImpactSpeed * 1.012;
             if (exitSpeed > maxExitSpeed && exitSpeed > 0) {
                 const limit = maxExitSpeed / exitSpeed;
                 vx *= limit;

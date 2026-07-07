@@ -44,59 +44,59 @@ export const POCKET_MAGNET_RADIUS = POCKET_RADIUS;
 export const POCKET_FALL_MS = 520;
 export const CUE_RESPOT_DELAY_MS = 400;
 
-/** Физика в стиле 8 Ball Pool — аркадная модель с фазой скольжения */
+/** Реалистичная физика: скольжение → качение, импульсные столкновения, винт через скорость контакта */
 export const REFERENCE_FPS = 60;
 export const MAX_PHYSICS_DT = 0.05;
-export const PHYSICS_SUBSTEPS = 8;
+export const PHYSICS_SUBSTEPS = 10;
 export const COLLISION_PASSES = 4;
 
-export const BALL_BOUNCE = 0.94;
-export const BALL_SURFACE_FRICTION = 0.22;
-export const CUSHION_BOUNCE = 0.84;
-export const CUSHION_TANGENTIAL_DAMPING = 0.28;
+export const BALL_MASS = 1;
+export const BALL_MOMENT = (2 / 5) * BALL_MASS * BALL_RADIUS * BALL_RADIUS;
 
-export const TABLE_DRAG = 0.9978;
-export const SLIDE_DRAG = 0.992;
-export const SLIDING_DECELERATION = 0.085;
-export const SLIDE_DECAY = 0.86;
-export const SLIDE_TO_ROLL_THRESHOLD = 0.08;
-export const SLIDE_FROM_OFFSET = 0.92;
-export const ROLLING_DECELERATION = 0.016;
-export const LOW_SPEED_DECELERATION = 0.026;
-export const LOW_SPEED_THRESHOLD = 1.3;
+export const BALL_RESTITUTION = 0.945;
+export const BALL_RESTITUTION_SLOW = 0.82;
+export const BALL_FRICTION = 0.055;
+export const CUSHION_RESTITUTION = 0.89;
+export const CUSHION_RESTITUTION_SLOW = 0.74;
+export const CUSHION_FRICTION = 0.20;
 
-export const SLEEP_SPEED = 0.022;
-export const SLEEP_SPIN = 0.012;
-export const SLEEP_FRAMES = 12;
+export const CLOTH_ROLL_DECEL = 0.027;
+export const CLOTH_ROLL_SPEED_SCALE = 0.0046;
+export const CLOTH_SLIDE_DECEL = 0.095;
+export const SLIP_RESOLVE_RATE = 0.13;
+export const SLIDE_RESOLVE_RATE = 0.075;
+export const SLIDE_THRESHOLD = 0.035;
+
+export const SPIN_ROLL_DAMP = 0.0038;
+export const SPIN_SLIDE_DAMP = 0.0075;
+export const SPIN_CURVE_WHILE_SLIDING = 0.0011;
+export const SPIN_CURVE_WHILE_ROLLING = 0.00055;
+
+export const LOW_SPEED_THRESHOLD = 1.4;
+
+export const SLEEP_SPEED = 0.014;
+export const SLEEP_SPIN = 0.007;
+export const SLEEP_FRAMES = 10;
 export const MIN_SPEED = SLEEP_SPEED;
 
 export const MAX_SPIN_OFFSET = 0.72;
-export const SPIN_SIDE_POWER = 0.28;
-export const SPIN_TOP_POWER = 0.31;
-export const SPIN_DECAY = 0.987;
-export const SIDE_SPIN_CURVE = 0.00185;
-export const SIDE_SPIN_THROW = 0.015;
-export const SPIN_CUSHION_SIDE_THROW = 0.009;
-export const TOP_SPIN_ACCEL = 0.093;
-export const DRAW_SPIN_BRAKE = 0.27;
-export const SPIN_TOP_MASSE_FACTOR = 0.06;
-export const DRAW_SPIN_MASSE_FACTOR = 0.135;
-export const TOP_SPIN_ROLLING_ACCEL = 0.016;
-export const DRAW_SPIN_ROLLING_ACCEL = 0.036;
-export const TOP_SPIN_CONVERSION = 0.82;
-export const SPIN_TRANSFER = 0.18;
-export const SPIN_CUSHION_RETAIN = 0.48;
-export const TOP_SPIN_CUSHION_KICK = 0.13;
-export const DRAW_SPIN_CUSHION_KICK = 0.36;
-export const MAX_SPIN_SPEED_CHANGE = 0.28;
-export const MAX_SIDE_SPIN_SPEED_CHANGE = 0.19;
+export const SPIN_SIDE_POWER = 0.92;
+export const SPIN_TOP_POWER = 0.80;
+export const SLIDE_FROM_OFFSET = 0.94;
 export const SPIN_VISUAL_SCALE = 0.065;
 
-/** Алиасы для превью прицела */
-export const BALL_RESTITUTION = BALL_BOUNCE;
-export const BALL_FRICTION = BALL_SURFACE_FRICTION;
-export const CUSHION_RESTITUTION = CUSHION_BOUNCE;
-export const CUSHION_FRICTION = CUSHION_TANGENTIAL_DAMPING;
+export const CUSHION_THROW = 0.050;
+export const CUSHION_SPIN_RETAIN = 0.55;
+export const BALL_SPIN_CONTACT = 0.60;
+export const COLLISION_SLIDE_MIN = 0.38;
+export const CUSHION_SLIDE = 0.58;
+
+/** Алиасы для превью прицела и совместимости */
+export const BALL_BOUNCE = BALL_RESTITUTION;
+export const BALL_SURFACE_FRICTION = BALL_FRICTION;
+export const CUSHION_BOUNCE = CUSHION_RESTITUTION;
+export const CUSHION_TANGENTIAL_DAMPING = CUSHION_FRICTION;
+export const BALL_FRICTION_COEFF = BALL_FRICTION;
 
 export const COLORS = {
     felt: '#2a8cb8',
