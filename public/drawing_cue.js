@@ -3,7 +3,8 @@ import {
     CUE_LENGTH,
     CUE_WIDTH,
     COLORS,
-    BOUNCE_PREVIEW_LEN_GHOST
+    BOUNCE_PREVIEW_LEN_GHOST,
+    OFF_TARGET_PREVIEW_LEN
 } from './constants.js';
 
 export function drawCueStick(ctx, tipX, tipY, angle) {
@@ -217,12 +218,14 @@ function drawOffTrajectory(ctx, startX, startY, path) {
     }
 
     if (path.hasTargetLine) {
-        const tx = path.targetEndX ?? path.contactX + path.targetDx * bounceLen;
-        const ty = path.targetEndY ?? path.contactY + path.targetDy * bounceLen;
+        const sx = path.targetStartX ?? path.contactX;
+        const sy = path.targetStartY ?? path.contactY;
+        const tx = path.targetEndX ?? sx + path.targetDx * OFF_TARGET_PREVIEW_LEN;
+        const ty = path.targetEndY ?? sy + path.targetDy * OFF_TARGET_PREVIEW_LEN;
         strokeLine(
             ctx,
-            path.contactX,
-            path.contactY,
+            sx,
+            sy,
             tx,
             ty,
             'rgba(255, 210, 80, 0.75)',

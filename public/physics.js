@@ -2,6 +2,7 @@ import {
     BALL_RADIUS,
     TRAJECTORY_EXTEND,
     BOUNCE_PREVIEW_LEN,
+    OFF_TARGET_PREVIEW_LEN,
     MIN_BOUNCE_DRAW,
     CANVAS_WIDTH,
     CANVAS_HEIGHT,
@@ -220,6 +221,9 @@ export function predictCueTrajectory(angle, cueBall, balls) {
         }
     }
 
+    const targetStartX = hit.type === 'ball' && hit.hitBall ? hit.hitBall.x : contactX;
+    const targetStartY = hit.type === 'ball' && hit.hitBall ? hit.hitBall.y : contactY;
+
     return {
         contactX,
         contactY,
@@ -234,8 +238,10 @@ export function predictCueTrajectory(angle, cueBall, balls) {
         hasTargetLine,
         targetDx,
         targetDy,
-        targetEndX: contactX + targetDx * BOUNCE_PREVIEW_LEN,
-        targetEndY: contactY + targetDy * BOUNCE_PREVIEW_LEN
+        targetStartX,
+        targetStartY,
+        targetEndX: targetStartX + targetDx * OFF_TARGET_PREVIEW_LEN,
+        targetEndY: targetStartY + targetDy * OFF_TARGET_PREVIEW_LEN
     };
 }
 
