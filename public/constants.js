@@ -2,7 +2,7 @@ export const CANVAS_WIDTH = 1040;
 export const CANVAS_HEIGHT = 520;
 
 /** Эталонный размер всего UI для пропорционального масштабирования */
-export const LAYOUT_SIDE_PANEL = 92;
+export const LAYOUT_SIDE_PANEL = 64;
 export const LAYOUT_AIM_PANEL = 92;
 /** Минимальный отступ между столом и остальными элементами UI */
 export const LAYOUT_TABLE_MARGIN = 24;
