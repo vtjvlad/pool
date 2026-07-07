@@ -2,8 +2,8 @@ export const CANVAS_WIDTH = 1040;
 export const CANVAS_HEIGHT = 520;
 
 /** Эталонный размер всего UI для пропорционального масштабирования */
-export const LAYOUT_SIDE_PANEL = 67;
-export const LAYOUT_AIM_PANEL = 67;
+export const LAYOUT_SIDE_PANEL = 92;
+export const LAYOUT_AIM_PANEL = 92;
 /** Минимальный отступ между столом и остальными элементами UI */
 export const LAYOUT_TABLE_MARGIN = 24;
 export const LAYOUT_TOP_BAR = 46;
@@ -277,8 +277,32 @@ export const AIM_WHEEL_SCROLL_PX = 12;
 export const AIM_SMOOTH_RATE = 6;
 export const AIM_SMOOTH_RATE_DRAG = 15;
 export const MAX_PULL = 115;
-export const MIN_POWER_PERCENT = 5;
+export const MIN_POWER_PERCENT = 10;
 export const POWER_FACTOR = 0.22;
+/** Доля шкалы силы для точной зоны (10–70% удара) */
+export const POWER_SLIDER_FINE_END = 92;
+export const POWER_FINE_START = 10;
+export const POWER_FINE_END = 70;
+
+export function sliderPosToPower(sliderPos) {
+    const pos = Math.max(0, Math.min(100, sliderPos));
+    if (pos <= 0) return 0;
+    if (pos <= POWER_SLIDER_FINE_END) {
+        return POWER_FINE_START + (pos / POWER_SLIDER_FINE_END) * (POWER_FINE_END - POWER_FINE_START);
+    }
+    const t = (pos - POWER_SLIDER_FINE_END) / (100 - POWER_SLIDER_FINE_END);
+    return POWER_FINE_END + t * (100 - POWER_FINE_END);
+}
+
+export function powerToSliderPos(power) {
+    const p = Math.max(0, Math.min(100, power));
+    if (p <= 0) return 0;
+    if (p <= POWER_FINE_END) {
+        return ((p - POWER_FINE_START) / (POWER_FINE_END - POWER_FINE_START)) * POWER_SLIDER_FINE_END;
+    }
+    const t = (p - POWER_FINE_END) / (100 - POWER_FINE_END);
+    return POWER_SLIDER_FINE_END + t * (100 - POWER_SLIDER_FINE_END);
+}
 /** Плавность изменения силы удара */
 export const POWER_SMOOTH_RATE = 6;
 export const POWER_SMOOTH_RATE_DRAG = 15;

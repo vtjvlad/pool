@@ -94,7 +94,7 @@ body {
 }
 
 #game-stage {
-    width: 1222px;
+    width: 1272px;
     height: 654px;
     flex-shrink: 0;
     display: flex;
@@ -232,11 +232,11 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 67px; /* как панель силы удара */
-    height: 260px; /* половина высоты стола (520px) */
-    padding: 8px 6px;
+    width: 92px;
+    height: 460px;
+    padding: 10px 8px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.25));
-    border-radius: 12px;
+    border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     touch-action: none;
 }
@@ -250,8 +250,8 @@ body {
 }
 
 #aim-controls .control-label {
-    margin-bottom: 4px;
-    font-size: 0.58rem;
+    margin-bottom: 6px;
+    font-size: 0.68rem;
 }
 
 #aim-slider-track {
@@ -261,7 +261,7 @@ body {
     justify-content: center;
     width: 100%;
     flex: 1;
-    min-height: 72px;
+    min-height: 120px;
     touch-action: none;
     cursor: grab;
 }
@@ -274,14 +274,14 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 51px; /* как ползунок силы удара */
+    width: 72px;
     height: 100%;
     pointer-events: none;
 }
 
 #aim-wheel-cap-top {
-    width: 51px;
-    height: 8px;
+    width: 72px;
+    height: 11px;
     flex-shrink: 0;
     border-radius: 50%;
     background: radial-gradient(ellipse 100% 100% at 50% 65%, #7a8490, #3a424c 55%, #1a1f26 100%);
@@ -293,8 +293,8 @@ body {
 }
 
 #aim-wheel-cap-bottom {
-    width: 51px;
-    height: 8px;
+    width: 72px;
+    height: 11px;
     flex-shrink: 0;
     border-radius: 50%;
     background: radial-gradient(ellipse 100% 100% at 50% 35%, #4f5864, #252b33 55%, #0c0f14 100%);
@@ -308,7 +308,7 @@ body {
 #aim-wheel-body {
     position: relative;
     flex: 1;
-    width: 41px;
+    width: 58px;
     overflow: hidden;
     background: linear-gradient(
         90deg,
@@ -353,20 +353,20 @@ body {
 
 #aim-wheel-pointer {
     position: absolute;
-    right: -2px;
+    right: -3px;
     top: 50%;
-    width: 6px;
-    height: 9px;
-    margin-top: -4.5px;
+    width: 8px;
+    height: 12px;
+    margin-top: -6px;
     background: rgba(126, 200, 255, 0.95);
     clip-path: polygon(0 50%, 100% 15%, 100% 85%);
-    box-shadow: 0 0 6px rgba(126, 200, 255, 0.65);
+    box-shadow: 0 0 8px rgba(126, 200, 255, 0.65);
     z-index: 3;
 }
 
 #aim-degrees {
-    margin-top: 4px;
-    font-size: 0.72rem;
+    margin-top: 6px;
+    font-size: 0.82rem;
     font-weight: 700;
     color: #7ec8ff;
     text-align: center;
@@ -441,11 +441,11 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 67px;
-    height: 390px; /* не более 75% от высоты стола (520px) */
-    padding: 10px 6px;
+    width: 92px;
+    height: 460px;
+    padding: 10px 8px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.25));
-    border-radius: 12px;
+    border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     touch-action: none;
 }
@@ -461,7 +461,7 @@ body {
 
 #pull-hint {
     margin: 0 0 8px;
-    font-size: 0.62rem;
+    font-size: 0.68rem;
     line-height: 1.2;
     text-align: center;
     opacity: 0.6;
@@ -470,9 +470,9 @@ body {
 #power-pull-track {
     position: relative;
     flex: 1;
-    width: 51px;
-    min-height: 200px;
-    border-radius: 25px;
+    width: 72px;
+    min-height: 280px;
+    border-radius: 36px;
     background: rgba(0, 0, 0, 0.45);
     border: 2px solid rgba(126, 200, 255, 0.25);
     overflow: hidden;
@@ -501,10 +501,10 @@ body {
     position: absolute;
     left: 50%;
     top: 0%;
-    width: 40px;
-    height: 40px;
-    margin-left: -20px;
-    margin-top: -20px;
+    width: 56px;
+    height: 56px;
+    margin-left: -28px;
+    margin-top: -28px;
     border-radius: 50%;
     background: radial-gradient(circle at 32% 28%, #fff, #c8d6e5 50%, #8395a7);
     border: 2px solid rgba(255, 255, 255, 0.9);
@@ -518,7 +518,7 @@ body {
 
 #power-value {
     margin-top: 8px;
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #7ec8ff;
 }

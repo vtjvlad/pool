@@ -21,6 +21,8 @@ import {
     AIM_SMOOTH_RATE_DRAG,
     POWER_SMOOTH_RATE,
     POWER_SMOOTH_RATE_DRAG,
+    sliderPosToPower,
+    powerToSliderPos,
     AIM_LINE_VARIANTS,
     AIM_LINE_LABELS,
     AIM_MODIFIER_STORAGE_KEY,
@@ -454,10 +456,11 @@ function getPullFromPower() {
 }
 
 function updatePowerVisual() {
-    const display = Math.max(0, Math.min(100, shotPower));
-    powerValue.textContent = `${Math.round(display)}%`;
-    powerFill.style.height = `${display}%`;
-    powerThumb.style.top = `${display}%`;
+    const power = Math.max(0, Math.min(100, shotPower));
+    const sliderPos = powerToSliderPos(power);
+    powerValue.textContent = `${Math.round(power)}%`;
+    powerFill.style.height = `${sliderPos}%`;
+    powerThumb.style.top = `${sliderPos}%`;
 }
 
 function snapPower() {
@@ -493,7 +496,8 @@ function resetPowerPull() {
 function powerFromClientY(clientY) {
     const rect = powerTrack.getBoundingClientRect();
     const y = clientY - rect.top;
-    return (Math.max(0, Math.min(rect.height, y)) / rect.height) * 100;
+    const sliderPos = (Math.max(0, Math.min(rect.height, y)) / rect.height) * 100;
+    return sliderPosToPower(sliderPos);
 }
 
 function allBallsSettled() {
