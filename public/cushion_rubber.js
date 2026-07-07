@@ -187,6 +187,33 @@ function createRubberFillGradient(ctx, line, nx, ny, t) {
     return grad;
 }
 
+function traceRubberInnerEdge(ctx, points) {
+    const {
+        hasEndCurve,
+        hasStartCurve,
+        innerEndX,
+        innerEndY,
+        innerStartX,
+        innerStartY,
+        beforeEndCurveX,
+        beforeEndCurveY,
+        afterEndCurveX,
+        afterEndCurveY,
+        beforeStartCurveX,
+        beforeStartCurveY,
+        afterStartCurveX,
+        afterStartCurveY
+    } = points;
+
+    ctx.moveTo(hasEndCurve ? afterEndCurveX : innerEndX, hasEndCurve ? afterEndCurveY : innerEndY);
+    ctx.lineTo(beforeStartCurveX, beforeStartCurveY);
+    if (hasStartCurve) {
+        ctx.quadraticCurveTo(innerStartX, innerStartY, afterStartCurveX, afterStartCurveY);
+    } else {
+        ctx.lineTo(innerStartX, innerStartY);
+    }
+}
+
 function drawRubberStrip(ctx, line) {
     const { nx, ny, tx, ty } = edgeNormal(line.x1, line.y1, line.x2, line.y2);
     const t = RUBBER_THICKNESS;
@@ -254,29 +281,44 @@ function drawRubberStrip(ctx, line) {
     ctx.fillStyle = createRubberFillGradient(ctx, line, nx, ny, t);
     ctx.fill();
 
+    const edgePoints = {
+        hasEndCurve,
+        hasStartCurve,
+        innerEndX,
+        innerEndY,
+        innerStartX,
+        innerStartY,
+        beforeEndCurveX,
+        beforeEndCurveY,
+        afterEndCurveX,
+        afterEndCurveY,
+        beforeStartCurveX,
+        beforeStartCurveY,
+        afterStartCurveX,
+        afterStartCurveY
+    };
+
     ctx.save();
     ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
+    ctx.lineCap = 'butt';
 
     ctx.beginPath();
-    ctx.moveTo(innerStartX, innerStartY);
-    ctx.lineTo(innerEndX, innerEndY);
+    traceRubberInnerEdge(ctx, edgePoints);
     ctx.strokeStyle = COLORS.rubberFeltEdge;
-    ctx.lineWidth = 1.8;
+    ctx.lineWidth = 1.1;
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.moveTo(innerStartX, innerStartY);
-    ctx.lineTo(innerEndX, innerEndY);
+    traceRubberInnerEdge(ctx, edgePoints);
     ctx.strokeStyle = COLORS.rubberHighlight;
-    ctx.lineWidth = 1.1;
+    ctx.lineWidth = 0.7;
     ctx.stroke();
 
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.strokeStyle = COLORS.rubberShadow;
-    ctx.lineWidth = 1.8;
+    ctx.lineWidth = 1.2;
     ctx.stroke();
     ctx.restore();
 }
