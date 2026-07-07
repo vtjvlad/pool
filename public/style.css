@@ -316,7 +316,7 @@ body {
     justify-content: center;
     width: 100%;
     flex: 1;
-    min-height: 100px;
+    min-height: 72px;
     touch-action: none;
     cursor: grab;
 }
@@ -427,28 +427,52 @@ body {
     text-align: center;
 }
 
-#aim-line-variant-btn {
-    margin-top: 4px;
-    padding: 3px 6px;
+#aim-toggles {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    margin-top: 6px;
+    width: 100%;
+}
+
+.aim-toggle-btn {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 6px;
+    min-height: 32px;
     cursor: pointer;
     background: rgba(0, 0, 0, 0.35);
     color: rgba(255, 255, 255, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 6px;
-    font-size: 0.55rem;
-    font-weight: 600;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
     touch-action: manipulation;
     white-space: nowrap;
+    letter-spacing: 0.04em;
 }
 
-#aim-line-variant-btn.is-active {
+.aim-toggle-btn.is-active {
     border-color: rgba(126, 200, 255, 0.55);
     color: #7ec8ff;
     box-shadow: 0 0 8px rgba(126, 200, 255, 0.2);
 }
 
-#aim-line-variant-btn:active {
+.aim-toggle-btn:active:not(:disabled) {
     transform: scale(0.96);
+}
+
+.aim-toggle-btn.is-disabled,
+.aim-toggle-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+    pointer-events: none;
+}
+
+#aim-line-variant-btn,
+#aim-modifier-btn {
+    margin-top: 0;
 }
 
 #billiard-canvas {

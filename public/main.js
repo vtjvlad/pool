@@ -23,6 +23,8 @@ import {
     AIM_WHEEL_SCROLL_PX,
     AIM_LINE_VARIANTS,
     AIM_LINE_LABELS,
+    AIM_MODIFIER_STORAGE_KEY,
+    AIM_MODIFIER_LABEL,
     MAX_CUE_MAX_CONTACTS,
     MAX_TARGET_MAX_CONTACTS
 } from './constants.js';
@@ -30,6 +32,7 @@ import { Ball } from './ball.js';
 import { createRack } from './game_logic.js';
 import { stepPhysics, updatePocketAnimations } from './physics_engine.js';
 import { predictCueTrajectory, predictExtendedCueTrajectory } from './physics.js';
+import { predictPowerTrajectory } from './physics_preview.js';
 import { drawTable } from './drawing_table.js';
 import { drawCueStick, drawTrajectory, drawSpinMark, getCueTipPosition } from './drawing_cue.js';
 import { getHeadSpot, lighten, darken, getPockets, getPlaySurface } from './utils.js';
@@ -49,6 +52,7 @@ const aimTrack = document.getElementById('aim-slider-track');
 const aimWheelNotches = document.getElementById('aim-wheel-notches');
 const aimDegrees = document.getElementById('aim-degrees');
 const aimLineVariantBtn = document.getElementById('aim-line-variant-btn');
+const aimModifierBtn = document.getElementById('aim-modifier-btn');
 const gameContainer = document.getElementById('game-container');
 const gameStage = document.getElementById('game-stage');
 const traySlots = document.getElementById('pocketed-tray-slots');
@@ -97,6 +101,7 @@ let activeAimSliderPointerId = null;
 let aimSliderLastY = null;
 let aimPointer = null;
 let aimLineVariant = 'off';
+let aimModifierEnabled = false;
 let lastFrameTime = performance.now();
 
 const AIM_LINE_VARIANT_KEY = 'vtj-pool-aim-line-variant';
@@ -114,14 +119,20 @@ function loadAimLineVariant() {
 function updateAimLineVariantButton() {
     if (!aimLineVariantBtn) return;
     aimLineVariantBtn.textContent = AIM_LINE_LABELS[aimLineVariant];
-    aimLineVariantBtn.classList.toggle('is-active', aimLineVariant !== 'off');
+    const variantActive = aimLineVariant !== 'off';
+    aimLineVariantBtn.classList.toggle('is-active', variantActive && !aimModifierEnabled);
+    aimLineVariantBtn.disabled = aimModifierEnabled;
+    aimLineVariantBtn.classList.toggle('is-disabled', aimModifierEnabled);
     aimLineVariantBtn.setAttribute(
         'aria-label',
-        `Вариант прицела: ${AIM_LINE_LABELS[aimLineVariant]}. Нажмите для переключения`
+        aimModifierEnabled
+            ? 'Вариант прицела: off (при включённом mod доступен только off)'
+            : `Вариант прицела: ${AIM_LINE_LABELS[aimLineVariant]}. Нажмите для переключения`
     );
 }
 
 function cycleAimLineVariant() {
+    if (aimModifierEnabled) return;
     const index = AIM_LINE_VARIANTS.indexOf(aimLineVariant);
     aimLineVariant = AIM_LINE_VARIANTS[(index + 1) % AIM_LINE_VARIANTS.length];
     try {
@@ -129,6 +140,45 @@ function cycleAimLineVariant() {
     } catch {
         // ignore storage errors
     }
+    updateAimLineVariantButton();
+}
+
+function loadAimModifier() {
+    try {
+        const saved = localStorage.getItem(AIM_MODIFIER_STORAGE_KEY);
+        if (saved === '1' || saved === 'true') aimModifierEnabled = true;
+        else if (saved === '0' || saved === 'false') aimModifierEnabled = false;
+        if (aimModifierEnabled) aimLineVariant = 'off';
+    } catch {
+        // ignore storage errors
+    }
+}
+
+function updateAimModifierButton() {
+    if (!aimModifierBtn) return;
+    aimModifierBtn.textContent = AIM_MODIFIER_LABEL;
+    aimModifierBtn.classList.toggle('is-active', aimModifierEnabled);
+    aimModifierBtn.setAttribute(
+        'aria-pressed',
+        aimModifierEnabled ? 'true' : 'false'
+    );
+    aimModifierBtn.setAttribute(
+        'aria-label',
+        `Модификатор прицела: ${aimModifierEnabled ? 'включён' : 'выключен'}. Нажмите для переключения`
+    );
+}
+
+function toggleAimModifier() {
+    aimModifierEnabled = !aimModifierEnabled;
+    if (aimModifierEnabled) {
+        aimLineVariant = 'off';
+    }
+    try {
+        localStorage.setItem(AIM_MODIFIER_STORAGE_KEY, aimModifierEnabled ? '1' : '0');
+    } catch {
+        // ignore storage errors
+    }
+    updateAimModifierButton();
     updateAimLineVariantButton();
 }
 
@@ -360,7 +410,18 @@ function drawImpactFlash() {
     ctx.restore();
 }
 
+function getShotPower() {
+    return getPullFromPower() * POWER_FACTOR;
+}
+
 function predictAimPath(angle) {
+    if (aimModifierEnabled) {
+        return predictPowerTrajectory(angle, cueBall, balls, {
+            power: getShotPower(),
+            spinOffsetX,
+            spinOffsetY
+        });
+    }
     if (aimLineVariant === 'off') {
         return predictCueTrajectory(angle, cueBall, balls);
     }
@@ -376,7 +437,7 @@ function predictAimPath(angle) {
 function drawCueScene(angle, pullBack) {
     const tip = getCueTipPosition(cueBall, angle, pullBack, spinOffsetX, spinOffsetY);
     const path = predictAimPath(angle);
-    drawTrajectory(ctx, angle, cueBall, aimX, aimY, path, aimLineVariant);
+    drawTrajectory(ctx, angle, cueBall, aimX, aimY, path, aimModifierEnabled ? 'off' : aimLineVariant, aimModifierEnabled);
     drawSpinMark(ctx, cueBall, angle, spinOffsetX, spinOffsetY);
     drawCueStick(ctx, tip.x, tip.y, angle);
 }
@@ -659,13 +720,21 @@ aimTrack.addEventListener('pointerup', finishAimSliderDrag);
 aimTrack.addEventListener('pointercancel', finishAimSliderDrag);
 
 if (aimLineVariantBtn) {
+    aimLineVariantBtn.classList.add('aim-toggle-btn');
     aimLineVariantBtn.addEventListener('click', cycleAimLineVariant);
+}
+
+if (aimModifierBtn) {
+    aimModifierBtn.classList.add('aim-toggle-btn');
+    aimModifierBtn.addEventListener('click', toggleAimModifier);
 }
 
 resetBtn.addEventListener('click', initGame);
 
 loadAimLineVariant();
+loadAimModifier();
 updateAimLineVariantButton();
+updateAimModifierButton();
 updateSpinPadVisual();
 updateAimSliderVisual();
 initGame();

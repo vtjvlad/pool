@@ -198,6 +198,10 @@ export const AIM_LINE_LABELS = {
     max: 'MAX'
 };
 
+/** Особый модификатор прицела (вкл/выкл для всех вариантов) */
+export const AIM_MODIFIER_STORAGE_KEY = 'vtj-pool-aim-modifier';
+export const AIM_MODIFIER_LABEL = 'mod';
+
 export const BALL_DEFS = {
     1: { color: '#f5d000', type: 'solid' },
     2: { color: '#0044cc', type: 'solid' },

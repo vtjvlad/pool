@@ -88,7 +88,7 @@ function wallBounceDir(dx, dy, nx, ny) {
     return { dx: bounceDx / len, dy: bounceDy / len };
 }
 
-function ballBounceDirs(dx, dy, contactX, contactY, hitBall) {
+export function ballBounceDirs(dx, dy, contactX, contactY, hitBall) {
     const nx = hitBall.x - contactX;
     const ny = hitBall.y - contactY;
     const len = Math.hypot(nx, ny) || 1;
