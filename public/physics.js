@@ -10,7 +10,9 @@ import {
     CUSHION_BOUNCE,
     CUSHION_TANGENTIAL_DAMPING,
     EXTENDED_CUE_MAX_CONTACTS,
-    EXTENDED_TARGET_MAX_CONTACTS
+    EXTENDED_TARGET_MAX_CONTACTS,
+    MAX_CUE_MAX_CONTACTS,
+    MAX_TARGET_MAX_CONTACTS
 } from './constants.js';
 import { rayCushionHit } from './cushion_collision.js';
 
@@ -237,10 +239,12 @@ export function predictCueTrajectory(angle, cueBall, balls) {
     };
 }
 
-export function predictExtendedCueTrajectory(angle, cueBall, balls) {
+export function predictExtendedCueTrajectory(angle, cueBall, balls, limits = {}) {
+    const cueMaxContacts = limits.cueMaxContacts ?? EXTENDED_CUE_MAX_CONTACTS;
+    const targetMaxContacts = limits.targetMaxContacts ?? EXTENDED_TARGET_MAX_CONTACTS;
     const dx = Math.cos(angle);
     const dy = Math.sin(angle);
-    const cueTrace = traceBallPath(cueBall.x, cueBall.y, dx, dy, balls, [cueBall], EXTENDED_CUE_MAX_CONTACTS);
+    const cueTrace = traceBallPath(cueBall.x, cueBall.y, dx, dy, balls, [cueBall], cueMaxContacts);
 
     let targetSegments = [];
     let targetContacts = [];
@@ -254,7 +258,7 @@ export function predictExtendedCueTrajectory(angle, cueBall, balls) {
             targetDir.dy,
             balls,
             [cueBall, ball],
-            EXTENDED_TARGET_MAX_CONTACTS
+            targetMaxContacts
         );
         targetSegments = targetTrace.segments;
         targetContacts = targetTrace.contacts;

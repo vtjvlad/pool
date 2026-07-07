@@ -22,7 +22,9 @@ import {
     AIM_SLIDER_SENSITIVITY,
     AIM_WHEEL_SCROLL_PX,
     AIM_LINE_VARIANTS,
-    AIM_LINE_LABELS
+    AIM_LINE_LABELS,
+    MAX_CUE_MAX_CONTACTS,
+    MAX_TARGET_MAX_CONTACTS
 } from './constants.js';
 import { Ball } from './ball.js';
 import { createRack } from './game_logic.js';
@@ -112,7 +114,7 @@ function loadAimLineVariant() {
 function updateAimLineVariantButton() {
     if (!aimLineVariantBtn) return;
     aimLineVariantBtn.textContent = AIM_LINE_LABELS[aimLineVariant];
-    aimLineVariantBtn.classList.toggle('is-active', aimLineVariant === 'on');
+    aimLineVariantBtn.classList.toggle('is-active', aimLineVariant !== 'off');
     aimLineVariantBtn.setAttribute(
         'aria-label',
         `Вариант прицела: ${AIM_LINE_LABELS[aimLineVariant]}. Нажмите для переключения`
@@ -358,11 +360,22 @@ function drawImpactFlash() {
     ctx.restore();
 }
 
+function predictAimPath(angle) {
+    if (aimLineVariant === 'off') {
+        return predictCueTrajectory(angle, cueBall, balls);
+    }
+    if (aimLineVariant === 'max') {
+        return predictExtendedCueTrajectory(angle, cueBall, balls, {
+            cueMaxContacts: MAX_CUE_MAX_CONTACTS,
+            targetMaxContacts: MAX_TARGET_MAX_CONTACTS
+        });
+    }
+    return predictExtendedCueTrajectory(angle, cueBall, balls);
+}
+
 function drawCueScene(angle, pullBack) {
     const tip = getCueTipPosition(cueBall, angle, pullBack, spinOffsetX, spinOffsetY);
-    const path = aimLineVariant === 'on'
-        ? predictExtendedCueTrajectory(angle, cueBall, balls)
-        : predictCueTrajectory(angle, cueBall, balls);
+    const path = predictAimPath(angle);
     drawTrajectory(ctx, angle, cueBall, aimX, aimY, path, aimLineVariant);
     drawSpinMark(ctx, cueBall, angle, spinOffsetX, spinOffsetY);
     drawCueStick(ctx, tip.x, tip.y, angle);

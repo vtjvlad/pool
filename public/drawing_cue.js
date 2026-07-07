@@ -215,10 +215,10 @@ export function drawTrajectory(ctx, angle, cueBall, aimX, aimY, path, variant = 
     const startY = cueBall.y + Math.sin(angle) * BALL_RADIUS;
 
     ctx.save();
-    if (variant === 'on') {
-        drawOnTrajectory(ctx, startX, startY, path);
-    } else {
+    if (variant === 'off') {
         drawOffTrajectory(ctx, startX, startY, path);
+    } else {
+        drawOnTrajectory(ctx, startX, startY, path);
     }
 
     ctx.beginPath();

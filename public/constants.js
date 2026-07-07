@@ -186,12 +186,16 @@ export const MIN_BOUNCE_DRAW = 0.08;
 /** Макс. касаний при расширенном превью (on) */
 export const EXTENDED_CUE_MAX_CONTACTS = 5;
 export const EXTENDED_TARGET_MAX_CONTACTS = 3;
+/** Макс. касаний при полном превью (MAX) — до естественной остановки луча */
+export const MAX_CUE_MAX_CONTACTS = 64;
+export const MAX_TARGET_MAX_CONTACTS = 64;
 
 /** Варианты отрисовки прицельной линии */
-export const AIM_LINE_VARIANTS = ['off', 'on'];
+export const AIM_LINE_VARIANTS = ['off', 'on', 'max'];
 export const AIM_LINE_LABELS = {
     off: 'off',
-    on: 'on'
+    on: 'on',
+    max: 'MAX'
 };
 
 export const BALL_DEFS = {
