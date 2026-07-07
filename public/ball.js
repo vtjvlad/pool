@@ -1,14 +1,30 @@
 import {
     BALL_RADIUS,
     SLEEP_SPEED,
+    SLEEP_SPIN,
+    SLIDE_THRESHOLD,
     POCKET_FALL_MS,
     CUE_RESPOT_DELAY_MS,
-    SPIN_VISUAL_SCALE
+    SPIN_VISUAL_SCALE,
+    SPIN_VISUAL_ROLLING_FACTOR
 } from './constants.js';
 import { getHeadSpot } from './utils.js';
 
 const IDENTITY_QUAT = { w: 1, x: 0, y: 0, z: 0 };
 const stripeCanvasCache = new Map();
+
+/** 6 меток на битке — равномерно по «сторонам» сферы (±X, ±Y, ±Z) */
+const CUE_MARK_DIRS = [
+    [1, 0, 0],
+    [-1, 0, 0],
+    [0, 1, 0],
+    [0, -1, 0],
+    [0, 0, 1],
+    [0, 0, -1]
+];
+const CUE_MARK_SURFACE = 0.9;
+const CUE_MARK_SCALE = 0.19;
+const CUE_MARK_COLOR = '#c41e3a';
 
 function getStripeCanvas(size) {
     if (!stripeCanvasCache.has(size)) {
@@ -74,6 +90,8 @@ export class Ball {
         this.px = x;
         this.py = y;
         this.sleepFrames = 0;
+        this.lastDirX = 1;
+        this.lastDirY = 0;
     }
 
     startPocketFall(pocket) {
@@ -128,23 +146,50 @@ export class Ball {
         const vx = this.vx;
         const vy = this.vy;
         const speed = Math.hypot(vx, vy);
-        if (speed < 1e-8) return;
+        const sliding = (this.slide || 0) > SLIDE_THRESHOLD;
+        const rollingClean = speed > SLEEP_SPEED && !sliding;
+        const spinScale = rollingClean
+            ? SPIN_VISUAL_SCALE * SPIN_VISUAL_ROLLING_FACTOR
+            : SPIN_VISUAL_SCALE;
 
-        const angle = (speed * frameFraction) / this.radius;
-        const half = angle * 0.5;
-        const s = Math.sin(half);
-        const c = Math.cos(half);
-        const axisX = -vy / speed;
-        const axisY = vx / speed;
-        const delta = { w: c, x: axisX * s, y: axisY * s, z: 0 };
+        if (speed >= 1e-8) {
+            const angle = (speed * frameFraction) / this.radius;
+            const half = angle * 0.5;
+            const s = Math.sin(half);
+            const c = Math.cos(half);
+            const axisX = -vy / speed;
+            const axisY = vx / speed;
+            const delta = { w: c, x: axisX * s, y: axisY * s, z: 0 };
 
-        this.orientation = quatNormalize(quatMultiply(delta, this.orientation));
+            this.orientation = quatNormalize(quatMultiply(delta, this.orientation));
+        }
 
-        const spinAngle = this.spin * SPIN_VISUAL_SCALE * frameFraction;
+        const spinAngle = (this.spin || 0) * spinScale * frameFraction;
         if (Math.abs(spinAngle) > 1e-8) {
             const half = spinAngle * 0.5;
             const spinDelta = { w: Math.cos(half), x: 0, y: 0, z: Math.sin(half) };
             this.orientation = quatNormalize(quatMultiply(spinDelta, this.orientation));
+        }
+
+        const topSpinAngle = (this.topSpin || 0) * spinScale * frameFraction;
+        if (Math.abs(topSpinAngle) > 1e-8) {
+            let axisX;
+            let axisY;
+            if (speed >= 1e-8) {
+                axisX = -vy / speed;
+                axisY = vx / speed;
+            } else {
+                axisX = -(this.lastDirY ?? 0);
+                axisY = this.lastDirX ?? 1;
+            }
+            const axisLen = Math.hypot(axisX, axisY) || 1;
+            axisX /= axisLen;
+            axisY /= axisLen;
+            const half = topSpinAngle * 0.5;
+            const s = Math.sin(half);
+            const c = Math.cos(half);
+            const topDelta = { w: c, x: axisX * s, y: axisY * s, z: 0 };
+            this.orientation = quatNormalize(quatMultiply(topDelta, this.orientation));
         }
     }
 
@@ -244,7 +289,7 @@ export class Ball {
         const textAngle = tangent
             ? Math.atan2(tangent.y - center.y, tangent.x - center.x)
             : 0;
-        const spotR = r * 0.56 * center.depth;
+        const spotR = r * 0.64 * center.depth;
 
         ctx.beginPath();
         ctx.arc(center.x, center.y, spotR, 0, Math.PI * 2);
@@ -255,21 +300,32 @@ export class Ball {
         ctx.translate(center.x, center.y);
         ctx.rotate(textAngle);
         ctx.fillStyle = this.ballType === 'eight' ? '#111' : '#222';
-        ctx.font = `bold ${r * 0.94 * center.depth}px Arial, sans-serif`;
+        ctx.font = `bold ${r * 1.05 * center.depth}px Arial, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(String(this.number), 0, 0.5);
         ctx.restore();
     }
 
-    drawCueMark(ctx, r) {
-        const mark = this.projectSurfacePoint(0.5, 0, 0.86);
-        if (!mark) return;
+    drawCueMarks(ctx, r) {
+        const marks = CUE_MARK_DIRS.map(([dx, dy, dz]) => {
+            const point = this.projectSurfacePoint(
+                dx * CUE_MARK_SURFACE,
+                dy * CUE_MARK_SURFACE,
+                dz * CUE_MARK_SURFACE
+            );
+            if (!point) return null;
+            return point;
+        }).filter(Boolean);
 
-        ctx.fillStyle = '#c41e3a';
-        ctx.beginPath();
-        ctx.arc(mark.x, mark.y, r * 0.11 * mark.depth, 0, Math.PI * 2);
-        ctx.fill();
+        marks.sort((a, b) => a.depth - b.depth);
+
+        ctx.fillStyle = CUE_MARK_COLOR;
+        for (const mark of marks) {
+            ctx.beginPath();
+            ctx.arc(mark.x, mark.y, r * CUE_MARK_SCALE * mark.depth, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 
     drawMeridians(ctx) {
@@ -317,7 +373,6 @@ export class Ball {
         ctx.fill();
         ctx.restore();
 
-        /* Тень (затемнение) на самом шаре убрана — заливка ровным цветом */
         let fillColor;
         if (this.isCueBall) {
             fillColor = '#ffffff';
@@ -344,7 +399,7 @@ export class Ball {
         }
 
         if (this.isCueBall) {
-            this.drawCueMark(ctx, r);
+            this.drawCueMarks(ctx, r);
         } else {
             this.drawNumberPatch(ctx, r);
             if (this.ballType !== 'stripe') {
@@ -363,7 +418,12 @@ export class Ball {
     }
 
     isMoving() {
-        return !this.inPocket && !this.isPocketing() && Math.hypot(this.vx, this.vy) > SLEEP_SPEED;
+        if (this.inPocket) return false;
+        if (this.isPocketing()) return true;
+        if (Math.hypot(this.vx, this.vy) > SLEEP_SPEED) return true;
+        if (Math.max(Math.abs(this.spin || 0), Math.abs(this.topSpin || 0)) > SLEEP_SPIN) return true;
+        if ((this.slide || 0) > SLIDE_THRESHOLD) return true;
+        return false;
     }
 
     respotCueBall(balls) {
@@ -379,6 +439,8 @@ export class Ball {
         this.slide = 0;
         this.sleepFrames = 0;
         this.orientation = { ...IDENTITY_QUAT };
+        this.lastDirX = 1;
+        this.lastDirY = 0;
 
         for (const ball of balls) {
             if (ball === this || ball.inPocket) continue;

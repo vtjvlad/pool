@@ -69,8 +69,10 @@ export const SLIDE_THRESHOLD = 0.035;
 
 export const SPIN_ROLL_DAMP = 0.0018;
 export const SPIN_SLIDE_DAMP = 0.0037;
-export const SPIN_CURVE_WHILE_SLIDING = 0.0022;
-export const SPIN_CURVE_WHILE_ROLLING = 0.0011;
+/** Затухание винта, когда шар уже стоит на месте */
+export const SPIN_STATIONARY_DAMP = 0.085;
+export const SPIN_CURVE_WHILE_SLIDING = 0.0029;
+export const SPIN_CURVE_WHILE_ROLLING = 0.00145;
 
 export const LOW_SPEED_THRESHOLD = 1.4;
 
@@ -80,14 +82,16 @@ export const SLEEP_FRAMES = 10;
 export const MIN_SPEED = SLEEP_SPEED;
 
 export const MAX_SPIN_OFFSET = 0.72;
-export const SPIN_SIDE_POWER = 1.84;
+export const SPIN_SIDE_POWER = 2.45;
 export const SPIN_TOP_POWER = 0.80;
 export const SLIDE_FROM_OFFSET = 0.94;
-export const SPIN_VISUAL_SCALE = 0.065;
+export const SPIN_VISUAL_SCALE = 0.06;
+/** Доля english-вращения поверх естественного качения v/r */
+export const SPIN_VISUAL_ROLLING_FACTOR = 0.38;
 
-export const CUSHION_THROW = 0.100;
+export const CUSHION_THROW = 0.13;
 export const CUSHION_SPIN_RETAIN = 0.76;
-export const BALL_SPIN_CONTACT = 1.45;
+export const BALL_SPIN_CONTACT = 0.38;
 export const DRAW_COLLISION_KICK = 0.34;
 export const DRAW_COLLISION_MAX = 0.52;
 export const DRAW_SPIN_TRANSFER = 0.62;

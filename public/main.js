@@ -338,8 +338,12 @@ function powerFromClientY(clientY) {
     return (Math.max(0, Math.min(rect.height, y)) / rect.height) * 100;
 }
 
+function allBallsSettled() {
+    return balls.every(ball => !ball.isMoving());
+}
+
 function canShowCue() {
-    return cueBall && !cueBall.inPocket && !cueBall.isPocketing() && !cueBall.isMoving() && !strikeAnim;
+    return cueBall && !cueBall.inPocket && !cueBall.isPocketing() && allBallsSettled() && !strikeAnim;
 }
 
 function canPullPower() {
@@ -502,6 +506,15 @@ function update(now = performance.now()) {
         aimTrack.classList.remove('is-dragging');
         activeCanvasPointerId = null;
         aimPointer = null;
+    }
+
+    if (isDraggingSpin && !canShowCue()) {
+        if (activeSpinPadPointerId !== null && spinPad.hasPointerCapture(activeSpinPadPointerId)) {
+            spinPad.releasePointerCapture(activeSpinPadPointerId);
+        }
+        isDraggingSpin = false;
+        activeSpinPadPointerId = null;
+        spinPad.classList.remove('is-dragging');
     }
 }
 
