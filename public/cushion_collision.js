@@ -104,7 +104,7 @@ function applyCushionSpin(ball, nx, ny, preImpactSpeed, vx, vy) {
     const topSpin = ball.topSpin || 0;
 
     if (Math.abs(spin) > 1e-6) {
-        const throwCap = preImpactSpeed * 0.12;
+        const throwCap = preImpactSpeed * 0.24;
         const throwV = clamp(spin * CUSHION_THROW * preImpactSpeed, -throwCap, throwCap);
         vx += throwV * tx;
         vy += throwV * ty;
@@ -119,12 +119,12 @@ function applyCushionSpin(ball, nx, ny, preImpactSpeed, vx, vy) {
             const followKick = clamp(topSpin * 0.048, 0, preImpactSpeed * 0.07);
             vx += followKick * inDirX;
             vy += followKick * inDirY;
-            ball.topSpin = topSpin * 0.45;
+            ball.topSpin = topSpin * 0.62;
         } else {
             const drawKick = clamp(topSpin * CUSHION_DRAW_KICK, -preImpactSpeed * 0.085, 0);
             vx += drawKick * inDirX;
             vy += drawKick * inDirY;
-            ball.topSpin = topSpin * 0.48;
+            ball.topSpin = topSpin * 0.65;
         }
     }
 

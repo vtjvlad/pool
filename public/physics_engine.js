@@ -66,13 +66,13 @@ function updateSleepState(ball) {
 function rollingLoss(speed, dt) {
     const speedRatio = clamp(speed / LOW_SPEED_THRESHOLD, 0, 1);
     const base = CLOTH_ROLL_DECEL + speed * CLOTH_ROLL_SPEED_SCALE;
-    return base * dt * (0.5 + 0.5 * speedRatio);
+    return base * dt * (0.62 + 0.38 * speedRatio);
 }
 
 function isSliding(ball, speed) {
     if ((ball.slide || 0) > SLIDE_THRESHOLD) return true;
     if (speed <= SLEEP_SPEED) return false;
-    return Math.abs(ball.topSpin || 0) > SLEEP_SPIN * 2;
+    return Math.abs(ball.topSpin || 0) > SLEEP_SPIN * 3;
 }
 
 function applySideSpinCurve(ball, speed, tanX, tanY, dt, strength, maxTurn) {
@@ -94,7 +94,7 @@ function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
 
     const topSpin = ball.topSpin || 0;
     if (topSpin < -SLEEP_SPIN) {
-        loss += CLOTH_SLIDE_DECEL * clamp(-topSpin / LOW_SPEED_THRESHOLD, 0, 0.55) * dt;
+        loss += CLOTH_SLIDE_DECEL * clamp(-topSpin / LOW_SPEED_THRESHOLD, 0, 0.38) * dt;
     } else if (topSpin > SLEEP_SPIN) {
         loss *= Math.max(0.35, 1 - topSpin / (LOW_SPEED_THRESHOLD * 2.2));
     }
@@ -103,7 +103,7 @@ function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
 
     ball.vx = dirX * nextSpeed;
     ball.vy = dirY * nextSpeed;
-    nextSpeed = applySideSpinCurve(ball, nextSpeed, tanX, tanY, dt, SPIN_CURVE_WHILE_SLIDING, 0.06);
+    nextSpeed = applySideSpinCurve(ball, nextSpeed, tanX, tanY, dt, SPIN_CURVE_WHILE_SLIDING, 0.12);
 
     if (nextSpeed > 0) {
         const len = Math.hypot(ball.vx, ball.vy) || 1;
@@ -115,7 +115,7 @@ function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
     }
 
     if (Math.abs(topSpin) > SLEEP_SPIN) {
-        const speedFactor = 1 / (1 + nextSpeed / LOW_SPEED_THRESHOLD);
+        const speedFactor = 1 / (1 + nextSpeed / (LOW_SPEED_THRESHOLD * 2.4));
         const resolve = SLIP_RESOLVE_RATE * dt * (1 + slideFactor * 0.6) * speedFactor;
         const delta = Math.min(Math.abs(topSpin), resolve) * Math.sign(topSpin);
         ball.topSpin = topSpin - delta;
@@ -137,7 +137,7 @@ function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
                 ball.vx = -dirX * backSpeed;
                 ball.vy = -dirY * backSpeed;
                 ball.slide = Math.max(ball.slide || 0, 0.34);
-                ball.topSpin *= 0.58;
+                ball.topSpin *= 0.72;
                 return;
             }
         } else if (topSpin > 0) {
@@ -150,7 +150,7 @@ function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
     ball.slide = Math.max(0, slideFactor - SLIDE_RESOLVE_RATE * dt);
     ball.spin *= Math.exp(-SPIN_SLIDE_DAMP * dt);
 
-    if (ball.slide <= SLIDE_THRESHOLD && Math.abs(ball.topSpin) <= SLEEP_SPIN * 2) {
+    if (ball.slide <= SLIDE_THRESHOLD && Math.abs(ball.topSpin) <= SLEEP_SPIN * 3) {
         ball.slide = 0;
         ball.topSpin = 0;
     }
@@ -169,7 +169,7 @@ function integrateRolling(ball, speed, dirX, dirY, dt) {
     const tanY = dirX;
     ball.vx = dirX * nextSpeed;
     ball.vy = dirY * nextSpeed;
-    nextSpeed = applySideSpinCurve(ball, nextSpeed, tanX, tanY, dt, SPIN_CURVE_WHILE_ROLLING, 0.025);
+    nextSpeed = applySideSpinCurve(ball, nextSpeed, tanX, tanY, dt, SPIN_CURVE_WHILE_ROLLING, 0.05);
 
     if (nextSpeed > SLEEP_SPEED) {
         const len = Math.hypot(ball.vx, ball.vy) || 1;

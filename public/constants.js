@@ -60,17 +60,17 @@ export const CUSHION_RESTITUTION = 0.89;
 export const CUSHION_RESTITUTION_SLOW = 0.74;
 export const CUSHION_FRICTION = 0.20;
 
-export const CLOTH_ROLL_DECEL = 0.027;
-export const CLOTH_ROLL_SPEED_SCALE = 0.0046;
-export const CLOTH_SLIDE_DECEL = 0.095;
-export const SLIP_RESOLVE_RATE = 0.13;
-export const SLIDE_RESOLVE_RATE = 0.075;
+export const CLOTH_ROLL_DECEL = 0.019;
+export const CLOTH_ROLL_SPEED_SCALE = 0.0031;
+export const CLOTH_SLIDE_DECEL = 0.068;
+export const SLIP_RESOLVE_RATE = 0.072;
+export const SLIDE_RESOLVE_RATE = 0.052;
 export const SLIDE_THRESHOLD = 0.035;
 
-export const SPIN_ROLL_DAMP = 0.0038;
-export const SPIN_SLIDE_DAMP = 0.0075;
-export const SPIN_CURVE_WHILE_SLIDING = 0.0011;
-export const SPIN_CURVE_WHILE_ROLLING = 0.00055;
+export const SPIN_ROLL_DAMP = 0.0022;
+export const SPIN_SLIDE_DAMP = 0.0045;
+export const SPIN_CURVE_WHILE_SLIDING = 0.0022;
+export const SPIN_CURVE_WHILE_ROLLING = 0.0011;
 
 export const LOW_SPEED_THRESHOLD = 1.4;
 
@@ -80,19 +80,19 @@ export const SLEEP_FRAMES = 10;
 export const MIN_SPEED = SLEEP_SPEED;
 
 export const MAX_SPIN_OFFSET = 0.72;
-export const SPIN_SIDE_POWER = 0.92;
+export const SPIN_SIDE_POWER = 1.84;
 export const SPIN_TOP_POWER = 0.80;
 export const SLIDE_FROM_OFFSET = 0.94;
 export const SPIN_VISUAL_SCALE = 0.065;
 
-export const CUSHION_THROW = 0.050;
-export const CUSHION_SPIN_RETAIN = 0.55;
-export const BALL_SPIN_CONTACT = 0.60;
+export const CUSHION_THROW = 0.100;
+export const CUSHION_SPIN_RETAIN = 0.68;
+export const BALL_SPIN_CONTACT = 1.20;
 export const DRAW_COLLISION_KICK = 0.34;
 export const DRAW_COLLISION_MAX = 0.52;
 export const DRAW_SPIN_TRANSFER = 0.62;
 export const DRAW_REVERSE_FACTOR = 0.32;
-export const DRAW_FORWARD_BRAKE = 0.48;
+export const DRAW_FORWARD_BRAKE = 0.34;
 export const DRAW_REVERSE_SPEED_THRESHOLD = 0.52;
 export const DRAW_MAX_REVERSE_SPEED_SCALE = 1.05;
 export const CUE_DRAW_BACK_RATIO = 1.08;
