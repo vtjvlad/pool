@@ -85,11 +85,13 @@ function separateBalls(b1, b2, nx, ny, dist) {
     const overlap = minDist - dist;
     if (overlap <= 0) return false;
 
-    const correction = overlap * 0.5;
-    b1.x -= nx * correction;
-    b1.y -= ny * correction;
-    b2.x += nx * correction;
-    b2.y += ny * correction;
+    const totalMass = b1.mass + b2.mass;
+    const share1 = b2.mass / totalMass;
+    const share2 = b1.mass / totalMass;
+    b1.x -= nx * overlap * share1;
+    b1.y -= ny * overlap * share1;
+    b2.x += nx * overlap * share2;
+    b2.y += ny * overlap * share2;
     return true;
 }
 
@@ -111,12 +113,13 @@ export function resolveCollision(b1, b2) {
     if (velNJ >= 0) return;
 
     const restitution = impactSpeed < LOW_SPEED_THRESHOLD ? BALL_RESTITUTION_SLOW : BALL_RESTITUTION;
-    const jn = -(1 + restitution) * velNJ * 0.5;
+    const invMassSum = 1 / b1.mass + 1 / b2.mass;
+    const impulse = -(1 + restitution) * velNJ / invMassSum;
 
-    b1.vx -= jn * nx;
-    b1.vy -= jn * ny;
-    b2.vx += jn * nx;
-    b2.vy += jn * ny;
+    b1.vx -= impulse * nx / b1.mass;
+    b1.vy -= impulse * ny / b1.mass;
+    b2.vx += impulse * nx / b2.mass;
+    b2.vy += impulse * ny / b2.mass;
 
     const tx = -ny;
     const ty = nx;
@@ -124,13 +127,13 @@ export function resolveCollision(b1, b2) {
     const v2t = b2.vx * tx + b2.vy * ty;
     const relT = v2t - v1t;
 
-    const jtMax = BALL_FRICTION * jn;
-    const jt = clamp(-relT * 0.5, -jtMax, jtMax);
+    const jtMax = BALL_FRICTION * Math.abs(impulse);
+    const jt = clamp(-relT / invMassSum, -jtMax, jtMax);
 
-    b1.vx -= jt * tx;
-    b1.vy -= jt * ty;
-    b2.vx += jt * tx;
-    b2.vy += jt * ty;
+    b1.vx -= jt * tx / b1.mass;
+    b1.vy -= jt * ty / b1.mass;
+    b2.vx += jt * tx / b2.mass;
+    b2.vy += jt * ty / b2.mass;
 
     wakeBall(b1);
     wakeBall(b2);

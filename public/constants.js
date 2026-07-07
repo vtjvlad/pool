@@ -61,6 +61,8 @@ export const PHYSICS_SUBSTEPS = 10;
 export const COLLISION_PASSES = 4;
 
 export const BALL_MASS = 0.167;
+export const BALL_MASS_MIN_G = 156;
+export const BALL_MASS_MAX_G = 172;
 export const BALL_MOMENT = (2 / 5) * BALL_MASS * BALL_RADIUS * BALL_RADIUS;
 
 export const RESTITUTION_PRESETS = {
@@ -307,6 +309,9 @@ export const BALL_DEFS = {
     14: { color: '#008833', type: 'stripe' },
     15: { color: '#880022', type: 'stripe' }
 };
+
+/** Случайный микросдвиг позиции шара в пирамиде (px по каждой оси) */
+export const RACK_POSITION_JITTER = 0.12;
 
 export const RACK_ORDER = [
     [1],

@@ -40,7 +40,7 @@ import {
     MAX_CUE_MAX_CONTACTS,
     MAX_TARGET_MAX_CONTACTS
 } from './constants.js';
-import { Ball } from './ball.js';
+import { Ball, randomBallMass } from './ball.js';
 import { createRack } from './game_logic.js';
 import { stepPhysics, updatePocketAnimations } from './physics_engine.js';
 import { invalidateCushionCollisionCache } from './cushion_collision.js';
@@ -586,7 +586,7 @@ function initGame() {
     resetTray();
 
     const head = getHeadSpot();
-    cueBall = new Ball(head.x, head.y, { isCueBall: true });
+    cueBall = new Ball(head.x, head.y, { isCueBall: true, mass: randomBallMass() });
     balls.push(cueBall);
     balls.push(...createRack());
 

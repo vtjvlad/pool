@@ -1,6 +1,6 @@
-import { BALL_RADIUS, BALL_DEFS, RACK_ORDER } from './constants.js';
+import { BALL_RADIUS, BALL_DEFS, RACK_ORDER, RACK_POSITION_JITTER } from './constants.js';
 import { getFootSpot } from './utils.js';
-import { Ball } from './ball.js';
+import { Ball, randomBallMass } from './ball.js';
 
 function shuffledRackNumbers() {
     const solids = [1, 2, 3, 4, 5, 6, 7];
@@ -49,12 +49,13 @@ export function createRack() {
                         ? randomRack.rightCorner
                         : randomRack.pool[randomIdx++];
             const def = BALL_DEFS[actualNum];
-            const x = foot.x + rowIdx * colSpacing;
-            const y = foot.y + (colIdx - (row.length - 1) / 2) * spacing;
+            const x = foot.x + rowIdx * colSpacing + (Math.random() * 2 - 1) * RACK_POSITION_JITTER;
+            const y = foot.y + (colIdx - (row.length - 1) / 2) * spacing + (Math.random() * 2 - 1) * RACK_POSITION_JITTER;
             rackBalls.push(new Ball(x, y, {
                 number: actualNum,
                 color: def.color,
-                ballType: def.type
+                ballType: def.type,
+                mass: randomBallMass()
             }));
         });
     });

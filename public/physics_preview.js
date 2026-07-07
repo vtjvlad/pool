@@ -17,7 +17,7 @@ const CUE_MAX_CONTACTS = 2;
 const TARGET_PREVIEW_LEN = 72;
 
 function cloneCueBall(cueBall) {
-    const c = new Ball(cueBall.x, cueBall.y, { isCueBall: true });
+    const c = new Ball(cueBall.x, cueBall.y, { isCueBall: true, mass: cueBall.mass });
     c.vx = cueBall.vx;
     c.vy = cueBall.vy;
     c.px = cueBall.px;

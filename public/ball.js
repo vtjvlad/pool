@@ -2,7 +2,10 @@ import {
     BALL_RADIUS,
     SLEEP_SPEED,
     POCKET_FALL_MS,
-    CUE_RESPOT_DELAY_MS
+    CUE_RESPOT_DELAY_MS,
+    BALL_MASS,
+    BALL_MASS_MIN_G,
+    BALL_MASS_MAX_G
 } from './constants.js';
 import { getHeadSpot } from './utils.js';
 
@@ -66,6 +69,11 @@ function rotateVec(q, x, y, z) {
     ];
 }
 
+export function randomBallMass() {
+    const grams = BALL_MASS_MIN_G + Math.random() * (BALL_MASS_MAX_G - BALL_MASS_MIN_G);
+    return grams / 1000;
+}
+
 export class Ball {
     constructor(x, y, options = {}) {
         this.x = x;
@@ -73,6 +81,7 @@ export class Ball {
         this.vx = 0;
         this.vy = 0;
         this.radius = BALL_RADIUS;
+        this.mass = options.mass ?? BALL_MASS;
         this.isCueBall = options.isCueBall || false;
         this.number = options.number || 0;
         this.ballType = options.ballType || (this.isCueBall ? 'cue' : 'solid');
