@@ -252,7 +252,7 @@ export class Ball {
         const textAngle = tangent
             ? Math.atan2(tangent.y - center.y, tangent.x - center.x)
             : 0;
-        const spotR = r * 0.64 * center.depth;
+        const spotR = r * 0.64;
 
         ctx.beginPath();
         ctx.arc(center.x, center.y, spotR, 0, Math.PI * 2);
@@ -263,7 +263,7 @@ export class Ball {
         ctx.translate(center.x, center.y);
         ctx.rotate(textAngle);
         ctx.fillStyle = this.ballType === 'eight' ? '#111' : '#222';
-        ctx.font = `bold ${r * 1.05 * center.depth}px Arial, sans-serif`;
+        ctx.font = `bold ${r * 1.05}px Arial, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(String(this.number), 0, 0.5);
