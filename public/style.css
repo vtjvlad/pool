@@ -94,7 +94,7 @@ body {
 }
 
 #game-stage {
-    width: 1244px;
+    width: 1252px;
     height: 654px;
     flex-shrink: 0;
     display: flex;
@@ -441,9 +441,9 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 64px;
+    width: 72px;
     height: 460px;
-    padding: 10px 5px;
+    padding: 10px 6px;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.25));
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -470,9 +470,9 @@ body {
 #power-pull-track {
     position: relative;
     flex: 1;
-    width: 40px;
+    width: 48px;
     min-height: 280px;
-    border-radius: 20px;
+    border-radius: 24px;
     background:
         linear-gradient(90deg, rgba(0, 0, 0, 0.45), rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.45)),
         rgba(0, 0, 0, 0.42);
@@ -504,7 +504,7 @@ body {
 
 .power-mark-line {
     display: block;
-    margin: 0 3px;
+    margin: 0 4px;
     height: 1px;
     background: rgba(126, 200, 255, 0.42);
     box-shadow: 0 0 4px rgba(126, 200, 255, 0.38);

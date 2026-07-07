@@ -43,7 +43,7 @@ export const CORNER_POCKET_CENTER_SHIFT = POCKET_INSET * 0.24;
 export const CUSHION_DEPTH = Math.max(16 + POCKET_LAYOUT_DIAMETER / 4, POCKET_INSET + POCKET_LAYOUT_RADIUS) * 0.75 * 0.75 * 1.1;
 export const PLAY_SURFACE_INSET = POCKET_LAYOUT_DIAMETER / 4;
 export let RUBBER_THICKNESS = BALL_RADIUS * 2 * 0.75 * 1.28 * CUSHION_LIP_SCALE;
-export const RUBBER_CENTER_CHAMFER_ANGLE = 60;
+export const RUBBER_CENTER_CHAMFER_ANGLE = 70;
 export const RUBBER_CORNER_CHAMFER_ANGLE = 45;
 export const DEBUG_DRAW_RUBBER = true;
 export const POCKET_MAGNET = 0.28;
@@ -74,7 +74,7 @@ export const CUE_RESPOT_DELAY_MS = 400;
 /** Базовая физика: импульсные столкновения, отскоки от бортов, торможение сукна */
 export const REFERENCE_FPS = 60;
 export const MAX_PHYSICS_DT = 0.05;
-export const PHYSICS_SUBSTEPS = 10;
+export const PHYSICS_SUBSTEPS = 50;
 export const COLLISION_PASSES = 4;
 
 export const BALL_MASS = 0.167;
