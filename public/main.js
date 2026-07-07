@@ -9,6 +9,14 @@ import {
     IMPACT_FLASH_MS,
     MIN_POWER_PERCENT,
     BALL_RADIUS,
+    MAX_SPIN_OFFSET,
+    SPIN_SIDE_POWER,
+    SPIN_TOP_POWER,
+    SLIDE_FROM_OFFSET,
+    SQUIRT_FACTOR,
+    SPIN_TIP_EFFICIENCY,
+    spinSpeedEffectiveness,
+    drawSpeedEffectiveness,
     REFERENCE_FPS,
     MAX_PHYSICS_DT,
     AIM_TAP_THRESHOLD_PX,
@@ -50,7 +58,7 @@ import { invalidateCushionCollisionCache } from './cushion_collision.js';
 import { predictCueTrajectory, predictExtendedCueTrajectory } from './physics.js';
 import { predictPowerTrajectory } from './physics_preview.js';
 import { drawTable } from './drawing_table.js';
-import { drawCueStick, drawTrajectory, getCueTipPosition } from './drawing_cue.js';
+import { drawCueStick, drawTrajectory, drawSpinMark, getCueTipPosition } from './drawing_cue.js';
 import { getHeadSpot, lighten, darken, getPockets, getPlaySurface } from './utils.js';
 
 // Полностью блокируем браузерный зум: double-tap, pinch, Ctrl/Cmd+wheel и клавиши.
@@ -98,6 +106,9 @@ const ballRestitutionBtn = document.getElementById('ball-restitution-btn');
 const cushionRestitutionBtn = document.getElementById('cushion-restitution-btn');
 const physicsModeBtn = document.getElementById('physics-mode-btn');
 const cushionLipBtn = document.getElementById('cushion-lip-btn');
+const spinPad = document.getElementById('spin-pad');
+const spinThumb = document.getElementById('spin-pad-thumb');
+const spinResetBtn = document.getElementById('spin-reset-btn');
 const gameContainer = document.getElementById('game-container');
 const gameStage = document.getElementById('game-stage');
 const traySlots = document.getElementById('pocketed-tray-slots');
@@ -146,6 +157,11 @@ let aimPointer = null;
 let aimLineVariant = 'off';
 let aimModifierEnabled = false;
 let lastFrameTime = performance.now();
+
+let spinOffsetX = 0;
+let spinOffsetY = 0;
+let isDraggingSpin = false;
+let activeSpinPadPointerId = null;
 
 const AIM_LINE_VARIANT_KEY = 'vtj-pool-aim-line-variant';
 const BALL_RESTITUTION_PROFILE_KEY = 'vtj-pool-ball-restitution-profile';
@@ -371,6 +387,78 @@ function addBallToTray(ball) {
     slot.appendChild(num);
 }
 
+function updateSpinPadVisual() {
+    const percentX = 50 + (spinOffsetX / MAX_SPIN_OFFSET) * 38;
+    const percentY = 50 + (spinOffsetY / MAX_SPIN_OFFSET) * 38;
+    spinThumb.style.left = `${percentX}%`;
+    spinThumb.style.top = `${percentY}%`;
+}
+
+function setSpinOffset(localX, localY) {
+    const len = Math.hypot(localX, localY);
+    if (len > MAX_SPIN_OFFSET) {
+        localX = (localX / len) * MAX_SPIN_OFFSET;
+        localY = (localY / len) * MAX_SPIN_OFFSET;
+    }
+    spinOffsetX = localX;
+    spinOffsetY = localY;
+    updateSpinPadVisual();
+}
+
+function resetSpin() {
+    setSpinOffset(0, 0);
+}
+
+function spinFromPadEvent(e) {
+    const rect = spinPad.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = e.clientX - cx;
+    const dy = e.clientY - cy;
+    const radius = rect.width * 0.42;
+    setSpinOffset(
+        (dx / radius) * MAX_SPIN_OFFSET,
+        (dy / radius) * MAX_SPIN_OFFSET
+    );
+}
+
+function applySpinToCueBall(power, angle) {
+    const offX = spinOffsetX / MAX_SPIN_OFFSET;
+    const offY = spinOffsetY / MAX_SPIN_OFFSET;
+    const offCenter = Math.hypot(offX, offY);
+
+    if (offCenter <= 0.04) {
+        cueBall.slide = 0;
+        cueBall.topSpin = 0;
+        cueBall.spin = 0;
+        resetSpin();
+        return;
+    }
+
+    const tipEff = 1 - offCenter * SPIN_TIP_EFFICIENCY;
+    const sideOff = Math.sign(offX) * Math.pow(Math.abs(offX), 0.9);
+    const topOff = Math.sign(offY) * Math.pow(Math.abs(offY), 0.88);
+    const speedEff = spinSpeedEffectiveness(power);
+    const drawEff = drawSpeedEffectiveness(power);
+    const topSpeedEff = Math.abs(topOff) > 0.04 ? drawEff : 1;
+
+    cueBall.spin = sideOff * SPIN_SIDE_POWER * power * tipEff * speedEff;
+    cueBall.topSpin = -topOff * SPIN_TOP_POWER * power * tipEff * topSpeedEff;
+
+    const slideFromSide = Math.abs(sideOff) * SLIDE_FROM_OFFSET * 0.62;
+    const slideFromTop = Math.abs(topOff) * 0.88;
+    cueBall.slide = Math.min(1, Math.max(slideFromSide, slideFromTop) + offCenter * 0.16);
+
+    if (Math.abs(sideOff) > 0.05) {
+        const squirtAngle = -sideOff * SQUIRT_FACTOR * (0.5 + power * 0.055) * speedEff;
+        const shotAngle = angle + squirtAngle;
+        cueBall.vx = Math.cos(shotAngle) * power;
+        cueBall.vy = Math.sin(shotAngle) * power;
+    }
+
+    resetSpin();
+}
+
 function getAimAngle() {
     return aimAngle;
 }
@@ -537,6 +625,10 @@ function canPullPower() {
     return canShowCue();
 }
 
+function canAdjustSpin() {
+    return canShowCue();
+}
+
 function startStrike(pullBack, angle) {
     strikeAnim = {
         angle,
@@ -574,6 +666,7 @@ function updateStrikeAnim() {
         const angle = strikeAnim.angle;
         cueBall.vx = Math.cos(angle) * power;
         cueBall.vy = Math.sin(angle) * power;
+        applySpinToCueBall(power, angle);
         impactFlash = { x: cueBall.x, y: cueBall.y, startTime: performance.now() };
         strikeAnim = null;
     }
@@ -621,9 +714,10 @@ function predictAimPath(angle) {
 }
 
 function drawCueScene(angle, pullBack) {
-    const tip = getCueTipPosition(cueBall, angle, pullBack);
+    const tip = getCueTipPosition(cueBall, angle, pullBack, spinOffsetX, spinOffsetY);
     const path = predictAimPath(angle);
     drawTrajectory(ctx, angle, cueBall, aimX, aimY, path, aimModifierEnabled ? 'off' : aimLineVariant, aimModifierEnabled);
+    drawSpinMark(ctx, cueBall, angle, spinOffsetX, spinOffsetY);
     drawCueStick(ctx, tip.x, tip.y, angle);
 }
 
@@ -648,6 +742,7 @@ function initGame() {
 
     updateAimFromPoint(cueBall.x + CANVAS_WIDTH * 0.16, cueBall.y);
     resetPowerPull();
+    resetSpin();
     isPullingPower = false;
     activePullPointerId = null;
     lastFrameTime = performance.now();
@@ -688,6 +783,12 @@ function update(now = performance.now()) {
         aimTrack.classList.remove('is-dragging');
         activeCanvasPointerId = null;
         aimPointer = null;
+    }
+
+    if (isDraggingSpin && !canShowCue()) {
+        isDraggingSpin = false;
+        activeSpinPadPointerId = null;
+        spinPad.classList.remove('is-dragging');
     }
 }
 
@@ -849,6 +950,33 @@ function finishPowerPull(e) {
 powerTrack.addEventListener('pointerup', finishPowerPull);
 powerTrack.addEventListener('pointercancel', finishPowerPull);
 
+spinPad.addEventListener('pointerdown', (e) => {
+    if (!canAdjustSpin()) return;
+    e.preventDefault();
+    spinPad.setPointerCapture(e.pointerId);
+    isDraggingSpin = true;
+    activeSpinPadPointerId = e.pointerId;
+    spinPad.classList.add('is-dragging');
+    spinFromPadEvent(e);
+});
+
+spinPad.addEventListener('pointermove', (e) => {
+    if (!isDraggingSpin || e.pointerId !== activeSpinPadPointerId) return;
+    spinFromPadEvent(e);
+});
+
+function finishSpinDrag(e) {
+    if (!isDraggingSpin || (e && e.pointerId !== activeSpinPadPointerId)) return;
+    if (e && spinPad.hasPointerCapture(e.pointerId)) spinPad.releasePointerCapture(e.pointerId);
+    isDraggingSpin = false;
+    activeSpinPadPointerId = null;
+    spinPad.classList.remove('is-dragging');
+}
+
+spinPad.addEventListener('pointerup', finishSpinDrag);
+spinPad.addEventListener('pointercancel', finishSpinDrag);
+spinResetBtn.addEventListener('click', resetSpin);
+
 aimTrack.addEventListener('pointerdown', (e) => {
     if (!canAdjustAim()) return;
     e.preventDefault();
@@ -923,6 +1051,7 @@ updatePhysicsModeButton();
 updateCushionLipButton();
 updateAimSliderVisual();
 initPowerMarks();
+updateSpinPadVisual();
 initGame();
 fitGameLayout();
 gameLoop();
@@ -934,12 +1063,14 @@ window.__poolTest = {
             balls: balls.map(b => ({
                 x: b.x, y: b.y, vx: b.vx, vy: b.vy,
                 inPocket: b.inPocket, isCueBall: b.isCueBall, number: b.number,
-                moving: b.isMoving(), pocketing: b.isPocketing()
+                moving: b.isMoving(), pocketing: b.isPocketing(),
+                spin: b.spin, topSpin: b.topSpin, slide: b.slide || 0
             })),
             score: scoreElement?.textContent ?? '0',
             cue: cue ? {
                 x: cue.x, y: cue.y, vx: cue.vx, vy: cue.vy,
-                moving: cue.isMoving(), inPocket: cue.inPocket, pocketing: cue.isPocketing()
+                moving: cue.isMoving(), inPocket: cue.inPocket, pocketing: cue.isPocketing(),
+                spin: cue.spin, topSpin: cue.topSpin, slide: cue.slide || 0
             } : null
         };
     },
@@ -962,20 +1093,27 @@ window.__poolTest = {
         cueBall.y = cueY ?? cueBall.y;
         cueBall.vx = 0;
         cueBall.vy = 0;
+        cueBall.spin = 0;
+        cueBall.topSpin = 0;
+        cueBall.slide = 0;
         cueBall.inPocket = false;
         cueBall.pocketFall = null;
         strikeAnim = null;
         for (const b of extraBalls) {
             balls.push(new Ball(b.x, b.y, { number: b.number ?? 1, color: b.color }));
         }
+        resetSpin();
         resetPowerPull();
     },
 
-    fire({ angle, power = 60 }) {
+    fire({ angle, power = 60, spinX = 0, spinY = 0 }) {
+        spinOffsetX = spinX * MAX_SPIN_OFFSET;
+        spinOffsetY = spinY * MAX_SPIN_OFFSET;
         const pullBack = (power / 100) * MAX_PULL;
         const p = pullBack * POWER_FACTOR;
         cueBall.vx = Math.cos(angle) * p;
         cueBall.vy = Math.sin(angle) * p;
+        applySpinToCueBall(p, angle);
     },
 
     simulate(maxSteps = 4000) {

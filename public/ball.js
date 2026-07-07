@@ -93,6 +93,9 @@ export class Ball {
         this.color = options.color || '#ffffff';
         this.inPocket = false;
         this.pocketFall = null;
+        this.spin = 0;
+        this.topSpin = 0;
+        this.slide = 0;
         this.orientation = { ...IDENTITY_QUAT };
         this.px = x;
         this.py = y;
@@ -122,6 +125,9 @@ export class Ball {
         };
         this.vx = 0;
         this.vy = 0;
+        this.spin = 0;
+        this.topSpin = 0;
+        this.slide = 0;
     }
 
     updatePocketFall(balls) {
@@ -181,13 +187,12 @@ export class Ball {
         if (speed < 1e-8) return;
 
         const angle = (speed * frameFraction) / this.radius;
-        const half = angle * 0.5;
-        const s = Math.sin(half);
-        const c = Math.cos(half);
+        const rollHalf = angle * 0.5;
+        const s = Math.sin(rollHalf);
+        const c = Math.cos(rollHalf);
         const axisX = -this.vy / speed;
         const axisY = this.vx / speed;
         const delta = { w: c, x: axisX * s, y: axisY * s, z: 0 };
-
         this.orientation = quatNormalize(quatMultiply(delta, this.orientation));
     }
 
@@ -437,6 +442,9 @@ export class Ball {
         this.vy = 0;
         this.inPocket = false;
         this.pocketFall = null;
+        this.spin = 0;
+        this.topSpin = 0;
+        this.slide = 0;
         this.sleepFrames = 0;
         this.orientation = { ...IDENTITY_QUAT };
         this.lastDirX = 1;

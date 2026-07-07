@@ -74,7 +74,7 @@ export const CUE_RESPOT_DELAY_MS = 400;
 /** Базовая физика: импульсные столкновения, отскоки от бортов, торможение сукна */
 export const REFERENCE_FPS = 60;
 export const MAX_PHYSICS_DT = 0.05;
-export const PHYSICS_SUBSTEPS = 50;
+export const PHYSICS_SUBSTEPS = 10;
 export const COLLISION_PASSES = 4;
 
 export const BALL_MASS = 0.167;
@@ -145,6 +145,90 @@ export let LOW_SPEED_THRESHOLD = activePhysicsMode.lowSpeedThreshold;
 export const SLEEP_SPEED = 0.014;
 export const SLEEP_FRAMES = 10;
 export const MIN_SPEED = SLEEP_SPEED;
+
+export const CLOTH_SLIDE_DECEL = 0.068;
+export const SLIP_RESOLVE_RATE = 0.072;
+export const SLIDE_RESOLVE_RATE = 0.048;
+export const SLIDE_THRESHOLD = 0.035;
+
+export const SPIN_ROLL_DAMP = 0.0024;
+export const SPIN_SLIDE_DAMP = 0.0048;
+export const SPIN_CURVE_WHILE_SLIDING = 0.0012;
+export const SPIN_CURVE_WHILE_ROLLING = 0.00022;
+export const SIDE_SPIN_SLIDE_THROW = 0.0015;
+export const SIDE_SPIN_ROLL_THROW = 0.00028;
+
+export const SLEEP_SPIN = 0.007;
+
+/** Общий множитель силы спина (1 = базовый, меньше — слабее эффекты) */
+export const SPIN_STRENGTH = 1 / 3;
+
+export const MAX_SPIN_OFFSET = 0.72;
+export const SPIN_SIDE_POWER = 0.68;
+export const SPIN_TOP_POWER = 0.44;
+export const SLIDE_FROM_OFFSET = 0.88;
+export const SQUIRT_FACTOR = 0.0107;
+export const SPIN_TIP_EFFICIENCY = 0.11;
+
+export const CUSHION_THROW = 0.048;
+export const CUSHION_SPIN_RETAIN = 0.71;
+export const BALL_SPIN_CONTACT = 0.54;
+export const BALL_SPIN_THROW = 0.16;
+export const SIDE_SPIN_COLLISION_THROW = 0.3;
+export const DRAW_COLLISION_KICK = 0.38;
+export const DRAW_COLLISION_MAX = 0.48;
+export const DRAW_SPIN_TRANSFER = 0.04;
+export const DRAW_REVERSE_FACTOR = 0.32;
+export const DRAW_FORWARD_BRAKE = 0.42;
+export const DRAW_REVERSE_SPEED_THRESHOLD = 0.72;
+export const DRAW_MAX_REVERSE_SPEED_SCALE = 1.35;
+export const CUE_DRAW_BACK_RATIO = 1.85;
+export const OBJECT_DRAW_BRAKE_RATIO = 0.38;
+export const FOLLOW_COLLISION_KICK = 0.085;
+export const CUE_FOLLOW_RATIO = 0.82;
+export const CUSHION_DRAW_KICK = 0.028;
+export const COLLISION_SLIDE_MIN = 0.34;
+export const CUSHION_SLIDE = 0.52;
+
+/** Скорость, относительно которой падает эффективность спина (≈ средний удар) */
+export const SPIN_SPEED_REF = 9.5;
+/** Крутизна спада: больше — сильнее ослабление на высоких скоростях */
+export const SPIN_SPEED_FALLOFF = 2.1;
+/** Степень кривой спада (2+ = резче на больших скоростях) */
+export const SPIN_SPEED_EXP = 2.35;
+/** Минимальная эффективность спина при очень быстром движении */
+export const SPIN_SPEED_MIN_EFF = 0.07;
+
+export function spinSpeedEffectiveness(speed) {
+    if (speed <= SLEEP_SPEED) return 1;
+    const ratio = speed / SPIN_SPEED_REF;
+    const falloff = 1 / (1 + Math.pow(ratio, SPIN_SPEED_EXP) * SPIN_SPEED_FALLOFF);
+    return Math.max(SPIN_SPEED_MIN_EFF, falloff);
+}
+
+/** Ослабление бокового спина на скорости — мягче, чем у follow/draw */
+export const SIDE_SPIN_SPEED_REF = 14;
+export const SIDE_SPIN_SPEED_FALLOFF = 1.15;
+export const SIDE_SPIN_SPEED_MIN_EFF = 0.22;
+
+export function sideSpinSpeedEffectiveness(speed) {
+    if (speed <= SLEEP_SPEED) return 1;
+    const ratio = speed / SIDE_SPIN_SPEED_REF;
+    const falloff = 1 / (1 + ratio * ratio * SIDE_SPIN_SPEED_FALLOFF);
+    return Math.max(SIDE_SPIN_SPEED_MIN_EFF, falloff);
+}
+
+/** Ослабление нижнего спина на скорости — мягче, чем у общего spinSpeedEffectiveness */
+export const DRAW_SPEED_REF = 12;
+export const DRAW_SPEED_FALLOFF = 0.9;
+export const DRAW_SPEED_MIN_EFF = 0.38;
+
+export function drawSpeedEffectiveness(speed) {
+    if (speed <= SLEEP_SPEED) return 1;
+    const ratio = speed / DRAW_SPEED_REF;
+    const falloff = 1 / (1 + ratio * ratio * DRAW_SPEED_FALLOFF);
+    return Math.max(DRAW_SPEED_MIN_EFF, falloff);
+}
 
 /** Микро-джиттер угла нормали при столкновениях (только runtime-физика) */
 export const COLLISION_NORMAL_JITTER = {
