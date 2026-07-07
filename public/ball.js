@@ -1,7 +1,8 @@
 import {
     BALL_RADIUS,
     SLEEP_SPEED,
-    POCKET_FALL_MS,
+    POCKET_FALL_SPEED_REF,
+    computePocketFallDuration,
     CUE_RESPOT_DELAY_MS,
     BALL_MASS,
     BALL_MASS_MIN_G,
@@ -69,6 +70,10 @@ function rotateVec(q, x, y, z) {
     ];
 }
 
+function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+}
+
 export function randomBallMass() {
     const grams = BALL_MASS_MIN_G + Math.random() * (BALL_MASS_MAX_G - BALL_MASS_MIN_G);
     return grams / 1000;
@@ -99,6 +104,7 @@ export class Ball {
     startPocketFall(pocket) {
         if (this.pocketFall || this.inPocket) return;
 
+        const entrySpeed = Math.hypot(this.vx, this.vy);
         this.pocketFall = {
             pocketX: pocket.x,
             pocketY: pocket.y,
@@ -106,7 +112,8 @@ export class Ball {
             startX: this.x,
             startY: this.y,
             startTime: performance.now(),
-            duration: POCKET_FALL_MS,
+            duration: computePocketFallDuration(entrySpeed),
+            entrySpeed,
             entryAngle: Math.atan2(this.y - pocket.y, this.x - pocket.x),
             depth: 0,
             scale: 1,
@@ -121,22 +128,27 @@ export class Ball {
         if (!this.pocketFall) return false;
 
         const {
-            pocketX, pocketY, startX, startY, startTime, duration, entryAngle
+            pocketX, pocketY, startX, startY, startTime, duration, entryAngle, entrySpeed
         } = this.pocketFall;
         const t = Math.min((performance.now() - startTime) / duration, 1);
+        const speedFactor = clamp(entrySpeed / POCKET_FALL_SPEED_REF, 0.35, 2.6);
 
-        const rollT = Math.min(t / 0.36, 1);
+        const rollPhase = clamp(0.4 - (speedFactor - 1) * 0.14, 0.22, 0.4);
+        const dropStart = clamp(0.3 - (speedFactor - 1) * 0.12, 0.14, 0.3);
+
+        const rollT = Math.min(t / rollPhase, 1);
         const rollEase = rollT * rollT * (3 - 2 * rollT);
-        const dropT = t < 0.26 ? 0 : Math.min((t - 0.26) / 0.74, 1);
+        const dropT = t < dropStart ? 0 : Math.min((t - dropStart) / (1 - dropStart), 1);
         const dropEase = dropT * dropT * dropT;
 
         const perpX = -Math.sin(entryAngle);
         const perpY = Math.cos(entryAngle);
-        const wobble = Math.sin(t * Math.PI * 3.4) * (1 - t) * 2.6;
+        const wobbleAmp = 1.6 + entrySpeed * 0.09;
+        const wobble = Math.sin(t * Math.PI * (3.2 + speedFactor * 0.4)) * (1 - t) * wobbleAmp;
 
         const baseX = startX + (pocketX - startX) * rollEase;
         const baseY = startY + (pocketY - startY) * rollEase;
-        const sinkPull = dropEase * 4.5;
+        const sinkPull = dropEase * (3.2 + entrySpeed * 0.18);
 
         this.x = baseX + perpX * wobble + Math.cos(entryAngle) * sinkPull * 0.25;
         this.y = baseY + perpY * wobble + Math.sin(entryAngle) * sinkPull * 0.25;
@@ -145,7 +157,7 @@ export class Ball {
         this.pocketFall.scale = 1 - dropEase * 0.91;
         this.pocketFall.alpha = 1 - dropEase * 0.97;
         this.pocketFall.progress = t;
-        this.advanceRoll(0.1 + dropEase * 0.42);
+        this.advanceRoll((0.08 + dropEase * 0.34) * speedFactor);
 
         if (t < 1) return false;
 

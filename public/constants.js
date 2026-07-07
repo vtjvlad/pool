@@ -52,6 +52,23 @@ export const POCKET_SLOW_SPEED = 5.0;
 export const POCKET_JAW_BIAS = 0.45;
 export const POCKET_MAGNET_RADIUS = POCKET_RADIUS;
 export const POCKET_FALL_MS = 600;
+export const POCKET_FALL_MS_MIN = 260;
+export const POCKET_FALL_MS_MAX = 780;
+export const POCKET_FALL_SPEED_REF = 10;
+export const POCKET_FALL_SPEED_CLAMP_MIN = 0.5;
+export const POCKET_FALL_SPEED_CLAMP_MAX = 28;
+
+export function computePocketFallDuration(entrySpeed) {
+    const speed = Math.max(
+        POCKET_FALL_SPEED_CLAMP_MIN,
+        Math.min(POCKET_FALL_SPEED_CLAMP_MAX, entrySpeed)
+    );
+    const ratio = POCKET_FALL_SPEED_REF / speed;
+    return Math.max(
+        POCKET_FALL_MS_MIN,
+        Math.min(POCKET_FALL_MS_MAX, POCKET_FALL_MS * ratio)
+    );
+}
 export const CUE_RESPOT_DELAY_MS = 400;
 
 /** Базовая физика: импульсные столкновения, отскоки от бортов, торможение сукна */
