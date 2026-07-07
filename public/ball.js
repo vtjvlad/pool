@@ -156,14 +156,27 @@ export class Ball {
         this.orientation = quatNormalize(quatMultiply(delta, this.orientation));
     }
 
-    projectSurfacePoint(lx, ly, lz) {
+    projectSurfacePoint(lx, ly, lz, minDepth = 0.1) {
         const [px, py, pz] = rotateVec(this.orientation, lx, ly, lz);
-        if (pz < 0.1) return null;
+        if (pz < minDepth) return null;
 
         return {
             x: this.x + px * this.radius,
             y: this.y + py * this.radius,
             depth: pz
+        };
+    }
+
+    projectSurfacePointFade(lx, ly, lz) {
+        const [px, py, pz] = rotateVec(this.orientation, lx, ly, lz);
+        if (pz <= 0) return null;
+
+        const fade = Math.min(1, pz / 0.12);
+        return {
+            x: this.x + px * this.radius,
+            y: this.y + py * this.radius,
+            depth: pz,
+            fade
         };
     }
 
@@ -183,16 +196,6 @@ export class Ball {
         }
 
         return points;
-    }
-
-    drawSurfacePath(ctx, points) {
-        if (points.length < 2) return;
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i].x, points[i].y);
-        }
-        ctx.stroke();
     }
 
     drawStripeSphere(ctx, r) {
@@ -245,21 +248,24 @@ export class Ball {
     }
 
     drawNumberPatch(ctx, r) {
-        const center = this.projectSurfacePoint(0, 0, 0.93);
+        const center = this.projectSurfacePointFade(0, 0, 0.93);
         if (!center) return;
 
-        const tangent = this.projectSurfacePoint(0.14, 0, 0.92);
+        const tangent = this.projectSurfacePoint(0.14, 0, 0.92, 0);
         const textAngle = tangent
             ? Math.atan2(tangent.y - center.y, tangent.x - center.x)
             : 0;
-        const spotR = r * 0.64;
+        const fade = center.fade;
+        const spotR = r * 0.64 * (0.9 + 0.1 * fade);
+
+        ctx.save();
+        ctx.globalAlpha *= fade;
 
         ctx.beginPath();
         ctx.arc(center.x, center.y, spotR, 0, Math.PI * 2);
         ctx.fillStyle = this.ballType === 'eight' ? '#ffffff' : '#fafafa';
         ctx.fill();
 
-        ctx.save();
         ctx.translate(center.x, center.y);
         ctx.rotate(textAngle);
         ctx.fillStyle = this.ballType === 'eight' ? '#111' : '#222';
@@ -288,26 +294,6 @@ export class Ball {
             ctx.beginPath();
             ctx.arc(mark.x, mark.y, r * CUE_MARK_SCALE * mark.depth, 0, Math.PI * 2);
             ctx.fill();
-        }
-    }
-
-    drawMeridians(ctx) {
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.09)';
-        ctx.lineWidth = 0.75;
-
-        for (let i = 0; i < 2; i++) {
-            const angle = i * Math.PI * 0.5;
-            const points = [];
-            for (let j = 0; j <= 24; j++) {
-                const t = (j / 24) * Math.PI * 2;
-                const point = this.projectSurfacePoint(
-                    Math.cos(t) * Math.cos(angle),
-                    Math.sin(t),
-                    Math.cos(t) * Math.sin(angle)
-                );
-                if (point) points.push(point);
-            }
-            this.drawSurfacePath(ctx, points);
         }
     }
 
@@ -365,9 +351,6 @@ export class Ball {
             this.drawCueMarks(ctx, r);
         } else {
             this.drawNumberPatch(ctx, r);
-            if (this.ballType !== 'stripe') {
-                this.drawMeridians(ctx);
-            }
         }
 
         ctx.restore();
