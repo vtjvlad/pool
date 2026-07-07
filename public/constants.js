@@ -137,11 +137,25 @@ export const COLORS = {
     woodDark: '#4a3018',
     woodGrain: 'rgba(35, 18, 6, 0.14)',
     woodEdge: 'rgba(0, 0, 0, 0.28)',
-    rubber: '#267da6',
-    rubberDark: '#1a6a94',
-    rubberLight: '#3aa8d4',
-    rubberHighlight: 'rgba(255, 255, 255, 0.14)',
-    rubberShadow: 'rgba(0, 0, 0, 0.22)',
+    rubber: '#155e7f',
+    rubberDark: '#0e3a52',
+    rubberLight: '#1f7399',
+    /** Оттенки губ vs градиент сукна: сверху темнее feltLight, снизу светлее feltDark */
+    rubberPalettes: {
+        top: {
+            dark: '#082636',
+            mid: '#104a62',
+            light: '#145e78'
+        },
+        bottom: {
+            dark: '#0a2836',
+            mid: '#184e66',
+            light: '#3ca6cc'
+        }
+    },
+    rubberHighlight: 'rgba(255, 255, 255, 0.09)',
+    rubberShadow: 'rgba(0, 0, 0, 0.34)',
+    rubberFeltEdge: 'rgba(0, 0, 0, 0.28)',
     cushionFeltShadow: 'rgba(0, 0, 0, 0.34)',
     metalBase: '#adb4bf',
     metalLight: '#e8ecf2',

@@ -349,6 +349,7 @@ function rubberEdgeLinesForSegment(segment) {
 
     line.chamferStartAngle = pocketRubberChamferAngle(pocketIds[0]);
     line.chamferEndAngle = pocketRubberChamferAngle(pocketIds[1]);
+    line.side = side;
     return [line];
 }
 

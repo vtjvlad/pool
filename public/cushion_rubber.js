@@ -118,6 +118,31 @@ export function drawRubberShadows(ctx) {
     ctx.restore();
 }
 
+function createRubberFillGradient(ctx, line, nx, ny, t) {
+    const { x1, y1, x2, y2, side } = line;
+    const ix1 = x1 + nx * t;
+    const iy1 = y1 + ny * t;
+    const palettes = COLORS.rubberPalettes;
+
+    if (side === 'top' || side === 'bottom') {
+        const pal = palettes[side];
+        const grad = ctx.createLinearGradient(x1, y1, ix1, iy1);
+        grad.addColorStop(0, pal.dark);
+        grad.addColorStop(0.42, pal.mid);
+        grad.addColorStop(1, pal.light);
+        return grad;
+    }
+
+    const topP = palettes.top;
+    const botP = palettes.bottom;
+    const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+    grad.addColorStop(0, topP.dark);
+    grad.addColorStop(0.22, topP.light);
+    grad.addColorStop(0.78, botP.mid);
+    grad.addColorStop(1, botP.light);
+    return grad;
+}
+
 function drawRubberStrip(ctx, line) {
     const { nx, ny, tx, ty } = edgeNormal(line.x1, line.y1, line.x2, line.y2);
     const t = RUBBER_THICKNESS;
@@ -128,38 +153,34 @@ function drawRubberStrip(ctx, line) {
     const ix2 = x2 + nx * t;
     const iy2 = y2 + ny * t;
 
-    const grad = ctx.createLinearGradient(x1, y1, ix1, iy1);
-    grad.addColorStop(0, COLORS.rubberDark);
-    grad.addColorStop(0.35, COLORS.rubber);
-    grad.addColorStop(1, COLORS.rubberLight);
+    const runEnd = chamferEndAngle != null ? chamferRunAlongEdge(t, chamferEndAngle) : 0;
+    const runStart = chamferStartAngle != null ? chamferRunAlongEdge(t, chamferStartAngle) : 0;
+    const innerEndX = chamferEndAngle != null ? ix2 - tx * runEnd : ix2;
+    const innerEndY = chamferEndAngle != null ? iy2 - ty * runEnd : iy2;
+    const innerStartX = chamferStartAngle != null ? ix1 + tx * runStart : ix1;
+    const innerStartY = chamferStartAngle != null ? iy1 + ty * runStart : iy1;
 
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
-
-    if (chamferEndAngle != null) {
-        const runEnd = chamferRunAlongEdge(t, chamferEndAngle);
-        ctx.lineTo(ix2 - tx * runEnd, iy2 - ty * runEnd);
-    } else {
-        ctx.lineTo(ix2, iy2);
-    }
-
-    ctx.lineTo(ix1, iy1);
-
-    if (chamferStartAngle != null) {
-        const runStart = chamferRunAlongEdge(t, chamferStartAngle);
-        ctx.lineTo(ix1 + tx * runStart, iy1 + ty * runStart);
-    }
-
+    ctx.lineTo(innerEndX, innerEndY);
+    ctx.lineTo(innerStartX, innerStartY);
     ctx.closePath();
-    ctx.fillStyle = grad;
+    ctx.fillStyle = createRubberFillGradient(ctx, line, nx, ny, t);
     ctx.fill();
 
     ctx.beginPath();
-    ctx.moveTo(ix1, iy1);
-    ctx.lineTo(ix2, iy2);
+    ctx.moveTo(innerStartX, innerStartY);
+    ctx.lineTo(innerEndX, innerEndY);
+    ctx.strokeStyle = COLORS.rubberFeltEdge;
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(innerStartX, innerStartY);
+    ctx.lineTo(innerEndX, innerEndY);
     ctx.strokeStyle = COLORS.rubberHighlight;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 0.7;
     ctx.stroke();
 
     ctx.beginPath();
