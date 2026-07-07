@@ -7,6 +7,8 @@ import {
     LOW_SPEED_THRESHOLD,
     CUSHION_THROW,
     CUSHION_SPIN_RETAIN,
+    CUSHION_DRAW_KICK,
+    SLEEP_SPIN,
     COLLISION_SLIDE_MIN,
     CUSHION_SLIDE
 } from './constants.js';
@@ -109,14 +111,21 @@ function applyCushionSpin(ball, nx, ny, preImpactSpeed, vx, vy) {
         ball.spin = spin * CUSHION_SPIN_RETAIN;
     }
 
-    if (Math.abs(topSpin) > 1e-6) {
+    if (Math.abs(topSpin) > SLEEP_SPIN) {
         const inSpeed = Math.hypot(vx, vy) || 1;
         const inDirX = vx / inSpeed;
         const inDirY = vy / inSpeed;
-        const followKick = clamp(topSpin * 0.048, -preImpactSpeed * 0.07, preImpactSpeed * 0.07);
-        vx += followKick * inDirX;
-        vy += followKick * inDirY;
-        ball.topSpin = topSpin * 0.45;
+        if (topSpin > 0) {
+            const followKick = clamp(topSpin * 0.048, 0, preImpactSpeed * 0.07);
+            vx += followKick * inDirX;
+            vy += followKick * inDirY;
+            ball.topSpin = topSpin * 0.45;
+        } else {
+            const drawKick = clamp(topSpin * CUSHION_DRAW_KICK, -preImpactSpeed * 0.085, 0);
+            vx += drawKick * inDirX;
+            vy += drawKick * inDirY;
+            ball.topSpin = topSpin * 0.48;
+        }
     }
 
     ball.slide = Math.max(ball.slide || 0, CUSHION_SLIDE);

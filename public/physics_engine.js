@@ -20,7 +20,17 @@ import {
     PHYSICS_SUBSTEPS,
     COLLISION_PASSES,
     BALL_SPIN_CONTACT,
-    COLLISION_SLIDE_MIN
+    COLLISION_SLIDE_MIN,
+    DRAW_COLLISION_KICK,
+    DRAW_COLLISION_MAX,
+    DRAW_SPIN_TRANSFER,
+    DRAW_REVERSE_FACTOR,
+    DRAW_FORWARD_BRAKE,
+    DRAW_REVERSE_SPEED_THRESHOLD,
+    DRAW_MAX_REVERSE_SPEED_SCALE,
+    CUE_DRAW_BACK_RATIO,
+    OBJECT_DRAW_BRAKE_RATIO,
+    FOLLOW_COLLISION_KICK
 } from './constants.js';
 import { resolveBallCushionCollision } from './cushion_collision.js';
 import { tryPocketBall } from './utils.js';
@@ -105,11 +115,33 @@ function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
     }
 
     if (Math.abs(topSpin) > SLEEP_SPIN) {
-        const resolve = SLIP_RESOLVE_RATE * dt * (1 + slideFactor * 0.6);
+        const speedFactor = 1 / (1 + nextSpeed / LOW_SPEED_THRESHOLD);
+        const resolve = SLIP_RESOLVE_RATE * dt * (1 + slideFactor * 0.6) * speedFactor;
         const delta = Math.min(Math.abs(topSpin), resolve) * Math.sign(topSpin);
         ball.topSpin = topSpin - delta;
+
         if (topSpin < 0) {
-            nextSpeed = Math.max(0, nextSpeed + delta * 0.22);
+            nextSpeed = Math.max(0, nextSpeed - Math.abs(delta) * DRAW_FORWARD_BRAKE);
+            if (nextSpeed > SLEEP_SPEED) {
+                ball.vx = dirX * nextSpeed;
+                ball.vy = dirY * nextSpeed;
+            }
+
+            const reverseThreshold = LOW_SPEED_THRESHOLD * DRAW_REVERSE_SPEED_THRESHOLD;
+            const spinLeft = Math.abs(ball.topSpin);
+            if (spinLeft > SLEEP_SPIN * 1.5 && nextSpeed < reverseThreshold) {
+                const backSpeed = Math.min(
+                    spinLeft * DRAW_REVERSE_FACTOR + (reverseThreshold - nextSpeed) * 0.35,
+                    LOW_SPEED_THRESHOLD * DRAW_MAX_REVERSE_SPEED_SCALE
+                );
+                ball.vx = -dirX * backSpeed;
+                ball.vy = -dirY * backSpeed;
+                ball.slide = Math.max(ball.slide || 0, 0.34);
+                ball.topSpin *= 0.58;
+                return;
+            }
+        } else if (topSpin > 0) {
+            nextSpeed = Math.max(0, nextSpeed + delta * 0.18);
             ball.vx = dirX * nextSpeed;
             ball.vy = dirY * nextSpeed;
         }
@@ -203,9 +235,61 @@ function separateBalls(b1, b2, nx, ny, dist) {
     return true;
 }
 
+function applyTopSpinCollision(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed) {
+    const topSpin = striker.topSpin || 0;
+    const preSpeed = Math.hypot(strikerPreVx, strikerPreVy);
+    let shotX = nx;
+    let shotY = ny;
+    if (strikerPreVx * nx + strikerPreVy * ny < 0) {
+        shotX = -nx;
+        shotY = -ny;
+    }
+    if (preSpeed > SLEEP_SPEED) {
+        shotX = strikerPreVx / preSpeed;
+        shotY = strikerPreVy / preSpeed;
+    }
+    const headOn = Math.abs(shotX * nx + shotY * ny);
+
+    if (topSpin < -SLEEP_SPIN) {
+        const drawMag = clamp(-topSpin * DRAW_COLLISION_KICK * headOn, 0, impactSpeed * DRAW_COLLISION_MAX);
+        if (drawMag <= SLEEP_SPIN) return;
+
+        const transferred = topSpin * DRAW_SPIN_TRANSFER * Math.max(0.45, headOn);
+        other.topSpin = (other.topSpin || 0) + transferred;
+        striker.topSpin = topSpin - transferred;
+
+        const cueDraw = drawMag * CUE_DRAW_BACK_RATIO;
+        striker.vx -= cueDraw * shotX;
+        striker.vy -= cueDraw * shotY;
+
+        const objBrake = drawMag * OBJECT_DRAW_BRAKE_RATIO;
+        other.vx -= objBrake * shotX;
+        other.vy -= objBrake * shotY;
+
+        const slideBoost = clamp(0.28 + drawMag / Math.max(impactSpeed, 0.1) * 0.42, 0.28, 0.78);
+        other.slide = Math.max(other.slide || 0, slideBoost);
+        striker.slide = Math.max(striker.slide || 0, slideBoost * 0.72);
+        return;
+    }
+
+    if (topSpin > SLEEP_SPIN) {
+        const followMag = clamp(topSpin * FOLLOW_COLLISION_KICK * headOn, 0, impactSpeed * 0.14);
+        other.vx += followMag * shotX;
+        other.vy += followMag * shotY;
+        striker.topSpin = topSpin * 0.55;
+    }
+}
+
 export function resolveCollision(b1, b2) {
     const { nx, ny, dist } = collisionNormal(b1, b2);
     if (!separateBalls(b1, b2, nx, ny, dist)) return;
+
+    const b1PreVx = b1.vx;
+    const b1PreVy = b1.vy;
+    const b2PreVx = b2.vx;
+    const b2PreVy = b2.vy;
+    const v1nPre = b1PreVx * nx + b1PreVy * ny;
+    const v2nPre = b2PreVx * nx + b2PreVy * ny;
 
     const rvx = b2.vx - b1.vx;
     const rvy = b2.vy - b1.vy;
@@ -239,6 +323,12 @@ export function resolveCollision(b1, b2) {
 
     b1.spin = (b1.spin || 0) + jt * BALL_SPIN_CONTACT;
     b2.spin = (b2.spin || 0) - jt * BALL_SPIN_CONTACT;
+
+    const striker = v1nPre > v2nPre ? b1 : b2;
+    const other = striker === b1 ? b2 : b1;
+    const strikerPreVx = striker === b1 ? b1PreVx : b2PreVx;
+    const strikerPreVy = striker === b1 ? b1PreVy : b2PreVy;
+    applyTopSpinCollision(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed);
 
     const slideBoost = clamp(COLLISION_SLIDE_MIN + impactSpeed * 0.018, COLLISION_SLIDE_MIN, 0.55);
     b1.slide = Math.max(b1.slide || 0, slideBoost);

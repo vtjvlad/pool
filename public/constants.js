@@ -88,6 +88,17 @@ export const SPIN_VISUAL_SCALE = 0.065;
 export const CUSHION_THROW = 0.050;
 export const CUSHION_SPIN_RETAIN = 0.55;
 export const BALL_SPIN_CONTACT = 0.60;
+export const DRAW_COLLISION_KICK = 0.34;
+export const DRAW_COLLISION_MAX = 0.52;
+export const DRAW_SPIN_TRANSFER = 0.62;
+export const DRAW_REVERSE_FACTOR = 0.32;
+export const DRAW_FORWARD_BRAKE = 0.48;
+export const DRAW_REVERSE_SPEED_THRESHOLD = 0.52;
+export const DRAW_MAX_REVERSE_SPEED_SCALE = 1.05;
+export const CUE_DRAW_BACK_RATIO = 1.08;
+export const OBJECT_DRAW_BRAKE_RATIO = 0.38;
+export const FOLLOW_COLLISION_KICK = 0.09;
+export const CUSHION_DRAW_KICK = 0.052;
 export const COLLISION_SLIDE_MIN = 0.38;
 export const CUSHION_SLIDE = 0.58;
 
