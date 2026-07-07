@@ -113,6 +113,13 @@ body {
     min-width: 0;
 }
 
+#top-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
 #play-area {
     display: flex;
     align-items: stretch;
@@ -142,6 +149,26 @@ body {
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
+}
+
+#switch-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding: 8px 10px;
+    min-width: 360px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+}
+
+.switch-panel-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.7;
+    text-align: center;
 }
 
 #game-title {
@@ -211,6 +238,14 @@ body {
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     touch-action: none;
+}
+
+#right-side-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
 }
 
 #aim-controls .control-label {
@@ -338,24 +373,25 @@ body {
 
 #aim-toggles {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: nowrap;
     align-items: stretch;
-    gap: 6px;
-    margin-top: 6px;
+    gap: 8px;
+    margin-top: 0;
     width: 100%;
 }
 
 .aim-toggle-btn {
-    width: 100%;
+    flex: 1 1 0;
     box-sizing: border-box;
-    padding: 8px 6px;
-    min-height: 32px;
+    padding: 10px 8px;
+    min-height: 40px;
     cursor: pointer;
     background: rgba(0, 0, 0, 0.35);
     color: rgba(255, 255, 255, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 8px;
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     font-weight: 700;
     touch-action: manipulation;
     white-space: nowrap;
@@ -487,8 +523,8 @@ body {
 }
 
 #bottom-bar {
-    flex: 0 0 40px;
-    height: 40px;
+    flex: 0 0 56px;
+    height: 56px;
     margin: 24px 0 0;
     padding-top: 0;
     display: flex;
@@ -499,6 +535,7 @@ body {
 
 #pocketed-tray {
     display: flex;
+    flex-direction: row;
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
@@ -518,6 +555,7 @@ body {
 
 #pocketed-tray-slots {
     display: flex;
+    flex-direction: row;
     align-items: center;
     gap: 4px;
 }

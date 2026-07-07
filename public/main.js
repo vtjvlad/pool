@@ -21,6 +21,10 @@ import {
     AIM_LINE_LABELS,
     AIM_MODIFIER_STORAGE_KEY,
     AIM_MODIFIER_LABEL,
+    BALL_RESTITUTION_PROFILE,
+    CUSHION_RESTITUTION_PROFILE,
+    setBallRestitutionProfile,
+    setCushionRestitutionProfile,
     MAX_CUE_MAX_CONTACTS,
     MAX_TARGET_MAX_CONTACTS
 } from './constants.js';
@@ -46,6 +50,8 @@ const aimWheelNotches = document.getElementById('aim-wheel-notches');
 const aimDegrees = document.getElementById('aim-degrees');
 const aimLineVariantBtn = document.getElementById('aim-line-variant-btn');
 const aimModifierBtn = document.getElementById('aim-modifier-btn');
+const ballRestitutionBtn = document.getElementById('ball-restitution-btn');
+const cushionRestitutionBtn = document.getElementById('cushion-restitution-btn');
 const gameContainer = document.getElementById('game-container');
 const gameStage = document.getElementById('game-stage');
 const traySlots = document.getElementById('pocketed-tray-slots');
@@ -94,6 +100,8 @@ let aimModifierEnabled = false;
 let lastFrameTime = performance.now();
 
 const AIM_LINE_VARIANT_KEY = 'vtj-pool-aim-line-variant';
+const BALL_RESTITUTION_PROFILE_KEY = 'vtj-pool-ball-restitution-profile';
+const CUSHION_RESTITUTION_PROFILE_KEY = 'vtj-pool-cushion-restitution-profile';
 
 function loadAimLineVariant() {
     try {
@@ -169,6 +177,61 @@ function toggleAimModifier() {
     }
     updateAimModifierButton();
     updateAimLineVariantButton();
+}
+
+function updateBallRestitutionButton() {
+    if (!ballRestitutionBtn) return;
+    const isSoft = BALL_RESTITUTION_PROFILE === 'soft';
+    ballRestitutionBtn.textContent = isSoft ? 'ball:s' : 'ball:t';
+    ballRestitutionBtn.classList.toggle('is-active', !isSoft);
+    ballRestitutionBtn.setAttribute(
+        'aria-label',
+        `Профиль упругости шара: ${BALL_RESTITUTION_PROFILE}. Нажмите для переключения`
+    );
+}
+
+function updateCushionRestitutionButton() {
+    if (!cushionRestitutionBtn) return;
+    const isSoft = CUSHION_RESTITUTION_PROFILE === 'soft';
+    cushionRestitutionBtn.textContent = isSoft ? 'cush:s' : 'cush:t';
+    cushionRestitutionBtn.classList.toggle('is-active', !isSoft);
+    cushionRestitutionBtn.setAttribute(
+        'aria-label',
+        `Профиль упругости губ: ${CUSHION_RESTITUTION_PROFILE}. Нажмите для переключения`
+    );
+}
+
+function loadRestitutionProfiles() {
+    try {
+        const savedBall = localStorage.getItem(BALL_RESTITUTION_PROFILE_KEY);
+        if (savedBall) setBallRestitutionProfile(savedBall);
+        const savedCushion = localStorage.getItem(CUSHION_RESTITUTION_PROFILE_KEY);
+        if (savedCushion) setCushionRestitutionProfile(savedCushion);
+    } catch {
+        // ignore storage errors
+    }
+}
+
+function toggleBallRestitutionProfile() {
+    const next = BALL_RESTITUTION_PROFILE === 'soft' ? 'tournament' : 'soft';
+    setBallRestitutionProfile(next);
+    try {
+        localStorage.setItem(BALL_RESTITUTION_PROFILE_KEY, next);
+    } catch {
+        // ignore storage errors
+    }
+    updateBallRestitutionButton();
+}
+
+function toggleCushionRestitutionProfile() {
+    const next = CUSHION_RESTITUTION_PROFILE === 'soft' ? 'tournament' : 'soft';
+    setCushionRestitutionProfile(next);
+    try {
+        localStorage.setItem(CUSHION_RESTITUTION_PROFILE_KEY, next);
+    } catch {
+        // ignore storage errors
+    }
+    updateCushionRestitutionButton();
 }
 
 const TRAY_CAPACITY = 15;
@@ -633,12 +696,25 @@ if (aimModifierBtn) {
     aimModifierBtn.addEventListener('click', toggleAimModifier);
 }
 
+if (ballRestitutionBtn) {
+    ballRestitutionBtn.classList.add('aim-toggle-btn');
+    ballRestitutionBtn.addEventListener('click', toggleBallRestitutionProfile);
+}
+
+if (cushionRestitutionBtn) {
+    cushionRestitutionBtn.classList.add('aim-toggle-btn');
+    cushionRestitutionBtn.addEventListener('click', toggleCushionRestitutionProfile);
+}
+
 resetBtn.addEventListener('click', initGame);
 
 loadAimLineVariant();
 loadAimModifier();
+loadRestitutionProfiles();
 updateAimLineVariantButton();
 updateAimModifierButton();
+updateBallRestitutionButton();
+updateCushionRestitutionButton();
 updateAimSliderVisual();
 initGame();
 fitGameLayout();

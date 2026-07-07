@@ -23,16 +23,17 @@ export const CENTRAL_POCKET_RADIUS = POCKET_RADIUS * 0.99225;
 export const POCKET_LAYOUT_DIAMETER = 33;
 export const POCKET_LAYOUT_RADIUS = POCKET_LAYOUT_DIAMETER / 2;
 export const POCKET_INSET = POCKET_LAYOUT_RADIUS * 1.5;
+export const CUSHION_LIP_SCALE = 0.9; // -10%
 export const CUSHION_POCKET_GAP = 0;
 export const CORNER_CUSHION_POCKET_GAP = POCKET_LAYOUT_DIAMETER / 4;
 export const CENTRAL_CUSHION_POCKET_GAP = POCKET_LAYOUT_DIAMETER / 5;
-export const CUSHION_CHAMFER = POCKET_LAYOUT_DIAMETER / 4;
+export const CUSHION_CHAMFER = (POCKET_LAYOUT_DIAMETER / 4) * CUSHION_LIP_SCALE;
 export const MID_POCKET_INSET = (POCKET_INSET - POCKET_LAYOUT_DIAMETER / 4) * 0.7;
 export const POCKET_CENTER_SHIFT = 0;
 export const CORNER_POCKET_CENTER_SHIFT = POCKET_INSET * 0.24;
-export const CUSHION_DEPTH = Math.max(16 + POCKET_LAYOUT_DIAMETER / 4, POCKET_INSET + POCKET_LAYOUT_RADIUS) * 0.75 * 0.75 * 1.1;
+export const CUSHION_DEPTH = Math.max(16 + POCKET_LAYOUT_DIAMETER / 4, POCKET_INSET + POCKET_LAYOUT_RADIUS) * 0.75 * 0.75 * 1.1 * CUSHION_LIP_SCALE;
 export const PLAY_SURFACE_INSET = POCKET_LAYOUT_DIAMETER / 4;
-export const RUBBER_THICKNESS = BALL_RADIUS * 2 * 0.75 * 1.28;
+export const RUBBER_THICKNESS = BALL_RADIUS * 2 * 0.75 * 1.28 * CUSHION_LIP_SCALE;
 export const RUBBER_CENTER_CHAMFER_ANGLE = 60;
 export const RUBBER_CORNER_CHAMFER_ANGLE = 45;
 export const DEBUG_DRAW_RUBBER = true;
@@ -50,14 +51,35 @@ export const MAX_PHYSICS_DT = 0.05;
 export const PHYSICS_SUBSTEPS = 10;
 export const COLLISION_PASSES = 4;
 
-export const BALL_MASS = 1;
+export const BALL_MASS = 0.167;
 export const BALL_MOMENT = (2 / 5) * BALL_MASS * BALL_RADIUS * BALL_RADIUS;
 
-export const BALL_RESTITUTION = 0.945;
-export const BALL_RESTITUTION_SLOW = 0.82;
+export const RESTITUTION_PRESETS = {
+    soft: {
+        ball: 0.91,
+        ballSlow: 0.78,
+        cushion: 0.84,
+        cushionSlow: 0.68
+    },
+    tournament: {
+        ball: 0.93,
+        ballSlow: 0.80,
+        cushion: 0.87,
+        cushionSlow: 0.72
+    }
+};
+export const RESTITUTION_PROFILES = ['soft', 'tournament'];
+export let BALL_RESTITUTION_PROFILE = 'tournament';
+export let CUSHION_RESTITUTION_PROFILE = 'tournament';
+
+let activeBallRestitution = RESTITUTION_PRESETS[BALL_RESTITUTION_PROFILE];
+let activeCushionRestitution = RESTITUTION_PRESETS[CUSHION_RESTITUTION_PROFILE];
+
+export let BALL_RESTITUTION = activeBallRestitution.ball;
+export let BALL_RESTITUTION_SLOW = activeBallRestitution.ballSlow;
 export const BALL_FRICTION = 0.055;
-export const CUSHION_RESTITUTION = 0.89;
-export const CUSHION_RESTITUTION_SLOW = 0.74;
+export let CUSHION_RESTITUTION = activeCushionRestitution.cushion;
+export let CUSHION_RESTITUTION_SLOW = activeCushionRestitution.cushionSlow;
 export const CUSHION_FRICTION = 0.20;
 
 export const CLOTH_ROLL_DECEL = 0.019;
@@ -70,11 +92,31 @@ export const SLEEP_FRAMES = 10;
 export const MIN_SPEED = SLEEP_SPEED;
 
 /** Алиасы для превью прицела и совместимости */
-export const BALL_BOUNCE = BALL_RESTITUTION;
+export let BALL_BOUNCE = BALL_RESTITUTION;
 export const BALL_SURFACE_FRICTION = BALL_FRICTION;
-export const CUSHION_BOUNCE = CUSHION_RESTITUTION;
+export let CUSHION_BOUNCE = CUSHION_RESTITUTION;
 export const CUSHION_TANGENTIAL_DAMPING = CUSHION_FRICTION;
 export const BALL_FRICTION_COEFF = BALL_FRICTION;
+
+export function setBallRestitutionProfile(profile) {
+    if (!Object.prototype.hasOwnProperty.call(RESTITUTION_PRESETS, profile)) return false;
+    BALL_RESTITUTION_PROFILE = profile;
+    activeBallRestitution = RESTITUTION_PRESETS[profile];
+    BALL_RESTITUTION = activeBallRestitution.ball;
+    BALL_RESTITUTION_SLOW = activeBallRestitution.ballSlow;
+    BALL_BOUNCE = BALL_RESTITUTION;
+    return true;
+}
+
+export function setCushionRestitutionProfile(profile) {
+    if (!Object.prototype.hasOwnProperty.call(RESTITUTION_PRESETS, profile)) return false;
+    CUSHION_RESTITUTION_PROFILE = profile;
+    activeCushionRestitution = RESTITUTION_PRESETS[profile];
+    CUSHION_RESTITUTION = activeCushionRestitution.cushion;
+    CUSHION_RESTITUTION_SLOW = activeCushionRestitution.cushionSlow;
+    CUSHION_BOUNCE = CUSHION_RESTITUTION;
+    return true;
+}
 
 export const COLORS = {
     felt: '#2a8cb8',
