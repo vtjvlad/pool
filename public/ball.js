@@ -8,16 +8,33 @@ import {
 import { getHeadSpot } from './utils.js';
 
 const IDENTITY_QUAT = { w: 1, x: 0, y: 0, z: 0 };
-const stripeCanvasCache = new Map();
+const sphereCanvasCache = new Map();
 
-function getStripeCanvas(size) {
-    if (!stripeCanvasCache.has(size)) {
+const LIGHT_DIR = { x: -0.4, y: -0.5, z: 0.8 };
+const LIGHT_LEN = Math.hypot(LIGHT_DIR.x, LIGHT_DIR.y, LIGHT_DIR.z);
+const VIEW_DIR = { x: 0, y: 0, z: 1 };
+const HALF_VEC = {
+    x: (LIGHT_DIR.x / LIGHT_LEN + VIEW_DIR.x) * 0.5,
+    y: (LIGHT_DIR.y / LIGHT_LEN + VIEW_DIR.y) * 0.5,
+    z: (LIGHT_DIR.z / LIGHT_LEN + VIEW_DIR.z) * 0.5
+};
+const HALF_LEN = Math.hypot(HALF_VEC.x, HALF_VEC.y, HALF_VEC.z);
+
+const STRIPE_SIN = Math.sin(0.66);
+const STRIPE_EDGE = 0.045;
+const NUMBER_CENTER = { x: 0, y: 0, z: 0.93 };
+const NUMBER_RADIUS = 0.63;
+const CUE_MARK_CENTER = { x: 0.5, y: 0, z: 0.86 };
+const CUE_MARK_RADIUS = 0.12;
+
+function getSphereCanvas(size) {
+    if (!sphereCanvasCache.has(size)) {
         const canvas = document.createElement('canvas');
         canvas.width = size;
         canvas.height = size;
-        stripeCanvasCache.set(size, canvas);
+        sphereCanvasCache.set(size, canvas);
     }
-    return stripeCanvasCache.get(size);
+    return sphereCanvasCache.get(size);
 }
 
 function quatNormalize(q) {
@@ -52,6 +69,31 @@ function rotateVec(q, x, y, z) {
         y + q.w * ty + (q.z * tx - q.x * tz),
         z + q.w * tz + (q.x * ty - q.y * tx)
     ];
+}
+
+function dist3d(ax, ay, az, bx, by, bz) {
+    const dx = ax - bx;
+    const dy = ay - by;
+    const dz = az - bz;
+    return Math.sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+function applyLighting(r, g, b, nx, ny, nz) {
+    const lx = LIGHT_DIR.x / LIGHT_LEN;
+    const ly = LIGHT_DIR.y / LIGHT_LEN;
+    const lz = LIGHT_DIR.z / LIGHT_LEN;
+    const diffuse = Math.max(0, nx * lx + ny * ly + nz * lz);
+
+    const hx = HALF_VEC.x / HALF_LEN;
+    const hy = HALF_VEC.y / HALF_LEN;
+    const hz = HALF_VEC.z / HALF_LEN;
+    const spec = Math.pow(Math.max(0, nx * hx + ny * hy + nz * hz), 24);
+
+    const shade = 0.35 + 0.65 * diffuse;
+    const sr = Math.min(255, r * shade + spec * 115);
+    const sg = Math.min(255, g * shade + spec * 115);
+    const sb = Math.min(255, b * shade + spec * 115);
+    return [sr | 0, sg | 0, sb | 0];
 }
 
 export class Ball {
@@ -159,46 +201,42 @@ export class Ball {
         };
     }
 
-    sampleSurfaceRing(latitude, segments = 28) {
-        const cosLat = Math.cos(latitude);
-        const sinLat = Math.sin(latitude);
-        const points = [];
-
-        for (let i = 0; i <= segments; i++) {
-            const t = (i / segments) * Math.PI * 2;
-            const point = this.projectSurfacePoint(
-                cosLat * Math.cos(t),
-                sinLat,
-                cosLat * Math.sin(t)
-            );
-            if (point) points.push(point);
+    getBaseColor(lx, ly, lz) {
+        const numDist = dist3d(lx, ly, lz, NUMBER_CENTER.x, NUMBER_CENTER.y, NUMBER_CENTER.z);
+        if (numDist < NUMBER_RADIUS) {
+            return this.ballType === 'eight' ? [255, 255, 255] : [250, 250, 248];
         }
 
-        return points;
-    }
-
-    drawSurfacePath(ctx, points) {
-        if (points.length < 2) return;
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i].x, points[i].y);
+        if (this.ballType === 'eight') {
+            return [26, 26, 26];
         }
-        ctx.stroke();
+
+        if (this.ballType === 'stripe') {
+            const white = [252, 252, 250];
+            const color = hexToRgb(this.color);
+            const inStripe = Math.abs(ly) <= STRIPE_SIN;
+            let rgb = inStripe ? color : white;
+
+            const edgeDist = Math.abs(Math.abs(ly) - STRIPE_SIN);
+            if (edgeDist < STRIPE_EDGE) {
+                const edge = (1 - edgeDist / STRIPE_EDGE) * 0.3;
+                rgb = rgb.map(c => c * (1 - edge));
+            }
+            return rgb;
+        }
+
+        return hexToRgb(this.color);
     }
 
-    drawStripeSphere(ctx, r) {
-        const d = Math.ceil(r * 2);
-        const offscreen = getStripeCanvas(d);
+    drawSphereSurface(ctx, r) {
+        const d = Math.ceil(r * 3);
+        const offscreen = getSphereCanvas(d);
         const offCtx = offscreen.getContext('2d');
         const image = offCtx.createImageData(d, d);
         const pixels = image.data;
-        const center = r;
+        const center = d / 2;
+        const pixelR = d / 2;
         const invQ = quatConjugate(this.orientation);
-        const stripeSin = Math.sin(0.66);
-        const stripeEdge = 0.045;
-        const color = hexToRgb(this.color);
-        const white = [252, 252, 250];
 
         for (let y = 0; y < d; y++) {
             for (let x = 0; x < d; x++) {
@@ -206,90 +244,72 @@ export class Ball {
                 const dx = x - center + 0.5;
                 const dy = y - center + 0.5;
                 const distSq = dx * dx + dy * dy;
-                if (distSq > r * r) {
+                if (distSq > pixelR * pixelR) {
                     pixels[idx + 3] = 0;
                     continue;
                 }
 
-                const sx = dx / r;
-                const sy = dy / r;
-                const sz = Math.sqrt(Math.max(0, 1 - sx * sx - sy * sy));
-                const [lx, ly, lz] = rotateVec(invQ, sx, sy, sz);
+                const nx = dx / pixelR;
+                const ny = dy / pixelR;
+                const nz = Math.sqrt(Math.max(0, 1 - nx * nx - ny * ny));
+                const [lx, ly, lz] = rotateVec(invQ, nx, ny, nz);
 
-                const inStripe = Math.abs(ly) <= stripeSin;
-                let rgb = inStripe ? color : white;
-
-                const edgeDist = Math.abs(Math.abs(ly) - stripeSin);
-                if (edgeDist < stripeEdge) {
-                    const edge = (1 - edgeDist / stripeEdge) * 0.3;
-                    rgb = rgb.map(c => c * (1 - edge));
+                let rgb;
+                if (this.isCueBall) {
+                    const markDist = dist3d(lx, ly, lz, CUE_MARK_CENTER.x, CUE_MARK_CENTER.y, CUE_MARK_CENTER.z);
+                    if (markDist < CUE_MARK_RADIUS) {
+                        rgb = [196, 30, 58];
+                    } else {
+                        rgb = [255, 255, 252];
+                    }
+                } else {
+                    rgb = this.getBaseColor(lx, ly, lz);
                 }
 
-                pixels[idx] = rgb[0];
-                pixels[idx + 1] = rgb[1];
-                pixels[idx + 2] = rgb[2];
+                const lit = applyLighting(rgb[0], rgb[1], rgb[2], nx, ny, nz);
+                pixels[idx] = lit[0];
+                pixels[idx + 1] = lit[1];
+                pixels[idx + 2] = lit[2];
                 pixels[idx + 3] = 255;
             }
         }
 
         offCtx.putImageData(image, 0, 0);
-        ctx.drawImage(offscreen, this.x - r, this.y - r);
+        ctx.drawImage(offscreen, this.x - r, this.y - r, r * 2, r * 2);
     }
 
-    drawNumberPatch(ctx, r) {
-        const center = this.projectSurfacePoint(0, 0, 0.93);
-        if (!center) return;
+    drawNumberText(ctx, r) {
+        const center = this.projectSurfacePoint(NUMBER_CENTER.x, NUMBER_CENTER.y, NUMBER_CENTER.z);
+        if (!center || center.depth < 0.25) return;
 
         const tangent = this.projectSurfacePoint(0.14, 0, 0.92);
         const textAngle = tangent
             ? Math.atan2(tangent.y - center.y, tangent.x - center.x)
             : 0;
-        const spotR = r * 0.56 * center.depth;
-
-        ctx.beginPath();
-        ctx.arc(center.x, center.y, spotR, 0, Math.PI * 2);
-        ctx.fillStyle = this.ballType === 'eight' ? '#ffffff' : '#fafafa';
-        ctx.fill();
 
         ctx.save();
         ctx.translate(center.x, center.y);
         ctx.rotate(textAngle);
+        ctx.scale(1, center.depth);
         ctx.fillStyle = this.ballType === 'eight' ? '#111' : '#222';
-        ctx.font = `bold ${r * 0.94 * center.depth}px Arial, sans-serif`;
+        ctx.font = `bold ${r * 1.17 * center.depth}px Arial, sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(String(this.number), 0, 0.5);
         ctx.restore();
     }
 
-    drawCueMark(ctx, r) {
-        const mark = this.projectSurfacePoint(0.5, 0, 0.86);
-        if (!mark) return;
-
-        ctx.fillStyle = '#c41e3a';
+    drawShadow(ctx, r) {
+        const shadowX = this.x + 1;
+        const shadowY = this.y + 1.5;
+        const grad = ctx.createRadialGradient(shadowX, shadowY, 0, shadowX, shadowY, r * 1.1);
+        grad.addColorStop(0, 'rgba(0, 0, 0, 0.3)');
+        grad.addColorStop(0.6, 'rgba(0, 0, 0, 0.12)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
         ctx.beginPath();
-        ctx.arc(mark.x, mark.y, r * 0.11 * mark.depth, 0, Math.PI * 2);
+        ctx.arc(shadowX, shadowY, r * 1.1, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
         ctx.fill();
-    }
-
-    drawMeridians(ctx) {
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.09)';
-        ctx.lineWidth = 0.75;
-
-        for (let i = 0; i < 2; i++) {
-            const angle = i * Math.PI * 0.5;
-            const points = [];
-            for (let j = 0; j <= 24; j++) {
-                const t = (j / 24) * Math.PI * 2;
-                const point = this.projectSurfacePoint(
-                    Math.cos(t) * Math.cos(angle),
-                    Math.sin(t),
-                    Math.cos(t) * Math.sin(angle)
-                );
-                if (point) points.push(point);
-            }
-            this.drawSurfacePath(ctx, points);
-        }
     }
 
     draw(ctx) {
@@ -310,55 +330,20 @@ export class Ball {
             ctx.translate(-this.x, -this.y);
         }
 
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(this.x + 1.5, this.y + 2, r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-        ctx.fill();
-        ctx.restore();
-
-        /* Тень (затемнение) на самом шаре убрана — заливка ровным цветом */
-        let fillColor;
-        if (this.isCueBall) {
-            fillColor = '#ffffff';
-        } else if (this.ballType === 'eight') {
-            fillColor = '#1a1a1a';
-        } else if (this.ballType === 'stripe') {
-            fillColor = '#fcfcfa';
-        } else {
-            fillColor = this.color;
-        }
-
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = fillColor;
-        ctx.fill();
+        this.drawShadow(ctx, r);
 
         ctx.save();
         ctx.beginPath();
         ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
         ctx.clip();
 
-        if (this.ballType === 'stripe' && !this.isCueBall) {
-            this.drawStripeSphere(ctx, r);
-        }
+        this.drawSphereSurface(ctx, r);
 
-        if (this.isCueBall) {
-            this.drawCueMark(ctx, r);
-        } else {
-            this.drawNumberPatch(ctx, r);
-            if (this.ballType !== 'stripe') {
-                this.drawMeridians(ctx);
-            }
+        if (!this.isCueBall) {
+            this.drawNumberText(ctx, r);
         }
 
         ctx.restore();
-
-        ctx.beginPath();
-        ctx.arc(this.x - r * 0.32, this.y - r * 0.32, r * 0.18, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
-        ctx.fill();
-
         ctx.restore();
     }
 
