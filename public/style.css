@@ -459,12 +459,12 @@ body {
     margin-bottom: 8px;
 }
 
-#pull-hint {
+#power-value {
     margin: 0 0 8px;
-    font-size: 0.68rem;
-    line-height: 1.2;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #7ec8ff;
     text-align: center;
-    opacity: 0.6;
 }
 
 #power-pull-track {
@@ -486,6 +486,41 @@ body {
     box-shadow: 0 0 16px rgba(80, 160, 255, 0.25);
 }
 
+#power-pull-marks {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.power-mark {
+    position: absolute;
+    left: 0;
+    right: 0;
+    transform: translateY(-50%);
+}
+
+.power-mark-line {
+    display: block;
+    margin: 0 6px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.35);
+}
+
+.power-mark-label {
+    position: absolute;
+    left: 50%;
+    top: -9px;
+    transform: translateX(-50%);
+    font-size: 0.48rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: rgba(255, 255, 255, 0.22);
+    white-space: nowrap;
+    pointer-events: none;
+}
+
 #power-pull-fill {
     position: absolute;
     top: 0;
@@ -495,6 +530,7 @@ body {
     background: linear-gradient(180deg, #5dade2, #f4d03f, #e74c3c);
     opacity: 0.9;
     pointer-events: none;
+    z-index: 1;
 }
 
 #power-pull-thumb {
@@ -510,17 +546,11 @@ body {
     border: 2px solid rgba(255, 255, 255, 0.9);
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
     pointer-events: none;
+    z-index: 3;
 }
 
 #power-pull-track.is-pulling #power-pull-thumb {
     box-shadow: 0 0 12px rgba(126, 200, 255, 0.8);
-}
-
-#power-value {
-    margin-top: 8px;
-    font-size: 1rem;
-    font-weight: 700;
-    color: #7ec8ff;
 }
 
 #bottom-bar {

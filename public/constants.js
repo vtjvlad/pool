@@ -279,8 +279,8 @@ export const AIM_SMOOTH_RATE_DRAG = 15;
 export const MAX_PULL = 115;
 export const MIN_POWER_PERCENT = 10;
 export const POWER_FACTOR = 0.22;
-/** Доля шкалы силы для точной зоны (10–70% удара) */
-export const POWER_SLIDER_FINE_END = 92;
+/** Доля шкалы: 0–85% → 10–70% удара, последние 15% → 70–100% */
+export const POWER_SLIDER_FINE_END = 85;
 export const POWER_FINE_START = 10;
 export const POWER_FINE_END = 70;
 
@@ -303,6 +303,9 @@ export function powerToSliderPos(power) {
     const t = (p - POWER_FINE_END) / (100 - POWER_FINE_END);
     return POWER_SLIDER_FINE_END + t * (100 - POWER_SLIDER_FINE_END);
 }
+
+/** Реальные отметки силы удара на шкале */
+export const POWER_MARK_PERCENTS = [0, 25, 50, 90];
 /** Плавность изменения силы удара */
 export const POWER_SMOOTH_RATE = 6;
 export const POWER_SMOOTH_RATE_DRAG = 15;

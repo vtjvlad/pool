@@ -32,13 +32,12 @@
         </header>
         <div id="play-area">
             <div id="shot-controls">
-                <span class="control-label">Сила</span>
-                <p id="pull-hint">Оттяните и отпустите</p>
+                <span id="power-value">0%</span>
                 <div id="power-pull-track">
+                    <div id="power-pull-marks" aria-hidden="true"></div>
                     <div id="power-pull-fill"></div>
                     <div id="power-pull-thumb"></div>
                 </div>
-                <span id="power-value">0%</span>
             </div>
             <div id="canvas-wrap">
                 <canvas id="billiard-canvas" width="1040" height="520"></canvas>

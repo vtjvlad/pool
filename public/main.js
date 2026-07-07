@@ -23,6 +23,7 @@ import {
     POWER_SMOOTH_RATE_DRAG,
     sliderPosToPower,
     powerToSliderPos,
+    POWER_MARK_PERCENTS,
     AIM_LINE_VARIANTS,
     AIM_LINE_LABELS,
     AIM_MODIFIER_STORAGE_KEY,
@@ -85,6 +86,7 @@ const scoreElement = document.getElementById('score');
 const resetBtn = document.getElementById('reset-btn');
 const powerValue = document.getElementById('power-value');
 const powerTrack = document.getElementById('power-pull-track');
+const powerMarks = document.getElementById('power-pull-marks');
 const powerFill = document.getElementById('power-pull-fill');
 const powerThumb = document.getElementById('power-pull-thumb');
 const aimTrack = document.getElementById('aim-slider-track');
@@ -461,6 +463,26 @@ function updatePowerVisual() {
     powerValue.textContent = `${Math.round(power)}%`;
     powerFill.style.height = `${sliderPos}%`;
     powerThumb.style.top = `${sliderPos}%`;
+}
+
+function initPowerMarks() {
+    if (!powerMarks) return;
+    powerMarks.replaceChildren();
+    for (const power of POWER_MARK_PERCENTS) {
+        const mark = document.createElement('div');
+        mark.className = 'power-mark';
+        mark.style.top = `${powerToSliderPos(power)}%`;
+
+        const line = document.createElement('span');
+        line.className = 'power-mark-line';
+
+        const label = document.createElement('span');
+        label.className = 'power-mark-label';
+        label.textContent = `${power}%`;
+
+        mark.append(line, label);
+        powerMarks.appendChild(mark);
+    }
 }
 
 function snapPower() {
@@ -897,6 +919,7 @@ updateCushionRestitutionButton();
 updatePhysicsModeButton();
 updateCushionLipButton();
 updateAimSliderVisual();
+initPowerMarks();
 initGame();
 fitGameLayout();
 gameLoop();
