@@ -511,7 +511,9 @@ function drawSegmentBody(ctx, segment) {
 function drawSegmentInnerEdge(ctx, segment) {
     ctx.save();
     ctx.strokeStyle = COLORS.woodEdge;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.8;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
     ctx.beginPath();
     traceInnerEdge(ctx, segment);
     ctx.stroke();
@@ -581,7 +583,9 @@ function drawWedgeInnerEdge(ctx, wedge) {
     const b = wedge.points[2];
     ctx.save();
     ctx.strokeStyle = COLORS.woodEdge;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.8;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
     ctx.lineTo(b.x, b.y);
@@ -624,7 +628,9 @@ function drawCornerSegmentBody(ctx, segment) {
 function drawCornerSegmentInnerEdge(ctx, segment) {
     ctx.save();
     ctx.strokeStyle = COLORS.metalEdge;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.6;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
     ctx.beginPath();
     traceInnerEdge(ctx, segment);
     ctx.stroke();
@@ -666,7 +672,9 @@ function drawCornerWedgeInnerEdge(ctx, wedge) {
     const b = wedge.points[2];
     ctx.save();
     ctx.strokeStyle = COLORS.metalShadow;
-    ctx.lineWidth = 0.9;
+    ctx.lineWidth = 1.4;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
     ctx.lineTo(b.x, b.y);

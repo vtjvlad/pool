@@ -159,36 +159,82 @@ function drawRubberStrip(ctx, line) {
     const innerEndY = chamferEndAngle != null ? iy2 - ty * runEnd : iy2;
     const innerStartX = chamferStartAngle != null ? ix1 + tx * runStart : ix1;
     const innerStartY = chamferStartAngle != null ? iy1 + ty * runStart : iy1;
+    const minCurve = 0.5;
+    const maxCurve = t * 0.85;
+    const startCurve = chamferStartAngle != null ? Math.min(runStart * 0.65, maxCurve) : 0;
+    const endCurve = chamferEndAngle != null ? Math.min(runEnd * 0.65, maxCurve) : 0;
+    const hasStartCurve = startCurve >= minCurve;
+    const hasEndCurve = endCurve >= minCurve;
+
+    const endChamferDx = innerEndX - x2;
+    const endChamferDy = innerEndY - y2;
+    const endChamferLen = Math.hypot(endChamferDx, endChamferDy) || 1;
+    const endChamferUx = endChamferDx / endChamferLen;
+    const endChamferUy = endChamferDy / endChamferLen;
+    const endCurveSafe = Math.min(endCurve, endChamferLen * 0.45);
+
+    const startChamferDx = x1 - innerStartX;
+    const startChamferDy = y1 - innerStartY;
+    const startChamferLen = Math.hypot(startChamferDx, startChamferDy) || 1;
+    const startChamferUx = startChamferDx / startChamferLen;
+    const startChamferUy = startChamferDy / startChamferLen;
+    const startCurveSafe = Math.min(startCurve, startChamferLen * 0.45);
+
+    const beforeEndCurveX = hasEndCurve ? innerEndX - endChamferUx * endCurveSafe : innerEndX;
+    const beforeEndCurveY = hasEndCurve ? innerEndY - endChamferUy * endCurveSafe : innerEndY;
+    const afterEndCurveX = hasEndCurve ? innerEndX - tx * endCurveSafe : innerEndX;
+    const afterEndCurveY = hasEndCurve ? innerEndY - ty * endCurveSafe : innerEndY;
+
+    const beforeStartCurveX = hasStartCurve ? innerStartX + tx * startCurveSafe : innerStartX;
+    const beforeStartCurveY = hasStartCurve ? innerStartY + ty * startCurveSafe : innerStartY;
+    const afterStartCurveX = hasStartCurve ? innerStartX + startChamferUx * startCurveSafe : innerStartX;
+    const afterStartCurveY = hasStartCurve ? innerStartY + startChamferUy * startCurveSafe : innerStartY;
 
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
-    ctx.lineTo(innerEndX, innerEndY);
-    ctx.lineTo(innerStartX, innerStartY);
+    ctx.lineTo(beforeEndCurveX, beforeEndCurveY);
+    if (hasEndCurve) {
+        ctx.quadraticCurveTo(innerEndX, innerEndY, afterEndCurveX, afterEndCurveY);
+    } else {
+        ctx.lineTo(innerEndX, innerEndY);
+    }
+    ctx.lineTo(beforeStartCurveX, beforeStartCurveY);
+    if (hasStartCurve) {
+        ctx.quadraticCurveTo(innerStartX, innerStartY, afterStartCurveX, afterStartCurveY);
+    } else {
+        ctx.lineTo(innerStartX, innerStartY);
+    }
+    ctx.lineTo(x1, y1);
     ctx.closePath();
     ctx.fillStyle = createRubberFillGradient(ctx, line, nx, ny, t);
     ctx.fill();
+
+    ctx.save();
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
 
     ctx.beginPath();
     ctx.moveTo(innerStartX, innerStartY);
     ctx.lineTo(innerEndX, innerEndY);
     ctx.strokeStyle = COLORS.rubberFeltEdge;
-    ctx.lineWidth = 1.1;
+    ctx.lineWidth = 1.8;
     ctx.stroke();
 
     ctx.beginPath();
     ctx.moveTo(innerStartX, innerStartY);
     ctx.lineTo(innerEndX, innerEndY);
     ctx.strokeStyle = COLORS.rubberHighlight;
-    ctx.lineWidth = 0.7;
+    ctx.lineWidth = 1.1;
     ctx.stroke();
 
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.strokeStyle = COLORS.rubberShadow;
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1.8;
     ctx.stroke();
+    ctx.restore();
 }
 
 export function drawRubberGums(ctx) {
