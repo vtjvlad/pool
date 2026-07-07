@@ -52,6 +52,10 @@ function getCollisionEdges() {
     return cachedCollisionEdges;
 }
 
+export function invalidateCushionCollisionCache() {
+    cachedCollisionEdges = null;
+}
+
 function circleSegmentCollision(bx, by, radius, line) {
     const dx = line.x2 - line.x1;
     const dy = line.y2 - line.y1;

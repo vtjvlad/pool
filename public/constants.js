@@ -23,17 +23,20 @@ export const CENTRAL_POCKET_RADIUS = POCKET_RADIUS * 0.99225;
 export const POCKET_LAYOUT_DIAMETER = 33;
 export const POCKET_LAYOUT_RADIUS = POCKET_LAYOUT_DIAMETER / 2;
 export const POCKET_INSET = POCKET_LAYOUT_RADIUS * 1.5;
-export const CUSHION_LIP_SCALE = 0.9; // -10%
+export const CUSHION_LIP_SCALE_MIN = 0.7;
+export const CUSHION_LIP_SCALE_MAX = 1.2;
+export const CUSHION_LIP_SCALE_STEP = 0.1;
+export let CUSHION_LIP_SCALE = 1.0;
 export const CUSHION_POCKET_GAP = 0;
 export const CORNER_CUSHION_POCKET_GAP = POCKET_LAYOUT_DIAMETER / 4;
 export const CENTRAL_CUSHION_POCKET_GAP = POCKET_LAYOUT_DIAMETER / 5;
-export const CUSHION_CHAMFER = (POCKET_LAYOUT_DIAMETER / 4) * CUSHION_LIP_SCALE;
+export const CUSHION_CHAMFER = POCKET_LAYOUT_DIAMETER / 4;
 export const MID_POCKET_INSET = (POCKET_INSET - POCKET_LAYOUT_DIAMETER / 4) * 0.7;
 export const POCKET_CENTER_SHIFT = 0;
 export const CORNER_POCKET_CENTER_SHIFT = POCKET_INSET * 0.24;
-export const CUSHION_DEPTH = Math.max(16 + POCKET_LAYOUT_DIAMETER / 4, POCKET_INSET + POCKET_LAYOUT_RADIUS) * 0.75 * 0.75 * 1.1 * CUSHION_LIP_SCALE;
+export const CUSHION_DEPTH = Math.max(16 + POCKET_LAYOUT_DIAMETER / 4, POCKET_INSET + POCKET_LAYOUT_RADIUS) * 0.75 * 0.75 * 1.1;
 export const PLAY_SURFACE_INSET = POCKET_LAYOUT_DIAMETER / 4;
-export const RUBBER_THICKNESS = BALL_RADIUS * 2 * 0.75 * 1.28 * CUSHION_LIP_SCALE;
+export let RUBBER_THICKNESS = BALL_RADIUS * 2 * 0.75 * 1.28 * CUSHION_LIP_SCALE;
 export const RUBBER_CENTER_CHAMFER_ANGLE = 60;
 export const RUBBER_CORNER_CHAMFER_ANGLE = 45;
 export const DEBUG_DRAW_RUBBER = true;
@@ -77,15 +80,42 @@ let activeCushionRestitution = RESTITUTION_PRESETS[CUSHION_RESTITUTION_PROFILE];
 
 export let BALL_RESTITUTION = activeBallRestitution.ball;
 export let BALL_RESTITUTION_SLOW = activeBallRestitution.ballSlow;
-export const BALL_FRICTION = 0.055;
+export const PHYSICS_MODE_PRESETS = {
+    real: {
+        ballFriction: 0.05,
+        cushionFriction: 0.17,
+        clothRollDecel: 0.017,
+        clothRollSpeedScale: 0.0028,
+        lowSpeedThreshold: 1.3
+    },
+    balanced: {
+        ballFriction: 0.055,
+        cushionFriction: 0.18,
+        clothRollDecel: 0.019,
+        clothRollSpeedScale: 0.0030,
+        lowSpeedThreshold: 1.4
+    },
+    arcade: {
+        ballFriction: 0.065,
+        cushionFriction: 0.22,
+        clothRollDecel: 0.022,
+        clothRollSpeedScale: 0.0035,
+        lowSpeedThreshold: 1.6
+    }
+};
+export const PHYSICS_MODES = ['real', 'balanced', 'arcade'];
+export let PHYSICS_MODE = 'balanced';
+let activePhysicsMode = PHYSICS_MODE_PRESETS[PHYSICS_MODE];
+
+export let BALL_FRICTION = activePhysicsMode.ballFriction;
 export let CUSHION_RESTITUTION = activeCushionRestitution.cushion;
 export let CUSHION_RESTITUTION_SLOW = activeCushionRestitution.cushionSlow;
-export const CUSHION_FRICTION = 0.20;
+export let CUSHION_FRICTION = activePhysicsMode.cushionFriction;
 
-export const CLOTH_ROLL_DECEL = 0.019;
-export const CLOTH_ROLL_SPEED_SCALE = 0.0031;
+export let CLOTH_ROLL_DECEL = activePhysicsMode.clothRollDecel;
+export let CLOTH_ROLL_SPEED_SCALE = activePhysicsMode.clothRollSpeedScale;
 
-export const LOW_SPEED_THRESHOLD = 1.4;
+export let LOW_SPEED_THRESHOLD = activePhysicsMode.lowSpeedThreshold;
 
 export const SLEEP_SPEED = 0.014;
 export const SLEEP_FRAMES = 10;
@@ -93,10 +123,10 @@ export const MIN_SPEED = SLEEP_SPEED;
 
 /** Алиасы для превью прицела и совместимости */
 export let BALL_BOUNCE = BALL_RESTITUTION;
-export const BALL_SURFACE_FRICTION = BALL_FRICTION;
+export let BALL_SURFACE_FRICTION = BALL_FRICTION;
 export let CUSHION_BOUNCE = CUSHION_RESTITUTION;
-export const CUSHION_TANGENTIAL_DAMPING = CUSHION_FRICTION;
-export const BALL_FRICTION_COEFF = BALL_FRICTION;
+export let CUSHION_TANGENTIAL_DAMPING = CUSHION_FRICTION;
+export let BALL_FRICTION_COEFF = BALL_FRICTION;
 
 export function setBallRestitutionProfile(profile) {
     if (!Object.prototype.hasOwnProperty.call(RESTITUTION_PRESETS, profile)) return false;
@@ -115,6 +145,31 @@ export function setCushionRestitutionProfile(profile) {
     CUSHION_RESTITUTION = activeCushionRestitution.cushion;
     CUSHION_RESTITUTION_SLOW = activeCushionRestitution.cushionSlow;
     CUSHION_BOUNCE = CUSHION_RESTITUTION;
+    return true;
+}
+
+export function setPhysicsMode(mode) {
+    if (!Object.prototype.hasOwnProperty.call(PHYSICS_MODE_PRESETS, mode)) return false;
+    PHYSICS_MODE = mode;
+    activePhysicsMode = PHYSICS_MODE_PRESETS[mode];
+    BALL_FRICTION = activePhysicsMode.ballFriction;
+    CUSHION_FRICTION = activePhysicsMode.cushionFriction;
+    CLOTH_ROLL_DECEL = activePhysicsMode.clothRollDecel;
+    CLOTH_ROLL_SPEED_SCALE = activePhysicsMode.clothRollSpeedScale;
+    LOW_SPEED_THRESHOLD = activePhysicsMode.lowSpeedThreshold;
+    BALL_SURFACE_FRICTION = BALL_FRICTION;
+    CUSHION_TANGENTIAL_DAMPING = CUSHION_FRICTION;
+    BALL_FRICTION_COEFF = BALL_FRICTION;
+    return true;
+}
+
+export function setCushionLipScale(nextScale) {
+    const numeric = Number(nextScale);
+    if (!Number.isFinite(numeric)) return false;
+    const clamped = Math.min(CUSHION_LIP_SCALE_MAX, Math.max(CUSHION_LIP_SCALE_MIN, numeric));
+    const stepped = Math.round(clamped / CUSHION_LIP_SCALE_STEP) * CUSHION_LIP_SCALE_STEP;
+    CUSHION_LIP_SCALE = Math.round(stepped * 100) / 100;
+    RUBBER_THICKNESS = BALL_RADIUS * 2 * 0.75 * 1.28 * CUSHION_LIP_SCALE;
     return true;
 }
 

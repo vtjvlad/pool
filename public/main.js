@@ -23,14 +23,23 @@ import {
     AIM_MODIFIER_LABEL,
     BALL_RESTITUTION_PROFILE,
     CUSHION_RESTITUTION_PROFILE,
+    PHYSICS_MODE,
+    PHYSICS_MODES,
+    CUSHION_LIP_SCALE,
+    CUSHION_LIP_SCALE_MIN,
+    CUSHION_LIP_SCALE_MAX,
+    CUSHION_LIP_SCALE_STEP,
     setBallRestitutionProfile,
     setCushionRestitutionProfile,
+    setPhysicsMode,
+    setCushionLipScale,
     MAX_CUE_MAX_CONTACTS,
     MAX_TARGET_MAX_CONTACTS
 } from './constants.js';
 import { Ball } from './ball.js';
 import { createRack } from './game_logic.js';
 import { stepPhysics, updatePocketAnimations } from './physics_engine.js';
+import { invalidateCushionCollisionCache } from './cushion_collision.js';
 import { predictCueTrajectory, predictExtendedCueTrajectory } from './physics.js';
 import { predictPowerTrajectory } from './physics_preview.js';
 import { drawTable } from './drawing_table.js';
@@ -52,6 +61,8 @@ const aimLineVariantBtn = document.getElementById('aim-line-variant-btn');
 const aimModifierBtn = document.getElementById('aim-modifier-btn');
 const ballRestitutionBtn = document.getElementById('ball-restitution-btn');
 const cushionRestitutionBtn = document.getElementById('cushion-restitution-btn');
+const physicsModeBtn = document.getElementById('physics-mode-btn');
+const cushionLipBtn = document.getElementById('cushion-lip-btn');
 const gameContainer = document.getElementById('game-container');
 const gameStage = document.getElementById('game-stage');
 const traySlots = document.getElementById('pocketed-tray-slots');
@@ -102,6 +113,7 @@ let lastFrameTime = performance.now();
 const AIM_LINE_VARIANT_KEY = 'vtj-pool-aim-line-variant';
 const BALL_RESTITUTION_PROFILE_KEY = 'vtj-pool-ball-restitution-profile';
 const CUSHION_RESTITUTION_PROFILE_KEY = 'vtj-pool-cushion-restitution-profile';
+const PHYSICS_MODE_KEY = 'vtj-pool-physics-mode';
 
 function loadAimLineVariant() {
     try {
@@ -232,6 +244,62 @@ function toggleCushionRestitutionProfile() {
         // ignore storage errors
     }
     updateCushionRestitutionButton();
+}
+
+function updatePhysicsModeButton() {
+    if (!physicsModeBtn) return;
+    const short = PHYSICS_MODE === 'balanced' ? 'bal' : PHYSICS_MODE;
+    physicsModeBtn.textContent = `mode:${short}`;
+    physicsModeBtn.classList.toggle('is-active', PHYSICS_MODE !== 'real');
+    physicsModeBtn.setAttribute(
+        'aria-label',
+        `Режим физики трения: ${PHYSICS_MODE}. Нажмите для переключения`
+    );
+}
+
+function loadPhysicsMode() {
+    try {
+        const saved = localStorage.getItem(PHYSICS_MODE_KEY);
+        if (saved) setPhysicsMode(saved);
+    } catch {
+        // ignore storage errors
+    }
+}
+
+function togglePhysicsMode() {
+    const index = PHYSICS_MODES.indexOf(PHYSICS_MODE);
+    const next = PHYSICS_MODES[(index + 1) % PHYSICS_MODES.length];
+    setPhysicsMode(next);
+    try {
+        localStorage.setItem(PHYSICS_MODE_KEY, next);
+    } catch {
+        // ignore storage errors
+    }
+    updatePhysicsModeButton();
+}
+
+function updateCushionLipButton() {
+    if (!cushionLipBtn) return;
+    const percent = Math.round(CUSHION_LIP_SCALE * 100);
+    cushionLipBtn.textContent = `lip:${percent}%`;
+    cushionLipBtn.classList.toggle('is-active', percent !== 100);
+    cushionLipBtn.setAttribute(
+        'aria-label',
+        `Ширина губ: ${percent} процентов. Нажмите для увеличения на 10 процентов`
+    );
+}
+
+function loadCushionLipScale() {
+    setCushionLipScale(1.0);
+    invalidateCushionCollisionCache();
+}
+
+function cycleCushionLipScale() {
+    const next = CUSHION_LIP_SCALE + CUSHION_LIP_SCALE_STEP;
+    const wrapped = next > CUSHION_LIP_SCALE_MAX ? CUSHION_LIP_SCALE_MIN : next;
+    if (!setCushionLipScale(wrapped)) return;
+    invalidateCushionCollisionCache();
+    updateCushionLipButton();
 }
 
 const TRAY_CAPACITY = 15;
@@ -706,15 +774,29 @@ if (cushionRestitutionBtn) {
     cushionRestitutionBtn.addEventListener('click', toggleCushionRestitutionProfile);
 }
 
+if (physicsModeBtn) {
+    physicsModeBtn.classList.add('aim-toggle-btn');
+    physicsModeBtn.addEventListener('click', togglePhysicsMode);
+}
+
+if (cushionLipBtn) {
+    cushionLipBtn.classList.add('aim-toggle-btn');
+    cushionLipBtn.addEventListener('click', cycleCushionLipScale);
+}
+
 resetBtn.addEventListener('click', initGame);
 
 loadAimLineVariant();
 loadAimModifier();
 loadRestitutionProfiles();
+loadPhysicsMode();
+loadCushionLipScale();
 updateAimLineVariantButton();
 updateAimModifierButton();
 updateBallRestitutionButton();
 updateCushionRestitutionButton();
+updatePhysicsModeButton();
+updateCushionLipButton();
 updateAimSliderVisual();
 initGame();
 fitGameLayout();
