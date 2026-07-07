@@ -253,18 +253,18 @@ export const AIM_TAP_MAX_MS = 280;
 export const AIM_MARKER_MIN_DIST = 48;
 export const AIM_BALL_DEAD_ZONE = BALL_RADIUS * 1.4;
 /** Во сколько раз колесо прицела менее чувствительно, чем прицеливание по столу */
-export const AIM_WHEEL_FINE_FACTOR = 3;
+export const AIM_WHEEL_FINE_FACTOR = 8;
 export const AIM_SLIDER_SENSITIVITY = 0.0037 / AIM_WHEEL_FINE_FACTOR;
 export const AIM_WHEEL_SCROLL_PX = 12;
 /** Плавность прицеливания: скорость догонки целевого угла (кадры эталонного FPS) */
-export const AIM_SMOOTH_RATE = 10;
-export const AIM_SMOOTH_RATE_DRAG = 24;
+export const AIM_SMOOTH_RATE = 6;
+export const AIM_SMOOTH_RATE_DRAG = 15;
 export const MAX_PULL = 115;
 export const MIN_POWER_PERCENT = 5;
 export const POWER_FACTOR = 0.22;
 /** Плавность изменения силы удара */
-export const POWER_SMOOTH_RATE = 10;
-export const POWER_SMOOTH_RATE_DRAG = 24;
+export const POWER_SMOOTH_RATE = 6;
+export const POWER_SMOOTH_RATE_DRAG = 15;
 export const STRIKE_ANIM_BASE_MS = 85;
 export const IMPACT_FLASH_MS = 180;
 export const TRAJECTORY_EXTEND = 18;

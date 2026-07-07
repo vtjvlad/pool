@@ -50,6 +50,33 @@ import { drawTable } from './drawing_table.js';
 import { drawCueStick, drawTrajectory, getCueTipPosition } from './drawing_cue.js';
 import { getHeadSpot, lighten, darken, getPockets, getPlaySurface } from './utils.js';
 
+// Полностью блокируем браузерный зум: double-tap, pinch, Ctrl/Cmd+wheel и клавиши.
+const preventBrowserZoom = e => e.preventDefault();
+const zoomBlockOptions = { passive: false, capture: true };
+let lastTouchEndAt = 0;
+
+document.addEventListener('dblclick', preventBrowserZoom, zoomBlockOptions);
+document.addEventListener('gesturestart', preventBrowserZoom, zoomBlockOptions);
+document.addEventListener('gesturechange', preventBrowserZoom, zoomBlockOptions);
+document.addEventListener('gestureend', preventBrowserZoom, zoomBlockOptions);
+document.addEventListener('touchstart', e => {
+    if (e.touches.length > 1) e.preventDefault();
+}, zoomBlockOptions);
+document.addEventListener('touchmove', e => {
+    if (e.touches.length > 1) e.preventDefault();
+}, zoomBlockOptions);
+document.addEventListener('touchend', e => {
+    const now = performance.now();
+    if (now - lastTouchEndAt < 350) e.preventDefault();
+    lastTouchEndAt = now;
+}, zoomBlockOptions);
+document.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, zoomBlockOptions);
+window.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '-' || e.key === '0')) {
+        e.preventDefault();
+    }
+}, zoomBlockOptions);
+
 const canvas = document.getElementById('billiard-canvas');
 const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
