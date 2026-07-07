@@ -83,9 +83,16 @@ function applySideSpinCurve(ball, speed, tanX, tanY, dt, strength, maxTurn) {
         -speed * maxTurn * dt,
         speed * maxTurn * dt
     );
-    ball.vx += -tanY * curve;
-    ball.vy += tanX * curve;
-    return Math.hypot(ball.vx, ball.vy);
+    ball.vx += tanX * curve;
+    ball.vy += tanY * curve;
+
+    const newSpeed = Math.hypot(ball.vx, ball.vy);
+    if (newSpeed > 1e-8) {
+        const scale = speed / newSpeed;
+        ball.vx *= scale;
+        ball.vy *= scale;
+    }
+    return speed;
 }
 
 function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
@@ -115,7 +122,7 @@ function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
     }
 
     if (Math.abs(topSpin) > SLEEP_SPIN) {
-        const speedFactor = 1 / (1 + nextSpeed / (LOW_SPEED_THRESHOLD * 2.4));
+        const speedFactor = 1 / (1 + nextSpeed / (LOW_SPEED_THRESHOLD * 3.0));
         const resolve = SLIP_RESOLVE_RATE * dt * (1 + slideFactor * 0.6) * speedFactor;
         const delta = Math.min(Math.abs(topSpin), resolve) * Math.sign(topSpin);
         ball.topSpin = topSpin - delta;

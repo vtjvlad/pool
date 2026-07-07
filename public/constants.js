@@ -63,12 +63,12 @@ export const CUSHION_FRICTION = 0.20;
 export const CLOTH_ROLL_DECEL = 0.019;
 export const CLOTH_ROLL_SPEED_SCALE = 0.0031;
 export const CLOTH_SLIDE_DECEL = 0.068;
-export const SLIP_RESOLVE_RATE = 0.072;
+export const SLIP_RESOLVE_RATE = 0.058;
 export const SLIDE_RESOLVE_RATE = 0.052;
 export const SLIDE_THRESHOLD = 0.035;
 
-export const SPIN_ROLL_DAMP = 0.0022;
-export const SPIN_SLIDE_DAMP = 0.0045;
+export const SPIN_ROLL_DAMP = 0.0018;
+export const SPIN_SLIDE_DAMP = 0.0037;
 export const SPIN_CURVE_WHILE_SLIDING = 0.0022;
 export const SPIN_CURVE_WHILE_ROLLING = 0.0011;
 
@@ -86,8 +86,8 @@ export const SLIDE_FROM_OFFSET = 0.94;
 export const SPIN_VISUAL_SCALE = 0.065;
 
 export const CUSHION_THROW = 0.100;
-export const CUSHION_SPIN_RETAIN = 0.68;
-export const BALL_SPIN_CONTACT = 1.20;
+export const CUSHION_SPIN_RETAIN = 0.76;
+export const BALL_SPIN_CONTACT = 1.45;
 export const DRAW_COLLISION_KICK = 0.34;
 export const DRAW_COLLISION_MAX = 0.52;
 export const DRAW_SPIN_TRANSFER = 0.62;

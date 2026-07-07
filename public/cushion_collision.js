@@ -119,12 +119,12 @@ function applyCushionSpin(ball, nx, ny, preImpactSpeed, vx, vy) {
             const followKick = clamp(topSpin * 0.048, 0, preImpactSpeed * 0.07);
             vx += followKick * inDirX;
             vy += followKick * inDirY;
-            ball.topSpin = topSpin * 0.62;
+            ball.topSpin = topSpin * 0.68;
         } else {
             const drawKick = clamp(topSpin * CUSHION_DRAW_KICK, -preImpactSpeed * 0.085, 0);
             vx += drawKick * inDirX;
             vy += drawKick * inDirY;
-            ball.topSpin = topSpin * 0.65;
+            ball.topSpin = topSpin * 0.72;
         }
     }
 
