@@ -181,7 +181,18 @@ export const STRIKE_ANIM_BASE_MS = 85;
 export const IMPACT_FLASH_MS = 180;
 export const TRAJECTORY_EXTEND = 18;
 export const BOUNCE_PREVIEW_LEN = 52;
+export const BOUNCE_PREVIEW_LEN_GHOST = 72;
 export const MIN_BOUNCE_DRAW = 0.08;
+/** Макс. касаний при расширенном превью (on) */
+export const EXTENDED_CUE_MAX_CONTACTS = 5;
+export const EXTENDED_TARGET_MAX_CONTACTS = 3;
+
+/** Варианты отрисовки прицельной линии */
+export const AIM_LINE_VARIANTS = ['off', 'on'];
+export const AIM_LINE_LABELS = {
+    off: 'off',
+    on: 'on'
+};
 
 export const BALL_DEFS = {
     1: { color: '#f5d000', type: 'solid' },

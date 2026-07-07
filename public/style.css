@@ -427,6 +427,30 @@ body {
     text-align: center;
 }
 
+#aim-line-variant-btn {
+    margin-top: 4px;
+    padding: 3px 6px;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.35);
+    color: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    font-size: 0.55rem;
+    font-weight: 600;
+    touch-action: manipulation;
+    white-space: nowrap;
+}
+
+#aim-line-variant-btn.is-active {
+    border-color: rgba(126, 200, 255, 0.55);
+    color: #7ec8ff;
+    box-shadow: 0 0 8px rgba(126, 200, 255, 0.2);
+}
+
+#aim-line-variant-btn:active {
+    transform: scale(0.96);
+}
+
 #billiard-canvas {
     display: block;
     width: 1040px;

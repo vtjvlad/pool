@@ -20,12 +20,14 @@ import {
     AIM_MARKER_MIN_DIST,
     AIM_BALL_DEAD_ZONE,
     AIM_SLIDER_SENSITIVITY,
-    AIM_WHEEL_SCROLL_PX
+    AIM_WHEEL_SCROLL_PX,
+    AIM_LINE_VARIANTS,
+    AIM_LINE_LABELS
 } from './constants.js';
 import { Ball } from './ball.js';
 import { createRack } from './game_logic.js';
 import { stepPhysics, updatePocketAnimations } from './physics_engine.js';
-import { predictCueTrajectory } from './physics.js';
+import { predictCueTrajectory, predictExtendedCueTrajectory } from './physics.js';
 import { drawTable } from './drawing_table.js';
 import { drawCueStick, drawTrajectory, drawSpinMark, getCueTipPosition } from './drawing_cue.js';
 import { getHeadSpot, lighten, darken, getPockets, getPlaySurface } from './utils.js';
@@ -44,6 +46,7 @@ const spinResetBtn = document.getElementById('spin-reset-btn');
 const aimTrack = document.getElementById('aim-slider-track');
 const aimWheelNotches = document.getElementById('aim-wheel-notches');
 const aimDegrees = document.getElementById('aim-degrees');
+const aimLineVariantBtn = document.getElementById('aim-line-variant-btn');
 const gameContainer = document.getElementById('game-container');
 const gameStage = document.getElementById('game-stage');
 const traySlots = document.getElementById('pocketed-tray-slots');
@@ -91,7 +94,41 @@ let isDraggingAimSlider = false;
 let activeAimSliderPointerId = null;
 let aimSliderLastY = null;
 let aimPointer = null;
+let aimLineVariant = 'off';
 let lastFrameTime = performance.now();
+
+const AIM_LINE_VARIANT_KEY = 'vtj-pool-aim-line-variant';
+
+function loadAimLineVariant() {
+    try {
+        const saved = localStorage.getItem(AIM_LINE_VARIANT_KEY);
+        const normalized = saved === 'ghost' ? 'off' : saved === 'classic' ? 'on' : saved;
+        if (AIM_LINE_VARIANTS.includes(normalized)) aimLineVariant = normalized;
+    } catch {
+        // ignore storage errors
+    }
+}
+
+function updateAimLineVariantButton() {
+    if (!aimLineVariantBtn) return;
+    aimLineVariantBtn.textContent = AIM_LINE_LABELS[aimLineVariant];
+    aimLineVariantBtn.classList.toggle('is-active', aimLineVariant === 'on');
+    aimLineVariantBtn.setAttribute(
+        'aria-label',
+        `Вариант прицела: ${AIM_LINE_LABELS[aimLineVariant]}. Нажмите для переключения`
+    );
+}
+
+function cycleAimLineVariant() {
+    const index = AIM_LINE_VARIANTS.indexOf(aimLineVariant);
+    aimLineVariant = AIM_LINE_VARIANTS[(index + 1) % AIM_LINE_VARIANTS.length];
+    try {
+        localStorage.setItem(AIM_LINE_VARIANT_KEY, aimLineVariant);
+    } catch {
+        // ignore storage errors
+    }
+    updateAimLineVariantButton();
+}
 
 const TRAY_CAPACITY = 15;
 
@@ -323,8 +360,10 @@ function drawImpactFlash() {
 
 function drawCueScene(angle, pullBack) {
     const tip = getCueTipPosition(cueBall, angle, pullBack, spinOffsetX, spinOffsetY);
-    const path = predictCueTrajectory(angle, cueBall, balls);
-    drawTrajectory(ctx, angle, cueBall, aimX, aimY, path);
+    const path = aimLineVariant === 'on'
+        ? predictExtendedCueTrajectory(angle, cueBall, balls)
+        : predictCueTrajectory(angle, cueBall, balls);
+    drawTrajectory(ctx, angle, cueBall, aimX, aimY, path, aimLineVariant);
     drawSpinMark(ctx, cueBall, angle, spinOffsetX, spinOffsetY);
     drawCueStick(ctx, tip.x, tip.y, angle);
 }
@@ -606,8 +645,14 @@ function finishAimSliderDrag(e) {
 aimTrack.addEventListener('pointerup', finishAimSliderDrag);
 aimTrack.addEventListener('pointercancel', finishAimSliderDrag);
 
+if (aimLineVariantBtn) {
+    aimLineVariantBtn.addEventListener('click', cycleAimLineVariant);
+}
+
 resetBtn.addEventListener('click', initGame);
 
+loadAimLineVariant();
+updateAimLineVariantButton();
 updateSpinPadVisual();
 updateAimSliderVisual();
 initGame();
