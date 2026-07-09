@@ -41,7 +41,6 @@ import {
     SIDE_SPIN_CURVE_MAX_SLIDING,
     SIDE_SPIN_CURVE_MAX_ROLLING,
     SIDE_SPIN_LATERAL_CAP,
-    SIDE_SPIN_RESIDUAL_MIX,
     spinSpeedEffectiveness,
     sideSpinTrajectoryEffectiveness,
     drawSpeedEffectiveness
@@ -98,19 +97,27 @@ function getSpinSlideDamp(ball) {
     return ball.isCueBall ? SPIN_SLIDE_DAMP : OBJECT_SPIN_SLIDE_DAMP;
 }
 
+function zeroNegligibleSpin(ball) {
+    if (Math.abs(ball.spin || 0) <= SLEEP_SPIN) ball.spin = 0;
+    if (Math.abs(ball.topSpin || 0) <= SLEEP_SPIN) ball.topSpin = 0;
+}
+
 function decayResidualSpin(ball, dt) {
+    const speed = Math.hypot(ball.vx, ball.vy);
+    const rollBoost = speed < SLEEP_SPEED * 2 ? 5 : (speed < LOW_SPEED_THRESHOLD ? 2.5 : 1);
+    const slideBoost = speed < SLEEP_SPEED * 2 ? 4 : 2;
+
     if (Math.abs(ball.spin || 0) > SLEEP_SPIN) {
-        ball.spin *= Math.exp(-getSpinRollDamp(ball) * dt);
-        if (Math.abs(ball.spin) <= SLEEP_SPIN) ball.spin = 0;
+        ball.spin *= Math.exp(-getSpinRollDamp(ball) * rollBoost * dt);
     }
     if (Math.abs(ball.topSpin || 0) > SLEEP_SPIN) {
-        ball.topSpin *= Math.exp(-getSpinSlideDamp(ball) * dt);
-        if (Math.abs(ball.topSpin) <= SLEEP_SPIN) ball.topSpin = 0;
+        ball.topSpin *= Math.exp(-getSpinSlideDamp(ball) * slideBoost * dt);
     }
     if ((ball.slide || 0) > SLIDE_THRESHOLD) {
         ball.slide = Math.max(0, ball.slide - SLIDE_RESOLVE_RATE * dt);
         if (ball.slide <= SLIDE_THRESHOLD) ball.slide = 0;
     }
+    zeroNegligibleSpin(ball);
 }
 
 function wakeBall(ball) {
@@ -139,7 +146,6 @@ function isSliding(ball, speed) {
     if ((ball.slide || 0) > SLIDE_THRESHOLD) return true;
     if (speed <= SLEEP_SPEED) return false;
     if (Math.abs(ball.topSpin || 0) > SLEEP_SPIN * 3) return true;
-    if (Math.abs(ball.spin || 0) > SLEEP_SPIN * 2) return true;
     return false;
 }
 
@@ -163,9 +169,9 @@ function applySideSpinCurve(ball, speed, tanX, tanY, dt, strength, maxTurn) {
     if (Math.abs(ball.spin) <= SLEEP_SPIN || speed <= SLEEP_SPEED) return speed;
 
     const slideFactor = clamp(ball.slide || 0, 0, 1);
-    const slideMix = slideFactor > SLIDE_THRESHOLD
-        ? 0.5 + slideFactor * 0.5
-        : (Math.abs(ball.spin) > SLEEP_SPIN * 2 ? SIDE_SPIN_RESIDUAL_MIX : 0);
+    if (slideFactor <= SLIDE_THRESHOLD) return speed;
+
+    const slideMix = 0.5 + slideFactor * 0.5;
     const rollMix = 1 - slideMix;
 
     applySideSpinLateral(ball, speed, tanX, tanY, dt, SIDE_SPIN_SLIDE_THROW, slideMix);
@@ -283,8 +289,7 @@ function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
         }
     }
 
-    const sideSpinHold = Math.abs(ball.spin) > SLEEP_SPIN * 2 ? 0.32 : 1;
-    ball.slide = Math.max(0, slideFactor - SLIDE_RESOLVE_RATE * dt * sideSpinHold);
+    ball.slide = Math.max(0, slideFactor - SLIDE_RESOLVE_RATE * dt);
     ball.spin *= Math.exp(-getSpinSlideDamp(ball) * dt);
 
     if (inDrawRollback && speed > SLEEP_SPEED * 2) {
@@ -318,8 +323,12 @@ function integrateRolling(ball, speed, dirX, dirY, dt) {
         ball.vx = (ball.vx / len) * nextSpeed;
         ball.vy = (ball.vy / len) * nextSpeed;
         ball.spin *= Math.exp(-getSpinRollDamp(ball) * dt);
+        if ((ball.slide || 0) <= SLIDE_THRESHOLD) {
+            ball.spin *= Math.exp(-getSpinRollDamp(ball) * 3.5 * dt);
+        }
         ball.topSpin = 0;
         ball.slide = 0;
+        zeroNegligibleSpin(ball);
     } else {
         settleLinearMotion(ball);
         decayResidualSpin(ball, dt);
@@ -351,6 +360,7 @@ export function applyMotionForces(ball, dt) {
         integrateRolling(ball, speed, dirX, dirY, dt);
     }
 
+    zeroNegligibleSpin(ball);
     updateBallOmega(ball);
     updateSleepState(ball);
 }

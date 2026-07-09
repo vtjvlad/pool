@@ -153,9 +153,9 @@ export const SLIDE_THRESHOLD = 0.035;
 
 export const SPIN_ROLL_DAMP = 0.0024;
 export const SPIN_SLIDE_DAMP = 0.0048;
-/** Затухание бокового винта на шарах (медленнее, чем на битке) */
-export const OBJECT_SPIN_ROLL_DAMP = 0.0014;
-export const OBJECT_SPIN_SLIDE_DAMP = 0.003;
+/** Затухание бокового винта на шарах (как на битке — полное гашение остатка) */
+export const OBJECT_SPIN_ROLL_DAMP = 0.0024;
+export const OBJECT_SPIN_SLIDE_DAMP = 0.0048;
 
 export const SLEEP_SPIN = 0.12;
 
