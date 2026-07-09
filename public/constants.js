@@ -231,7 +231,14 @@ const SPIN_TUNING_DEFAULT = {
     sideSpinCurveMaxRolling: 0.09,
     sideSpinLateralCap: 0.14,
     sideSpinResidualMix: 0.62,
-    slideFromSideScale: 0.75
+    slideFromSideScale: 0.75,
+    spinMotionPeakEff: 1.0,
+    spinMotionMediumEff: 0.6,
+    spinMotionLowEff: 0.38,
+    spinMotionHighEndEff: 0.07,
+    drawMotionEffBias: 1.06,
+    strikeSpinEffFloor: 0.18,
+    strikeDrawEffFloor: 0.2
 };
 
 export const SPIN_PRESETS = {
@@ -278,7 +285,14 @@ export const SPIN_PRESETS = {
         sideSpinCurveMaxRolling: 0.022,
         sideSpinLateralCap: 0.055,
         sideSpinResidualMix: 0.24,
-        slideFromSideScale: 0.58
+        slideFromSideScale: 0.58,
+        spinMotionPeakEff: 0.92,
+        spinMotionMediumEff: 0.52,
+        spinMotionLowEff: 0.32,
+        spinMotionHighEndEff: 0.05,
+        drawMotionEffBias: 1.04,
+        strikeSpinEffFloor: 0.15,
+        strikeDrawEffFloor: 0.17
     },
     arcade: {
         spinStrength: 1.85,
@@ -322,7 +336,14 @@ export const SPIN_PRESETS = {
         sideSpinCurveMaxRolling: 0.058,
         sideSpinLateralCap: 0.11,
         sideSpinResidualMix: 0.55,
-        slideFromSideScale: 0.88
+        slideFromSideScale: 0.88,
+        spinMotionPeakEff: 1.0,
+        spinMotionMediumEff: 0.68,
+        spinMotionLowEff: 0.42,
+        spinMotionHighEndEff: 0.1,
+        drawMotionEffBias: 1.1,
+        strikeSpinEffFloor: 0.22,
+        strikeDrawEffFloor: 0.24
     }
 };
 
@@ -387,6 +408,14 @@ export let SIDE_SPIN_LATERAL_CAP = SPIN_TUNING_DEFAULT.sideSpinLateralCap;
 export let SIDE_SPIN_RESIDUAL_MIX = SPIN_TUNING_DEFAULT.sideSpinResidualMix;
 export let SLIDE_FROM_SIDE_SCALE = SPIN_TUNING_DEFAULT.slideFromSideScale;
 
+export let SPIN_MOTION_PEAK_EFF = SPIN_TUNING_DEFAULT.spinMotionPeakEff;
+export let SPIN_MOTION_MEDIUM_EFF = SPIN_TUNING_DEFAULT.spinMotionMediumEff;
+export let SPIN_MOTION_LOW_EFF = SPIN_TUNING_DEFAULT.spinMotionLowEff;
+export let SPIN_MOTION_HIGH_END_EFF = SPIN_TUNING_DEFAULT.spinMotionHighEndEff;
+export let DRAW_MOTION_EFF_BIAS = SPIN_TUNING_DEFAULT.drawMotionEffBias;
+export let STRIKE_SPIN_EFF_FLOOR = SPIN_TUNING_DEFAULT.strikeSpinEffFloor;
+export let STRIKE_DRAW_EFF_FLOOR = SPIN_TUNING_DEFAULT.strikeDrawEffFloor;
+
 function applySpinPresetValues(tuning) {
     SPIN_STRENGTH = tuning.spinStrength;
     SPIN_SIDE_POWER = tuning.spinSidePower;
@@ -430,6 +459,13 @@ function applySpinPresetValues(tuning) {
     SIDE_SPIN_LATERAL_CAP = tuning.sideSpinLateralCap;
     SIDE_SPIN_RESIDUAL_MIX = tuning.sideSpinResidualMix;
     SLIDE_FROM_SIDE_SCALE = tuning.slideFromSideScale;
+    SPIN_MOTION_PEAK_EFF = tuning.spinMotionPeakEff;
+    SPIN_MOTION_MEDIUM_EFF = tuning.spinMotionMediumEff;
+    SPIN_MOTION_LOW_EFF = tuning.spinMotionLowEff;
+    SPIN_MOTION_HIGH_END_EFF = tuning.spinMotionHighEndEff;
+    DRAW_MOTION_EFF_BIAS = tuning.drawMotionEffBias;
+    STRIKE_SPIN_EFF_FLOOR = tuning.strikeSpinEffFloor;
+    STRIKE_DRAW_EFF_FLOOR = tuning.strikeDrawEffFloor;
 }
 
 export function setSpinPreset(preset) {
@@ -439,77 +475,89 @@ export function setSpinPreset(preset) {
     return true;
 }
 
-function motionSpinEffectiveness(speed, ref, falloff, exp, minEff) {
-    if (speed <= SLEEP_SPEED) return 1;
-    const ratio = speed / ref;
-    const curve = exp === 2
-        ? ratio * ratio * falloff
-        : Math.pow(ratio, exp) * falloff;
-    return Math.max(minEff, 1 / (1 + curve));
+function clamp01(value) {
+    return Math.max(0, Math.min(1, value));
+}
+
+function smoothstep01(t) {
+    const x = clamp01(t);
+    return x * x * (3 - 2 * x);
+}
+
+function lerp(a, b, t) {
+    return a + (b - a) * t;
+}
+
+/** 100% силы удара (= 100 × POWER_FACTOR ниже по файлу) */
+export const SPIN_MOTION_MAX_SPEED = 22;
+
+/**
+ * Эффективность винта от скорости (доля от макс. удара).
+ * Пик ~30–65%, средняя ~15–30% и ~65–85%, выше 85% — почти нет эффекта.
+ * @param {number} speed — текущая скорость шара
+ * @param {number} [maxSpeed] — скорость при 100% силе удара
+ */
+export function spinMotionEffectiveness(speed, maxSpeed = SPIN_MOTION_MAX_SPEED) {
+    if (speed <= SLEEP_SPEED) return SPIN_MOTION_PEAK_EFF;
+
+    const r = clamp01(speed / Math.max(maxSpeed, 1e-6));
+    const peak = SPIN_MOTION_PEAK_EFF;
+    const medium = SPIN_MOTION_MEDIUM_EFF;
+    const low = SPIN_MOTION_LOW_EFF;
+    const highEnd = SPIN_MOTION_HIGH_END_EFF;
+    const peakCenter = 0.475;
+
+    if (r >= 0.85) {
+        return lerp(medium, highEnd, smoothstep01((r - 0.85) / 0.15));
+    }
+    if (r >= 0.65) {
+        return lerp(peak * 0.96, medium, smoothstep01((r - 0.65) / 0.2));
+    }
+    if (r >= 0.3) {
+        const u = (r - peakCenter) / 0.175;
+        return peak * (0.96 + 0.04 * Math.max(0, 1 - u * u));
+    }
+    if (r >= 0.15) {
+        return lerp(medium, peak * 0.96, smoothstep01((r - 0.15) / 0.15));
+    }
+    return lerp(low, medium, smoothstep01(r / 0.15));
 }
 
 function strikeAmountEffectiveness(
     power,
-    minEff, plateauEff, maxEff, ref, highRef, rampExp = 0.65
+    floorEff
 ) {
-    if (power <= SLEEP_SPEED) return minEff;
-    if (power >= highRef) return maxEff;
-    if (power >= ref) {
-        const t = (power - ref) / (highRef - ref);
-        return plateauEff + (maxEff - plateauEff) * t;
-    }
-    const t = power / ref;
-    return minEff + (plateauEff - minEff) * Math.pow(t, rampExp);
+    if (power <= SLEEP_SPEED) return floorEff;
+    const motionEff = spinMotionEffectiveness(power);
+    return floorEff + (SPIN_MOTION_PEAK_EFF - floorEff) * (motionEff / Math.max(SPIN_MOTION_PEAK_EFF, 1e-6));
 }
 
-/** Эффективность бокового винта при ударе — растёт с силой, не падает на 100% */
+/** Эффективность бокового винта при ударе — следует кривой скорости */
 export function strikeSpinAmountEffectiveness(power) {
-    return strikeAmountEffectiveness(
-        power,
-        STRIKE_SPIN_MIN_EFF,
-        STRIKE_SPIN_PLATEAU_EFF,
-        STRIKE_SPIN_MAX_EFF,
-        STRIKE_SPIN_REF,
-        STRIKE_SPIN_HIGH_REF
-    );
+    return strikeAmountEffectiveness(power, STRIKE_SPIN_EFF_FLOOR);
 }
 
 /** Эффективность draw/follow при ударе */
 export function strikeDrawAmountEffectiveness(power) {
-    return strikeAmountEffectiveness(
-        power,
-        STRIKE_DRAW_MIN_EFF,
-        STRIKE_DRAW_PLATEAU_EFF,
-        STRIKE_DRAW_MAX_EFF,
-        STRIKE_DRAW_REF,
-        STRIKE_DRAW_HIGH_REF,
-        0.55
-    );
+    return strikeAmountEffectiveness(power, STRIKE_DRAW_EFF_FLOOR);
 }
 
-/** Squirt при ударе — сильнее падает на максимальной силе (отдельно от величины spin) */
+/** Squirt при ударе — сильнее падает на максимальной силе */
 export function strikeSquirtEffectiveness(power) {
-    return motionSpinEffectiveness(
-        power,
-        STRIKE_SQUIRT_REF,
-        STRIKE_SQUIRT_FALLOFF,
-        STRIKE_SQUIRT_EXP,
-        STRIKE_SQUIRT_MIN_EFF
+    return Math.max(
+        STRIKE_SQUIRT_MIN_EFF,
+        spinMotionEffectiveness(power) * 0.92
     );
 }
 
 /** Ослабление эффектов винта на текущей скорости шара (столкновения, topSpin) */
 export function spinSpeedEffectiveness(speed) {
-    return motionSpinEffectiveness(speed, SPIN_SPEED_REF, SPIN_SPEED_FALLOFF, SPIN_SPEED_EXP, SPIN_SPEED_MIN_EFF);
+    return spinMotionEffectiveness(speed);
 }
 
-/** Боковой винт → отклонение траектории: ~1–2% на макс. скорости, растёт при замедлении */
+/** Боковой винт → отклонение траектории по скорости шара */
 export function sideSpinTrajectoryEffectiveness(speed) {
-    if (speed <= SLEEP_SPEED) return 1;
-    if (speed >= SIDE_SPIN_TRAJ_REF_SPEED) return SIDE_SPIN_TRAJ_MIN_EFF;
-    const t = speed / SIDE_SPIN_TRAJ_REF_SPEED;
-    const slowFactor = 1 - Math.pow(t, SIDE_SPIN_TRAJ_RAMP);
-    return SIDE_SPIN_TRAJ_MIN_EFF + (1 - SIDE_SPIN_TRAJ_MIN_EFF) * slowFactor;
+    return spinMotionEffectiveness(speed);
 }
 
 /** @deprecated alias — используйте sideSpinTrajectoryEffectiveness */
@@ -519,7 +567,7 @@ export function sideSpinSpeedEffectiveness(speed) {
 
 /** Ослабление draw/follow на текущей скорости */
 export function drawSpeedEffectiveness(speed) {
-    return motionSpinEffectiveness(speed, DRAW_SPEED_REF, DRAW_SPEED_FALLOFF, 2, DRAW_SPEED_MIN_EFF);
+    return Math.min(1, spinMotionEffectiveness(speed) * DRAW_MOTION_EFF_BIAS);
 }
 
 /** Микро-джиттер угла нормали при столкновениях (только runtime-физика) */
