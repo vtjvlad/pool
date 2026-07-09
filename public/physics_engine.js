@@ -46,6 +46,7 @@ import {
 import { resolveBallCushionCollision } from './cushion_collision.js';
 import { jitterCollisionNormal } from './collision_noise.js';
 import { tryPocketBall } from './utils.js';
+import { updateBallOmega, clearBallOmega } from './ball.js';
 
 function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -63,6 +64,7 @@ function stopBall(ball) {
     ball.slide = 0;
     ball.drawAxisX = 0;
     ball.drawAxisY = 0;
+    clearBallOmega(ball);
 }
 
 function setDrawAxis(ball, axisX, axisY) {
@@ -319,6 +321,7 @@ export function applyMotionForces(ball, dt) {
     let speed = Math.hypot(ball.vx, ball.vy);
     if (speed <= 0) {
         decayResidualSpin(ball, dt);
+        updateBallOmega(ball);
         updateSleepState(ball);
         return;
     }
@@ -337,6 +340,7 @@ export function applyMotionForces(ball, dt) {
         integrateRolling(ball, speed, dirX, dirY, dt);
     }
 
+    updateBallOmega(ball);
     updateSleepState(ball);
 }
 
@@ -542,6 +546,8 @@ export function resolveCollision(b1, b2) {
 
     wakeBall(b1);
     wakeBall(b2);
+    updateBallOmega(b1);
+    updateBallOmega(b2);
 }
 
 export function resolveAllBallCollisions(balls) {
@@ -573,7 +579,6 @@ export function stepPhysics(balls, frameScale = 1) {
             ball.py = ball.y;
             ball.x += ball.vx * subDt;
             ball.y += ball.vy * subDt;
-            ball.advanceRoll(subDt);
         }
 
         resolveAllBallCollisions(balls);
@@ -590,6 +595,7 @@ export function stepPhysics(balls, frameScale = 1) {
             if (ball.inPocket || ball.isPocketing()) continue;
             applyMotionForces(ball, subDt);
             tryPocketBall(ball, subDt * PHYSICS_SUBSTEPS);
+            ball.advanceRoll(subDt);
         }
     }
 }

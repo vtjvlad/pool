@@ -103,7 +103,6 @@ function stepCueOnly(cue, obstacles, frameScale) {
         cue.py = cue.y;
         cue.x += cue.vx * subDt;
         cue.y += cue.vy * subDt;
-        cue.advanceRoll(subDt);
 
         const staticHit = resolveStaticBallCollisions(cue, obstacles);
         if (staticHit) ballContact = staticHit;
@@ -114,6 +113,7 @@ function stepCueOnly(cue, obstacles, frameScale) {
 
         applyMotionForces(cue, subDt);
         tryPocketBall(cue, subDt * PHYSICS_SUBSTEPS);
+        cue.advanceRoll(subDt);
     }
 
     return ballContact;

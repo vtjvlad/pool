@@ -11,6 +11,7 @@ import {
     strikeDrawAmountEffectiveness,
     strikeSquirtEffectiveness
 } from './constants.js';
+import { updateBallOmega } from './ball.js';
 
 export function spinOffsetNormalized(spinOffsetX, spinOffsetY) {
     return {
@@ -33,6 +34,7 @@ export function applySpinToBall(cueBall, power, angle, spinOffsetX, spinOffsetY)
         cueBall.slide = 0;
         cueBall.topSpin = 0;
         cueBall.spin = 0;
+        updateBallOmega(cueBall);
         return false;
     }
 
@@ -58,5 +60,6 @@ export function applySpinToBall(cueBall, power, angle, spinOffsetX, spinOffsetY)
         cueBall.vy = Math.sin(shotAngle) * power;
     }
 
+    updateBallOmega(cueBall);
     return true;
 }

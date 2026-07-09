@@ -17,6 +17,7 @@ import {
 import { getCushionInnerEdges } from './cushions.js';
 import { getRubberCollisionEdges } from './cushion_rubber.js';
 import { jitterCollisionNormal } from './collision_noise.js';
+import { updateBallOmega } from './ball.js';
 
 const PLAY_CENTER_X = CANVAS_WIDTH / 2;
 const PLAY_CENTER_Y = CANVAS_HEIGHT / 2;
@@ -233,6 +234,7 @@ export function resolveBallCushionCollision(ball, prevX, prevY, options = {}) {
     ball.y = by;
     ball.vx = vx;
     ball.vy = vy;
+    updateBallOmega(ball);
 }
 
 function raySegmentHit(ox, oy, dx, dy, radius, line) {

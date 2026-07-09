@@ -26,6 +26,17 @@ const CUE_MARK_SURFACE = 0.9;
 const CUE_MARK_SCALE = 0.19;
 const CUE_MARK_COLOR = '#c41e3a';
 
+/** 4 метки на шарах — по экватору, чтобы вращение было видно сверху */
+const OBJECT_MARK_DIRS = [
+    [0.84, 0, 0.42],
+    [-0.84, 0, 0.42],
+    [0, 0.84, 0.42],
+    [0, -0.84, 0.42]
+];
+const OBJECT_MARK_SURFACE = 0.88;
+const OBJECT_MARK_SCALE = 0.12;
+const SPHERE_LIGHT = [0.34, -0.26, 0.9];
+
 function getStripeCanvas(size) {
     if (!stripeCanvasCache.has(size)) {
         const canvas = document.createElement('canvas');
@@ -59,6 +70,25 @@ function hexToRgb(hex) {
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
+function parseBallRgb(color) {
+    if (color.startsWith('#')) return hexToRgb(color);
+    const m = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+    if (m) return [Number(m[1]), Number(m[2]), Number(m[3])];
+    return [200, 200, 200];
+}
+
+function sphereLocalShade(lx, ly, lz) {
+    const [lx0, ly0, lz0] = SPHERE_LIGHT;
+    const len = Math.hypot(lx0, ly0, lz0);
+    const ndotl = (lx * lx0 + ly * ly0 + lz * lz0) / len;
+    return clamp(0.46 + 0.54 * ndotl, 0.36, 1.0);
+}
+
+function shadeRgb(rgb, factor, darken = 1) {
+    const k = factor * darken;
+    return rgb.map(c => Math.round(c * k));
+}
+
 function rotateVec(q, x, y, z) {
     const tx = 2 * (q.y * z - q.z * y);
     const ty = 2 * (q.z * x - q.x * z);
@@ -72,6 +102,44 @@ function rotateVec(q, x, y, z) {
 
 function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
+}
+
+/** Синхронизирует угловую скорость ω с кинематическим состоянием физики (v, spin, topSpin). */
+export function updateBallOmega(ball) {
+    const r = ball.radius;
+    const vx = ball.vx || 0;
+    const vy = ball.vy || 0;
+    const speed = Math.hypot(vx, vy);
+    const spin = ball.spin || 0;
+    const topSpin = ball.topSpin || 0;
+
+    let omegaX = 0;
+    let omegaY = 0;
+
+    if (speed > 1e-8) {
+        omegaX = -vy / r;
+        omegaY = vx / r;
+    }
+
+    let omegaZ = spin / r;
+
+    if (speed > 1e-8 && Math.abs(topSpin) > 1e-8) {
+        const dirX = vx / speed;
+        const dirY = vy / speed;
+        const topOmega = topSpin / r;
+        omegaX += -dirY * topOmega;
+        omegaY += dirX * topOmega;
+    }
+
+    ball.omegaX = omegaX;
+    ball.omegaY = omegaY;
+    ball.omegaZ = omegaZ;
+}
+
+export function clearBallOmega(ball) {
+    ball.omegaX = 0;
+    ball.omegaY = 0;
+    ball.omegaZ = 0;
 }
 
 export function randomBallMass() {
@@ -96,6 +164,9 @@ export class Ball {
         this.spin = 0;
         this.topSpin = 0;
         this.slide = 0;
+        this.omegaX = 0;
+        this.omegaY = 0;
+        this.omegaZ = 0;
         this.orientation = { ...IDENTITY_QUAT };
         this.px = x;
         this.py = y;
@@ -130,6 +201,7 @@ export class Ball {
         this.spin = 0;
         this.topSpin = 0;
         this.slide = 0;
+        clearBallOmega(this);
         this.drawAxisX = 0;
         this.drawAxisY = 0;
     }
@@ -167,7 +239,12 @@ export class Ball {
         this.pocketFall.scale = 1 - dropEase * 0.91;
         this.pocketFall.alpha = 1 - dropEase * 0.97;
         this.pocketFall.progress = t;
-        this.advanceRoll((0.08 + dropEase * 0.34) * speedFactor);
+        const rollScale = (0.08 + dropEase * 0.34) * speedFactor;
+        this.applyRotationVector(
+            -Math.sin(entryAngle) * rollScale,
+            Math.cos(entryAngle) * rollScale,
+            rollScale * 0.35
+        );
 
         if (t < 1) return false;
 
@@ -184,20 +261,25 @@ export class Ball {
         return this.pocketFall !== null;
     }
 
-    advanceRoll(frameFraction) {
+    applyRotationVector(rx, ry, rz) {
+        const angle = Math.hypot(rx, ry, rz);
+        if (angle < 1e-10) return;
+
+        const half = angle * 0.5;
+        const s = Math.sin(half) / angle;
+        const c = Math.cos(half);
+        const delta = { w: c, x: rx * s, y: ry * s, z: rz * s };
+        this.orientation = quatNormalize(quatMultiply(delta, this.orientation));
+    }
+
+    advanceRoll(dt) {
         if (this.inPocket) return;
 
-        const speed = Math.hypot(this.vx, this.vy);
-        if (speed < 1e-8) return;
-
-        const angle = (speed * frameFraction) / this.radius;
-        const rollHalf = angle * 0.5;
-        const s = Math.sin(rollHalf);
-        const c = Math.cos(rollHalf);
-        const axisX = -this.vy / speed;
-        const axisY = this.vx / speed;
-        const delta = { w: c, x: axisX * s, y: axisY * s, z: 0 };
-        this.orientation = quatNormalize(quatMultiply(delta, this.orientation));
+        this.applyRotationVector(
+            (this.omegaX || 0) * dt,
+            (this.omegaY || 0) * dt,
+            (this.omegaZ || 0) * dt
+        );
     }
 
     projectSurfacePoint(lx, ly, lz, minDepth = 0.1) {
@@ -242,7 +324,7 @@ export class Ball {
         return points;
     }
 
-    drawStripeSphere(ctx, r) {
+    drawStripeSphere(ctx, r, darken = 1) {
         const d = Math.ceil(r * 2);
         const offscreen = getStripeCanvas(d);
         const offCtx = offscreen.getContext('2d');
@@ -270,14 +352,15 @@ export class Ball {
                 const sy = dy / r;
                 const sz = Math.sqrt(Math.max(0, 1 - sx * sx - sy * sy));
                 const [lx, ly, lz] = rotateVec(invQ, sx, sy, sz);
+                const shade = sphereLocalShade(lx, ly, lz) * darken;
 
                 const inStripe = Math.abs(ly) <= stripeSin;
-                let rgb = inStripe ? color : white;
+                let rgb = shadeRgb(inStripe ? color : white, shade);
 
                 const edgeDist = Math.abs(Math.abs(ly) - stripeSin);
                 if (edgeDist < stripeEdge) {
                     const edge = (1 - edgeDist / stripeEdge) * 0.3;
-                    rgb = rgb.map(c => c * (1 - edge));
+                    rgb = rgb.map(c => Math.round(c * (1 - edge)));
                 }
 
                 pixels[idx] = rgb[0];
@@ -289,6 +372,72 @@ export class Ball {
 
         offCtx.putImageData(image, 0, 0);
         ctx.drawImage(offscreen, this.x - r, this.y - r);
+    }
+
+    drawSolidSphere(ctx, r, fillColor, darken = 1) {
+        const d = Math.ceil(r * 2);
+        const offscreen = getStripeCanvas(d);
+        const offCtx = offscreen.getContext('2d');
+        const image = offCtx.createImageData(d, d);
+        const pixels = image.data;
+        const center = r;
+        const invQ = quatConjugate(this.orientation);
+        const base = parseBallRgb(fillColor);
+
+        for (let y = 0; y < d; y++) {
+            for (let x = 0; x < d; x++) {
+                const idx = (y * d + x) * 4;
+                const dx = x - center + 0.5;
+                const dy = y - center + 0.5;
+                const distSq = dx * dx + dy * dy;
+                if (distSq > r * r) {
+                    pixels[idx + 3] = 0;
+                    continue;
+                }
+
+                const sx = dx / r;
+                const sy = dy / r;
+                const sz = Math.sqrt(Math.max(0, 1 - sx * sx - sy * sy));
+                const [lx, ly, lz] = rotateVec(invQ, sx, sy, sz);
+                const rgb = shadeRgb(base, sphereLocalShade(lx, ly, lz), darken);
+
+                pixels[idx] = rgb[0];
+                pixels[idx + 1] = rgb[1];
+                pixels[idx + 2] = rgb[2];
+                pixels[idx + 3] = 255;
+            }
+        }
+
+        offCtx.putImageData(image, 0, 0);
+        ctx.drawImage(offscreen, this.x - r, this.y - r);
+    }
+
+    getObjectMarkColor() {
+        if (this.ballType === 'eight') return 'rgba(255, 255, 255, 0.38)';
+        if (this.ballType === 'stripe') return 'rgba(0, 0, 0, 0.22)';
+        const rgb = hexToRgb(this.color);
+        return `rgb(${Math.round(rgb[0] * 0.55)},${Math.round(rgb[1] * 0.55)},${Math.round(rgb[2] * 0.55)})`;
+    }
+
+    drawObjectRollMarks(ctx, r) {
+        const marks = OBJECT_MARK_DIRS.map(([dx, dy, dz]) => {
+            const point = this.projectSurfacePoint(
+                dx * OBJECT_MARK_SURFACE,
+                dy * OBJECT_MARK_SURFACE,
+                dz * OBJECT_MARK_SURFACE
+            );
+            if (!point) return null;
+            return point;
+        }).filter(Boolean);
+
+        marks.sort((a, b) => a.depth - b.depth);
+
+        ctx.fillStyle = this.getObjectMarkColor();
+        for (const mark of marks) {
+            ctx.beginPath();
+            ctx.arc(mark.x, mark.y, r * OBJECT_MARK_SCALE * mark.depth, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 
     drawNumberPatch(ctx, r) {
@@ -383,26 +532,19 @@ export class Ball {
         } else if (this.ballType === 'eight') {
             fillColor = '#1a1a1a';
         } else if (this.ballType === 'stripe') {
-            fillColor = '#fcfcfa';
+            fillColor = this.color;
         } else {
             fillColor = this.color;
         }
 
-        if (depth > 0.15) {
-            const darken = 1 - depth * 0.45;
-            if (fillColor.startsWith('#')) {
-                const n = parseInt(fillColor.slice(1), 16);
-                const rr = Math.round(((n >> 16) & 255) * darken);
-                const gg = Math.round(((n >> 8) & 255) * darken);
-                const bb = Math.round((n & 255) * darken);
-                fillColor = `rgb(${rr},${gg},${bb})`;
-            }
-        }
+        const depthDarken = depth > 0.15 ? 1 - depth * 0.45 : 1;
 
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = fillColor;
-        ctx.fill();
+        if (this.isCueBall) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+        }
 
         ctx.save();
         ctx.beginPath();
@@ -410,12 +552,15 @@ export class Ball {
         ctx.clip();
 
         if (this.ballType === 'stripe' && !this.isCueBall) {
-            this.drawStripeSphere(ctx, r);
+            this.drawStripeSphere(ctx, r, depthDarken);
+        } else if (!this.isCueBall) {
+            this.drawSolidSphere(ctx, r, fillColor, depthDarken);
         }
 
         if (this.isCueBall) {
             this.drawCueMarks(ctx, r);
         } else {
+            this.drawObjectRollMarks(ctx, r);
             this.drawNumberPatch(ctx, r);
         }
 
@@ -449,6 +594,7 @@ export class Ball {
         this.spin = 0;
         this.topSpin = 0;
         this.slide = 0;
+        clearBallOmega(this);
         this.sleepFrames = 0;
         this.orientation = { ...IDENTITY_QUAT };
         this.lastDirX = 1;
