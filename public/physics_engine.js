@@ -25,6 +25,7 @@ import {
     SIDE_SPIN_COLLISION_THROW,
     SIDE_SPIN_COLLISION_TRANSFER,
     OBJECT_SPIN_COLLISION_TRANSFER,
+    BALL_SPIN_COLLISION_GAIN,
     COLLISION_SLIDE_MIN,
     OBJECT_SPIN_ROLL_DAMP,
     OBJECT_SPIN_SLIDE_DAMP,
@@ -42,6 +43,7 @@ import {
     SIDE_SPIN_CURVE_MAX_SLIDING,
     SIDE_SPIN_CURVE_MAX_ROLLING,
     SIDE_SPIN_LATERAL_CAP,
+    SIDE_SPIN_RESIDUAL_MIX,
     spinSpeedEffectiveness,
     sideSpinTrajectoryEffectiveness,
     drawSpeedEffectiveness
@@ -147,6 +149,7 @@ function isSliding(ball, speed) {
     if ((ball.slide || 0) > SLIDE_THRESHOLD) return true;
     if (speed <= SLEEP_SPEED) return false;
     if (Math.abs(ball.topSpin || 0) > SLEEP_SPIN * 3) return true;
+    if (Math.abs(ball.spin || 0) > SLEEP_SPIN * 2) return true;
     return false;
 }
 
@@ -170,10 +173,11 @@ function applySideSpinCurve(ball, speed, tanX, tanY, dt, strength, maxTurn) {
     if (Math.abs(ball.spin) <= SLEEP_SPIN || speed <= SLEEP_SPEED) return speed;
 
     const slideFactor = clamp(ball.slide || 0, 0, 1);
-    if (slideFactor <= SLIDE_THRESHOLD) return speed;
-
-    const slideMix = 0.5 + slideFactor * 0.5;
+    const slideMix = slideFactor > SLIDE_THRESHOLD
+        ? 0.5 + slideFactor * 0.5
+        : (Math.abs(ball.spin) > SLEEP_SPIN * 2 ? SIDE_SPIN_RESIDUAL_MIX : 0);
     const rollMix = 1 - slideMix;
+    if (slideMix <= 0 && rollMix <= 0) return speed;
 
     applySideSpinLateral(ball, speed, tanX, tanY, dt, SIDE_SPIN_SLIDE_THROW, slideMix);
     applySideSpinLateral(ball, speed, tanX, tanY, dt, SIDE_SPIN_ROLL_THROW, rollMix);
@@ -324,8 +328,8 @@ function integrateRolling(ball, speed, dirX, dirY, dt) {
         ball.vx = (ball.vx / len) * nextSpeed;
         ball.vy = (ball.vy / len) * nextSpeed;
         ball.spin *= Math.exp(-getSpinRollDamp(ball) * dt);
-        if ((ball.slide || 0) <= SLIDE_THRESHOLD) {
-            ball.spin *= Math.exp(-getSpinRollDamp(ball) * 3.5 * dt);
+        if ((ball.slide || 0) <= SLIDE_THRESHOLD && speed < SLEEP_SPEED * 4) {
+            ball.spin *= Math.exp(-getSpinRollDamp(ball) * dt);
         }
         ball.topSpin = 0;
         ball.slide = 0;
@@ -481,26 +485,42 @@ function collisionHeadOn(striker, strikerPreVx, strikerPreVy, nx, ny) {
     return Math.abs(shotX * nx + shotY * ny);
 }
 
-function applyCollisionSpinTransfer(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed, trajEff) {
-    if (striker === other) return;
+function applyCollisionSpinTransfer(b1, b2, b1PreVx, b1PreVy, b2PreVx, b2PreVy, nx, ny, impactSpeed, trajEff) {
+    const spin1 = Math.abs(b1.spin || 0);
+    const spin2 = Math.abs(b2.spin || 0);
+    if (spin1 <= SLEEP_SPIN && spin2 <= SLEEP_SPIN) return;
 
-    const strikerSpin = striker.spin || 0;
-    if (Math.abs(strikerSpin) <= SLEEP_SPIN) return;
+    let donor;
+    let receiver;
+    let donorPreVx;
+    let donorPreVy;
+    if (spin1 >= spin2 && spin1 > SLEEP_SPIN) {
+        donor = b1;
+        receiver = b2;
+        donorPreVx = b1PreVx;
+        donorPreVy = b1PreVy;
+    } else {
+        donor = b2;
+        receiver = b1;
+        donorPreVx = b2PreVx;
+        donorPreVy = b2PreVy;
+    }
 
-    const headOn = collisionHeadOn(striker, strikerPreVx, strikerPreVy, nx, ny);
-    const transferRatio = striker.isCueBall
+    const donorSpin = donor.spin || 0;
+    const headOn = collisionHeadOn(donor, donorPreVx, donorPreVy, nx, ny);
+    const transferRatio = donor.isCueBall
         ? SIDE_SPIN_COLLISION_TRANSFER
         : OBJECT_SPIN_COLLISION_TRANSFER;
     const transfer = clamp(
-        strikerSpin * transferRatio * trajEff * Math.max(0.42, headOn),
-        -impactSpeed * 0.22 * trajEff,
-        impactSpeed * 0.22 * trajEff
+        donorSpin * transferRatio * trajEff * Math.max(0.42, headOn),
+        -impactSpeed * 0.9 * trajEff,
+        impactSpeed * 0.9 * trajEff
     );
     if (Math.abs(transfer) <= SLEEP_SPIN * 0.5) return;
 
-    other.spin = (other.spin || 0) + transfer;
-    striker.spin = strikerSpin - transfer * 0.82;
-    other.slide = Math.max(other.slide || 0, COLLISION_SLIDE_MIN * 0.5);
+    receiver.spin = (receiver.spin || 0) + transfer;
+    donor.spin = donorSpin - transfer * 0.78;
+    receiver.slide = Math.max(receiver.slide || 0, COLLISION_SLIDE_MIN * 0.5);
 }
 
 export function resolveCollision(b1, b2) {
@@ -547,15 +567,16 @@ export function resolveCollision(b1, b2) {
     const relSurf = surf2 - surf1;
 
     const jtMax = BALL_FRICTION * Math.abs(impulse);
-    const jt = clamp(-relSurf / (invMassSum * 1.75), -jtMax, jtMax);
+    const jt = clamp(-relSurf / (invMassSum * 1.55), -jtMax, jtMax);
 
     b1.vx -= jt * tx / b1.mass;
     b1.vy -= jt * ty / b1.mass;
     b2.vx += jt * tx / b2.mass;
     b2.vy += jt * ty / b2.mass;
 
-    b1.spin = (b1.spin || 0) + jt * BALL_SPIN_CONTACT * contactEff;
-    b2.spin = (b2.spin || 0) - jt * BALL_SPIN_CONTACT * contactEff;
+    const spinFromJt = jt * BALL_SPIN_CONTACT * contactEff * BALL_SPIN_COLLISION_GAIN;
+    b1.spin = (b1.spin || 0) + spinFromJt;
+    b2.spin = (b2.spin || 0) - spinFromJt;
 
     const spinThrow = clamp((b1.spin - b2.spin) * BALL_SPIN_THROW * trajEff, -impactSpeed * 0.07 * trajEff, impactSpeed * 0.07 * trajEff);
     if (Math.abs(spinThrow) > 1e-6) {
@@ -580,7 +601,7 @@ export function resolveCollision(b1, b2) {
     const strikerPreVx = striker === b1 ? b1PreVx : b2PreVx;
     const strikerPreVy = striker === b1 ? b1PreVy : b2PreVy;
     applyTopSpinCollision(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed);
-    applyCollisionSpinTransfer(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed, trajEff);
+    applyCollisionSpinTransfer(b1, b2, b1PreVx, b1PreVy, b2PreVx, b2PreVy, nx, ny, impactSpeed, trajEff);
 
     if (striker.isCueBall && Math.abs(striker.spin || 0) > SLEEP_SPIN) {
         const spinKick = clamp(
