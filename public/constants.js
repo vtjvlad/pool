@@ -153,6 +153,9 @@ export const SLIDE_THRESHOLD = 0.035;
 
 export const SPIN_ROLL_DAMP = 0.0024;
 export const SPIN_SLIDE_DAMP = 0.0048;
+/** Затухание бокового винта на шарах (медленнее, чем на битке) */
+export const OBJECT_SPIN_ROLL_DAMP = 0.0014;
+export const OBJECT_SPIN_SLIDE_DAMP = 0.003;
 
 export const SLEEP_SPIN = 0.12;
 
@@ -161,6 +164,10 @@ export const SLIDE_FROM_OFFSET = 0.88;
 
 export const CUSHION_SPIN_RETAIN = 0.71;
 export const BALL_SPIN_CONTACT = 0.54;
+/** Доля бокового винта битка, передаваемая шару при столкновении */
+export const SIDE_SPIN_COLLISION_TRANSFER = 0.26;
+/** Усиление ωz при отрисовке винта на шарах (не на битке) */
+export const OBJECT_ENGLISH_VISUAL_SCALE = 1.32;
 export const DRAW_COLLISION_MAX = 0.48;
 export const DRAW_SPIN_TRANSFER = 0.04;
 export const DRAW_REVERSE_FACTOR = 0.32;

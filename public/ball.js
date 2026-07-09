@@ -1,6 +1,7 @@
 import {
     BALL_RADIUS,
     SLEEP_SPEED,
+    OBJECT_ENGLISH_VISUAL_SCALE,
     POCKET_FALL_SPEED_REF,
     computePocketFallDuration,
     CUE_RESPOT_DELAY_MS,
@@ -26,15 +27,6 @@ const CUE_MARK_SURFACE = 0.9;
 const CUE_MARK_SCALE = 0.19;
 const CUE_MARK_COLOR = '#c41e3a';
 
-/** 4 метки на шарах — по экватору, чтобы вращение было видно сверху */
-const OBJECT_MARK_DIRS = [
-    [0.84, 0, 0.42],
-    [-0.84, 0, 0.42],
-    [0, 0.84, 0.42],
-    [0, -0.84, 0.42]
-];
-const OBJECT_MARK_SURFACE = 0.88;
-const OBJECT_MARK_SCALE = 0.12;
 const SPHERE_LIGHT = [0.34, -0.26, 0.9];
 
 function getStripeCanvas(size) {
@@ -122,6 +114,9 @@ export function updateBallOmega(ball) {
     }
 
     let omegaZ = spin / r;
+    if (!ball.isCueBall) {
+        omegaZ *= OBJECT_ENGLISH_VISUAL_SCALE;
+    }
 
     if (speed > 1e-8 && Math.abs(topSpin) > 1e-8) {
         const dirX = vx / speed;
@@ -412,34 +407,6 @@ export class Ball {
         ctx.drawImage(offscreen, this.x - r, this.y - r);
     }
 
-    getObjectMarkColor() {
-        if (this.ballType === 'eight') return 'rgba(255, 255, 255, 0.38)';
-        if (this.ballType === 'stripe') return 'rgba(0, 0, 0, 0.22)';
-        const rgb = hexToRgb(this.color);
-        return `rgb(${Math.round(rgb[0] * 0.55)},${Math.round(rgb[1] * 0.55)},${Math.round(rgb[2] * 0.55)})`;
-    }
-
-    drawObjectRollMarks(ctx, r) {
-        const marks = OBJECT_MARK_DIRS.map(([dx, dy, dz]) => {
-            const point = this.projectSurfacePoint(
-                dx * OBJECT_MARK_SURFACE,
-                dy * OBJECT_MARK_SURFACE,
-                dz * OBJECT_MARK_SURFACE
-            );
-            if (!point) return null;
-            return point;
-        }).filter(Boolean);
-
-        marks.sort((a, b) => a.depth - b.depth);
-
-        ctx.fillStyle = this.getObjectMarkColor();
-        for (const mark of marks) {
-            ctx.beginPath();
-            ctx.arc(mark.x, mark.y, r * OBJECT_MARK_SCALE * mark.depth, 0, Math.PI * 2);
-            ctx.fill();
-        }
-    }
-
     drawNumberPatch(ctx, r) {
         const center = this.projectSurfacePointFade(0, 0, 0.93);
         if (!center) return;
@@ -553,7 +520,6 @@ export class Ball {
         if (this.isCueBall) {
             this.drawCueMarks(ctx, r);
         } else {
-            this.drawObjectRollMarks(ctx, r);
             this.drawNumberPatch(ctx, r);
         }
 

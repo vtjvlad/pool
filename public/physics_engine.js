@@ -23,7 +23,10 @@ import {
     BALL_SPIN_CONTACT,
     BALL_SPIN_THROW,
     SIDE_SPIN_COLLISION_THROW,
+    SIDE_SPIN_COLLISION_TRANSFER,
     COLLISION_SLIDE_MIN,
+    OBJECT_SPIN_ROLL_DAMP,
+    OBJECT_SPIN_SLIDE_DAMP,
     DRAW_COLLISION_KICK,
     DRAW_COLLISION_MAX,
     DRAW_SPIN_TRANSFER,
@@ -87,13 +90,21 @@ function getDrawAxis(ball, dirX, dirY) {
     return { x: dirX, y: dirY };
 }
 
+function getSpinRollDamp(ball) {
+    return ball.isCueBall ? SPIN_ROLL_DAMP : OBJECT_SPIN_ROLL_DAMP;
+}
+
+function getSpinSlideDamp(ball) {
+    return ball.isCueBall ? SPIN_SLIDE_DAMP : OBJECT_SPIN_SLIDE_DAMP;
+}
+
 function decayResidualSpin(ball, dt) {
     if (Math.abs(ball.spin || 0) > SLEEP_SPIN) {
-        ball.spin *= Math.exp(-SPIN_ROLL_DAMP * dt);
+        ball.spin *= Math.exp(-getSpinRollDamp(ball) * dt);
         if (Math.abs(ball.spin) <= SLEEP_SPIN) ball.spin = 0;
     }
     if (Math.abs(ball.topSpin || 0) > SLEEP_SPIN) {
-        ball.topSpin *= Math.exp(-SPIN_SLIDE_DAMP * dt);
+        ball.topSpin *= Math.exp(-getSpinSlideDamp(ball) * dt);
         if (Math.abs(ball.topSpin) <= SLEEP_SPIN) ball.topSpin = 0;
     }
     if ((ball.slide || 0) > SLIDE_THRESHOLD) {
@@ -274,7 +285,7 @@ function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
 
     const sideSpinHold = Math.abs(ball.spin) > SLEEP_SPIN * 2 ? 0.32 : 1;
     ball.slide = Math.max(0, slideFactor - SLIDE_RESOLVE_RATE * dt * sideSpinHold);
-    ball.spin *= Math.exp(-SPIN_SLIDE_DAMP * dt);
+    ball.spin *= Math.exp(-getSpinSlideDamp(ball) * dt);
 
     if (inDrawRollback && speed > SLEEP_SPEED * 2) {
         ball.slide = Math.max(ball.slide || 0, SLIDE_THRESHOLD + 0.02);
@@ -306,7 +317,7 @@ function integrateRolling(ball, speed, dirX, dirY, dt) {
         const len = Math.hypot(ball.vx, ball.vy) || 1;
         ball.vx = (ball.vx / len) * nextSpeed;
         ball.vy = (ball.vy / len) * nextSpeed;
-        ball.spin *= Math.exp(-SPIN_ROLL_DAMP * dt);
+        ball.spin *= Math.exp(-getSpinRollDamp(ball) * dt);
         ball.topSpin = 0;
         ball.slide = 0;
     } else {
@@ -444,6 +455,40 @@ function applyTopSpinCollision(striker, other, strikerPreVx, strikerPreVy, nx, n
     }
 }
 
+function collisionHeadOn(striker, strikerPreVx, strikerPreVy, nx, ny) {
+    const preSpeed = Math.hypot(strikerPreVx, strikerPreVy);
+    let shotX = nx;
+    let shotY = ny;
+    if (strikerPreVx * nx + strikerPreVy * ny < 0) {
+        shotX = -nx;
+        shotY = -ny;
+    }
+    if (preSpeed > SLEEP_SPEED) {
+        shotX = strikerPreVx / preSpeed;
+        shotY = strikerPreVy / preSpeed;
+    }
+    return Math.abs(shotX * nx + shotY * ny);
+}
+
+function applyCueEnglishTransfer(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed, trajEff) {
+    if (!striker.isCueBall || striker === other) return;
+
+    const cueSpin = striker.spin || 0;
+    if (Math.abs(cueSpin) <= SLEEP_SPIN) return;
+
+    const headOn = collisionHeadOn(striker, strikerPreVx, strikerPreVy, nx, ny);
+    const transfer = clamp(
+        cueSpin * SIDE_SPIN_COLLISION_TRANSFER * trajEff * Math.max(0.42, headOn),
+        -impactSpeed * 0.22 * trajEff,
+        impactSpeed * 0.22 * trajEff
+    );
+    if (Math.abs(transfer) <= SLEEP_SPIN * 0.5) return;
+
+    other.spin = (other.spin || 0) + transfer;
+    striker.spin = cueSpin - transfer * 0.82;
+    other.slide = Math.max(other.slide || 0, COLLISION_SLIDE_MIN * 0.5);
+}
+
 export function resolveCollision(b1, b2) {
     const { nx: baseNx, ny: baseNy, dist } = collisionNormal(b1, b2);
     if (!separateBalls(b1, b2, baseNx, baseNy, dist)) return;
@@ -521,6 +566,7 @@ export function resolveCollision(b1, b2) {
     const strikerPreVx = striker === b1 ? b1PreVx : b2PreVx;
     const strikerPreVy = striker === b1 ? b1PreVy : b2PreVy;
     applyTopSpinCollision(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed);
+    applyCueEnglishTransfer(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed, trajEff);
 
     if (striker.isCueBall && Math.abs(striker.spin || 0) > SLEEP_SPIN) {
         const spinKick = clamp(
