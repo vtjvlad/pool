@@ -2,6 +2,7 @@ import { Ball } from './ball.js';
 import { applyMotionForces } from './physics_engine.js';
 import { resolveBallCushionCollision } from './cushion_collision.js';
 import { tryPocketBall } from './utils.js';
+import { applySpinToBall } from './spin.js';
 import {
     BALL_RADIUS,
     BALL_RESTITUTION,
@@ -13,7 +14,7 @@ import { ballBounceDirs } from './physics.js';
 
 const CONTACT_COOLDOWN_STEPS = 4;
 const MAX_SIM_STEPS = 3600;
-const CUE_MAX_CONTACTS = 2;
+const DEFAULT_CUE_MAX_CONTACTS = 2;
 const TARGET_PREVIEW_LEN = 72;
 
 function cloneCueBall(cueBall) {
@@ -23,6 +24,9 @@ function cloneCueBall(cueBall) {
     c.px = cueBall.px;
     c.py = cueBall.py;
     c.sleepFrames = cueBall.sleepFrames;
+    c.spin = 0;
+    c.topSpin = 0;
+    c.slide = 0;
     return c;
 }
 
@@ -32,9 +36,10 @@ function staticObstacles(balls, cueBall) {
         .map(b => ({ x: b.x, y: b.y, ball: b }));
 }
 
-function applyStrike(simCue, angle, power) {
+function applyStrike(simCue, angle, power, spinOffsetX = 0, spinOffsetY = 0) {
     simCue.vx = Math.cos(angle) * power;
     simCue.vy = Math.sin(angle) * power;
+    applySpinToBall(simCue, power, angle, spinOffsetX, spinOffsetY);
 }
 
 function resolveCueStaticBallCollision(cue, obstacle) {
@@ -114,7 +119,7 @@ function stepCueOnly(cue, obstacles, frameScale) {
     return ballContact;
 }
 
-function runCueSimulation(simCue, obstacles) {
+function runCueSimulation(simCue, obstacles, cueMaxContacts = DEFAULT_CUE_MAX_CONTACTS) {
     const samples = [{ x: simCue.x, y: simCue.y }];
     let firstContactSampleIdx = -1;
     const cueContacts = [];
@@ -129,7 +134,7 @@ function runCueSimulation(simCue, obstacles) {
 
         if (simCue.inPocket || simCue.isPocketing()) break;
 
-        if (cueContacts.length < CUE_MAX_CONTACTS) {
+        if (cueContacts.length < cueMaxContacts) {
             if (cueCooldown > 0) {
                 cueCooldown--;
             } else {
@@ -249,13 +254,22 @@ function buildOffPath(sim, angle) {
     };
 }
 
-export function predictPowerTrajectory(angle, cueBall, balls, options) {
-    const { power } = options;
+export function predictSimulatedTrajectory(angle, cueBall, balls, options = {}) {
+    const {
+        power,
+        spinOffsetX = 0,
+        spinOffsetY = 0,
+        cueMaxContacts = DEFAULT_CUE_MAX_CONTACTS
+    } = options;
 
     const simCue = cloneCueBall(cueBall);
     const obstacles = staticObstacles(balls, cueBall);
-    applyStrike(simCue, angle, power);
+    applyStrike(simCue, angle, power, spinOffsetX, spinOffsetY);
 
-    const sim = runCueSimulation(simCue, obstacles);
+    const sim = runCueSimulation(simCue, obstacles, cueMaxContacts);
     return buildOffPath(sim, angle);
+}
+
+export function predictPowerTrajectory(angle, cueBall, balls, options) {
+    return predictSimulatedTrajectory(angle, cueBall, balls, options);
 }

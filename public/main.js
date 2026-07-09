@@ -10,13 +10,6 @@ import {
     MIN_POWER_PERCENT,
     BALL_RADIUS,
     MAX_SPIN_OFFSET,
-    SPIN_SIDE_POWER,
-    SPIN_TOP_POWER,
-    SLIDE_FROM_OFFSET,
-    SQUIRT_FACTOR,
-    SPIN_TIP_EFFICIENCY,
-    spinSpeedEffectiveness,
-    drawSpeedEffectiveness,
     REFERENCE_FPS,
     MAX_PHYSICS_DT,
     AIM_TAP_THRESHOLD_PX,
@@ -48,6 +41,7 @@ import {
     setCushionRestitutionProfile,
     setPhysicsMode,
     setCushionLipScale,
+    EXTENDED_CUE_MAX_CONTACTS,
     MAX_CUE_MAX_CONTACTS,
     MAX_TARGET_MAX_CONTACTS
 } from './constants.js';
@@ -56,7 +50,8 @@ import { createRack } from './game_logic.js';
 import { stepPhysics, updatePocketAnimations } from './physics_engine.js';
 import { invalidateCushionCollisionCache } from './cushion_collision.js';
 import { predictCueTrajectory, predictExtendedCueTrajectory } from './physics.js';
-import { predictPowerTrajectory } from './physics_preview.js';
+import { predictSimulatedTrajectory } from './physics_preview.js';
+import { applySpinToBall, hasSignificantSpin } from './spin.js';
 import { drawTable } from './drawing_table.js';
 import { drawCueStick, drawTrajectory, drawSpinMark, getCueTipPosition } from './drawing_cue.js';
 import { getHeadSpot, lighten, darken, getPockets, getPlaySurface } from './utils.js';
@@ -423,39 +418,7 @@ function spinFromPadEvent(e) {
 }
 
 function applySpinToCueBall(power, angle) {
-    const offX = spinOffsetX / MAX_SPIN_OFFSET;
-    const offY = spinOffsetY / MAX_SPIN_OFFSET;
-    const offCenter = Math.hypot(offX, offY);
-
-    if (offCenter <= 0.04) {
-        cueBall.slide = 0;
-        cueBall.topSpin = 0;
-        cueBall.spin = 0;
-        resetSpin();
-        return;
-    }
-
-    const tipEff = 1 - offCenter * SPIN_TIP_EFFICIENCY;
-    const sideOff = Math.sign(offX) * Math.pow(Math.abs(offX), 0.9);
-    const topOff = Math.sign(offY) * Math.pow(Math.abs(offY), 0.88);
-    const speedEff = spinSpeedEffectiveness(power);
-    const drawEff = drawSpeedEffectiveness(power);
-    const topSpeedEff = Math.abs(topOff) > 0.04 ? drawEff : 1;
-
-    cueBall.spin = sideOff * SPIN_SIDE_POWER * power * tipEff * speedEff;
-    cueBall.topSpin = -topOff * SPIN_TOP_POWER * power * tipEff * topSpeedEff;
-
-    const slideFromSide = Math.abs(sideOff) * SLIDE_FROM_OFFSET * 0.62;
-    const slideFromTop = Math.abs(topOff) * 0.88;
-    cueBall.slide = Math.min(1, Math.max(slideFromSide, slideFromTop) + offCenter * 0.16);
-
-    if (Math.abs(sideOff) > 0.05) {
-        const squirtAngle = -sideOff * SQUIRT_FACTOR * (0.5 + power * 0.055) * speedEff;
-        const shotAngle = angle + squirtAngle;
-        cueBall.vx = Math.cos(shotAngle) * power;
-        cueBall.vy = Math.sin(shotAngle) * power;
-    }
-
+    applySpinToBall(cueBall, power, angle, spinOffsetX, spinOffsetY);
     resetSpin();
 }
 
@@ -696,9 +659,19 @@ function getShotPower() {
 }
 
 function predictAimPath(angle) {
-    if (aimModifierEnabled) {
-        return predictPowerTrajectory(angle, cueBall, balls, {
-            power: getShotPower()
+    const power = getShotPower();
+    const spinActive = hasSignificantSpin(spinOffsetX, spinOffsetY);
+
+    if (aimModifierEnabled || spinActive) {
+        let cueMaxContacts = 2;
+        if (aimLineVariant === 'max') cueMaxContacts = MAX_CUE_MAX_CONTACTS;
+        else if (aimLineVariant !== 'off') cueMaxContacts = EXTENDED_CUE_MAX_CONTACTS;
+
+        return predictSimulatedTrajectory(angle, cueBall, balls, {
+            power,
+            spinOffsetX,
+            spinOffsetY,
+            cueMaxContacts
         });
     }
     if (aimLineVariant === 'off') {
@@ -716,7 +689,8 @@ function predictAimPath(angle) {
 function drawCueScene(angle, pullBack) {
     const tip = getCueTipPosition(cueBall, angle, pullBack, spinOffsetX, spinOffsetY);
     const path = predictAimPath(angle);
-    drawTrajectory(ctx, angle, cueBall, aimX, aimY, path, aimModifierEnabled ? 'off' : aimLineVariant, aimModifierEnabled);
+    const drawVariant = path.simulated ? 'off' : (aimModifierEnabled ? 'off' : aimLineVariant);
+    drawTrajectory(ctx, angle, cueBall, aimX, aimY, path, drawVariant, aimModifierEnabled);
     drawSpinMark(ctx, cueBall, angle, spinOffsetX, spinOffsetY);
     drawCueStick(ctx, tip.x, tip.y, angle);
 }

@@ -158,23 +158,23 @@ export const SPIN_CURVE_WHILE_ROLLING = 0.00022;
 export const SIDE_SPIN_SLIDE_THROW = 0.0015;
 export const SIDE_SPIN_ROLL_THROW = 0.00028;
 
-export const SLEEP_SPIN = 0.007;
+export const SLEEP_SPIN = 0.17;
 
-/** Общий множитель силы спина (1 = базовый, меньше — слабее эффекты) */
-export const SPIN_STRENGTH = 1 / 3;
+/** Общий множитель силы спина (1 = базовый) */
+export const SPIN_STRENGTH = 1.5;
 
 export const MAX_SPIN_OFFSET = 0.72;
-export const SPIN_SIDE_POWER = 0.68;
-export const SPIN_TOP_POWER = 0.44;
+export const SPIN_SIDE_POWER = 1.15;
+export const SPIN_TOP_POWER = 0.64;
 export const SLIDE_FROM_OFFSET = 0.88;
-export const SQUIRT_FACTOR = 0.0107;
+export const SQUIRT_FACTOR = 0.307;// 
 export const SPIN_TIP_EFFICIENCY = 0.11;
 
 export const CUSHION_THROW = 0.048;
 export const CUSHION_SPIN_RETAIN = 0.71;
 export const BALL_SPIN_CONTACT = 0.54;
-export const BALL_SPIN_THROW = 0.16;
-export const SIDE_SPIN_COLLISION_THROW = 0.3;
+export const BALL_SPIN_THROW = 0.26;
+export const SIDE_SPIN_COLLISION_THROW = 0.6;
 export const DRAW_COLLISION_KICK = 0.38;
 export const DRAW_COLLISION_MAX = 0.48;
 export const DRAW_SPIN_TRANSFER = 0.04;
