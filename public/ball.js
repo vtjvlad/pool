@@ -1,6 +1,7 @@
 import {
     BALL_RADIUS,
     SLEEP_SPEED,
+    SLIDE_THRESHOLD,
     OBJECT_ENGLISH_VISUAL_SCALE,
     POCKET_FALL_SPEED_REF,
     computePocketFallDuration,
@@ -214,6 +215,16 @@ function drawTableBallShadow(ctx, x, y, r, depthScale, speed) {
     );
 }
 
+/** Доля визуального качения: только по ball.slide (не по spin — иначе шар «скользит» почти всегда). */
+function rollingVisualMix(ball) {
+    const slide = ball.slide || 0;
+    if (slide <= 0) return 1;
+    if (slide <= SLIDE_THRESHOLD) {
+        return clamp(1 - slide / SLIDE_THRESHOLD, 0, 1);
+    }
+    return 0;
+}
+
 /** Синхронизирует угловую скорость ω с кинематическим состоянием физики (v, spin, topSpin). */
 export function updateBallOmega(ball) {
     const r = ball.radius;
@@ -222,13 +233,14 @@ export function updateBallOmega(ball) {
     const speed = Math.hypot(vx, vy);
     const spin = ball.spin || 0;
     const topSpin = ball.topSpin || 0;
+    const rollMix = rollingVisualMix(ball);
 
     let omegaX = 0;
     let omegaY = 0;
 
-    if (speed > 1e-8) {
-        omegaX = -vy / r;
-        omegaY = vx / r;
+    if (speed > 1e-8 && rollMix > 1e-6) {
+        omegaX = (-vy / r) * rollMix;
+        omegaY = (vx / r) * rollMix;
     }
 
     let omegaZ = spin / r;
@@ -236,12 +248,12 @@ export function updateBallOmega(ball) {
         omegaZ *= OBJECT_ENGLISH_VISUAL_SCALE;
     }
 
-    if (speed > 1e-8 && Math.abs(topSpin) > 1e-8) {
+    if (speed > 1e-8 && Math.abs(topSpin) > 1e-8 && rollMix > 1e-6) {
         const dirX = vx / speed;
         const dirY = vy / speed;
         const topOmega = topSpin / r;
-        omegaX += -dirY * topOmega;
-        omegaY += dirX * topOmega;
+        omegaX += -dirY * topOmega * rollMix;
+        omegaY += dirX * topOmega * rollMix;
     }
 
     ball.omegaX = omegaX;
