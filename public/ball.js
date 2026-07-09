@@ -81,7 +81,7 @@ function sphereLocalShade(lx, ly, lz) {
     const [lx0, ly0, lz0] = SPHERE_LIGHT;
     const len = Math.hypot(lx0, ly0, lz0);
     const ndotl = (lx * lx0 + ly * ly0 + lz * lz0) / len;
-    return clamp(0.46 + 0.54 * ndotl, 0.36, 1.0);
+    return clamp(0.72 + 0.28 * ndotl, 0.64, 1.0);
 }
 
 function shadeRgb(rgb, factor, darken = 1) {
@@ -499,7 +499,7 @@ export class Ball {
         const alpha = fall ? fall.alpha : 1;
         const depth = fall ? fall.depth : 0;
         const squash = fall ? 1 - depth * 0.28 : 1;
-        const shadowAlpha = fall ? 0.35 * (1 - depth * 0.85) : 0.35;
+        const shadowAlpha = fall ? 0.28 * (1 - depth * 0.85) : 0.28;
 
         ctx.save();
 
@@ -521,14 +521,14 @@ export class Ball {
             ctx.globalAlpha = shadowAlpha * (1 - depth * 0.4);
             ctx.beginPath();
             ctx.arc(this.x + 1.5, this.y + 2, r, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
             ctx.fill();
             ctx.restore();
         }
 
         let fillColor;
         if (this.isCueBall) {
-            fillColor = '#ffffff';
+            fillColor = '#f5f3ee';
         } else if (this.ballType === 'eight') {
             fillColor = '#1a1a1a';
         } else if (this.ballType === 'stripe') {
@@ -539,13 +539,6 @@ export class Ball {
 
         const depthDarken = depth > 0.15 ? 1 - depth * 0.45 : 1;
 
-        if (this.isCueBall) {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffffff';
-            ctx.fill();
-        }
-
         ctx.save();
         ctx.beginPath();
         ctx.arc(this.x, this.y, r, 0, Math.PI * 2);
@@ -553,7 +546,7 @@ export class Ball {
 
         if (this.ballType === 'stripe' && !this.isCueBall) {
             this.drawStripeSphere(ctx, r, depthDarken);
-        } else if (!this.isCueBall) {
+        } else {
             this.drawSolidSphere(ctx, r, fillColor, depthDarken);
         }
 
