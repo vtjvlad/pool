@@ -6,7 +6,7 @@ export const LAYOUT_SIDE_PANEL = 64;
 export const LAYOUT_AIM_PANEL = 92;
 /** Минимальный отступ между столом и остальными элементами UI */
 export const LAYOUT_TABLE_MARGIN = 24;
-export const LAYOUT_TOP_BAR = 46;
+export const LAYOUT_TOP_BAR = 92;
 export const LAYOUT_HINT = 40;
 export const LAYOUT_WIDTH =
     LAYOUT_SIDE_PANEL + LAYOUT_TABLE_MARGIN + CANVAS_WIDTH + LAYOUT_TABLE_MARGIN + LAYOUT_AIM_PANEL;
