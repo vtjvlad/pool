@@ -1,6 +1,7 @@
 import {
     BALL_RADIUS,
     SLEEP_SPEED,
+    SLEEP_SPIN,
     SLIDE_THRESHOLD,
     OBJECT_ENGLISH_VISUAL_SCALE,
     POCKET_FALL_SPEED_REF,
@@ -225,6 +226,35 @@ function rollingVisualMix(ball) {
     return 0;
 }
 
+function getVisualDrawAxis(ball, dirX, dirY) {
+    const ax = ball.drawAxisX || 0;
+    const ay = ball.drawAxisY || 0;
+    const axisLen = Math.hypot(ax, ay);
+    if (axisLen > 0.5) return { x: ax / axisLen, y: ay / axisLen };
+
+    const lx = ball.lastDirX ?? dirX;
+    const ly = ball.lastDirY ?? dirY;
+    const lastLen = Math.hypot(lx, ly);
+    if (lastLen > 0.5) return { x: lx / lastLen, y: ly / lastLen };
+    return { x: dirX, y: dirY };
+}
+
+/** Откат с нижним винтом: скольжение назад, но шар визуально крутится вперёд. */
+function isDrawRollbackSlide(ball, vx, vy, speed) {
+    if (speed <= SLEEP_SPEED) return false;
+    if ((ball.topSpin || 0) >= -SLEEP_SPIN) return false;
+    if ((ball.slide || 0) <= SLIDE_THRESHOLD) return false;
+
+    const axis = getVisualDrawAxis(ball, vx / speed, vy / speed);
+    return axis.x * vx + axis.y * vy < -SLEEP_SPEED;
+}
+
+function drawRollbackRollVisualMix(ball) {
+    const slide = ball.slide || 0;
+    if (slide <= SLIDE_THRESHOLD) return 0;
+    return clamp((slide - SLIDE_THRESHOLD) / (1 - SLIDE_THRESHOLD), 0.4, 1);
+}
+
 /** Синхронизирует угловую скорость ω с кинематическим состоянием физики (v, spin, topSpin). */
 export function updateBallOmega(ball) {
     const r = ball.radius;
@@ -234,13 +264,22 @@ export function updateBallOmega(ball) {
     const spin = ball.spin || 0;
     const topSpin = ball.topSpin || 0;
     const rollMix = rollingVisualMix(ball);
+    const drawRollbackMix = isDrawRollbackSlide(ball, vx, vy, speed)
+        ? drawRollbackRollVisualMix(ball)
+        : 0;
 
     let omegaX = 0;
     let omegaY = 0;
 
-    if (speed > 1e-8 && rollMix > 1e-6) {
-        omegaX = (-vy / r) * rollMix;
-        omegaY = (vx / r) * rollMix;
+    if (speed > 1e-8) {
+        if (rollMix > 1e-6) {
+            omegaX = (-vy / r) * rollMix;
+            omegaY = (vx / r) * rollMix;
+        } else if (drawRollbackMix > 1e-6) {
+            // Качение «вперёд» по оси удара, пока биток скользит назад (draw).
+            omegaX = (vy / r) * drawRollbackMix;
+            omegaY = (-vx / r) * drawRollbackMix;
+        }
     }
 
     let omegaZ = spin / r;

@@ -161,7 +161,7 @@ function applySideSpinLateral(ball, speed, tanX, tanY, dt, throwStrength, slideM
     const forwardTravel = speed * dt;
     const cap = Math.min(
         speed * SIDE_SPIN_LATERAL_CAP * trajEff * Math.max(dt * 50, 0.5),
-        forwardTravel * trajEff * 0.04
+        forwardTravel * trajEff * 0.075
     );
     const clamped = clamp(lateral, -cap, cap);
 
@@ -190,7 +190,7 @@ function applySideSpinCurve(ball, speed, tanX, tanY, dt, strength, maxTurn) {
         -speed * maxTurn * dt * trajEff,
         speed * maxTurn * dt * trajEff
     );
-    const curveCap = forwardTravel * trajEff * 0.04;
+    const curveCap = forwardTravel * trajEff * 0.078;
     const clampedCurve = clamp(curve, -curveCap, curveCap);
     ball.vx += tanX * clampedCurve;
     ball.vy += tanY * clampedCurve;
