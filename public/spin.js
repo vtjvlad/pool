@@ -3,6 +3,7 @@ import {
     SPIN_SIDE_POWER,
     SPIN_TOP_POWER,
     SLIDE_FROM_OFFSET,
+    SLIDE_FROM_SIDE_SCALE,
     SQUIRT_FACTOR,
     SPIN_TIP_EFFICIENCY,
     SPIN_STRENGTH,
@@ -44,7 +45,7 @@ export function applySpinToBall(cueBall, power, angle, spinOffsetX, spinOffsetY)
     cueBall.spin = sideOff * SPIN_SIDE_POWER * power * tipEff * speedEff * SPIN_STRENGTH;
     cueBall.topSpin = -topOff * SPIN_TOP_POWER * power * tipEff * topSpeedEff * SPIN_STRENGTH;
 
-    const slideFromSide = Math.abs(sideOff) * SLIDE_FROM_OFFSET * 0.62;
+    const slideFromSide = Math.abs(sideOff) * SLIDE_FROM_OFFSET * SLIDE_FROM_SIDE_SCALE;
     const slideFromTop = Math.abs(topOff) * 0.88;
     cueBall.slide = Math.min(1, Math.max(slideFromSide, slideFromTop) + offCenter * 0.16);
 

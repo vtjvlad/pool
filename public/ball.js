@@ -102,6 +102,8 @@ export class Ball {
         this.sleepFrames = 0;
         this.lastDirX = 1;
         this.lastDirY = 0;
+        this.drawAxisX = 0;
+        this.drawAxisY = 0;
     }
 
     startPocketFall(pocket) {
@@ -128,6 +130,8 @@ export class Ball {
         this.spin = 0;
         this.topSpin = 0;
         this.slide = 0;
+        this.drawAxisX = 0;
+        this.drawAxisY = 0;
     }
 
     updatePocketFall(balls) {
@@ -449,6 +453,8 @@ export class Ball {
         this.orientation = { ...IDENTITY_QUAT };
         this.lastDirX = 1;
         this.lastDirY = 0;
+        this.drawAxisX = 0;
+        this.drawAxisY = 0;
 
         for (const ball of balls) {
             if (ball === this || ball.inPocket) continue;

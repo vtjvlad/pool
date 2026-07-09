@@ -153,29 +153,14 @@ export const SLIDE_THRESHOLD = 0.035;
 
 export const SPIN_ROLL_DAMP = 0.0024;
 export const SPIN_SLIDE_DAMP = 0.0048;
-export const SPIN_CURVE_WHILE_SLIDING = 0.0012;
-export const SPIN_CURVE_WHILE_ROLLING = 0.00022;
-export const SIDE_SPIN_SLIDE_THROW = 0.0015;
-export const SIDE_SPIN_ROLL_THROW = 0.00028;
 
-export const SLEEP_SPIN = 0.17;
-
-/** Общий множитель силы спина (1 = базовый) */
-export const SPIN_STRENGTH = 1.5;
+export const SLEEP_SPIN = 0.12;
 
 export const MAX_SPIN_OFFSET = 0.72;
-export const SPIN_SIDE_POWER = 1.15;
-export const SPIN_TOP_POWER = 0.64;
 export const SLIDE_FROM_OFFSET = 0.88;
-export const SQUIRT_FACTOR = 0.307;// 
-export const SPIN_TIP_EFFICIENCY = 0.11;
 
-export const CUSHION_THROW = 0.048;
 export const CUSHION_SPIN_RETAIN = 0.71;
 export const BALL_SPIN_CONTACT = 0.54;
-export const BALL_SPIN_THROW = 0.26;
-export const SIDE_SPIN_COLLISION_THROW = 0.6;
-export const DRAW_COLLISION_KICK = 0.38;
 export const DRAW_COLLISION_MAX = 0.48;
 export const DRAW_SPIN_TRANSFER = 0.04;
 export const DRAW_REVERSE_FACTOR = 0.32;
@@ -190,14 +175,185 @@ export const CUSHION_DRAW_KICK = 0.028;
 export const COLLISION_SLIDE_MIN = 0.34;
 export const CUSHION_SLIDE = 0.52;
 
-/** Скорость, относительно которой падает эффективность спина (≈ средний удар) */
-export const SPIN_SPEED_REF = 9.5;
-/** Крутизна спада: больше — сильнее ослабление на высоких скоростях */
-export const SPIN_SPEED_FALLOFF = 2.1;
-/** Степень кривой спада (2+ = резче на больших скоростях) */
-export const SPIN_SPEED_EXP = 2.35;
-/** Минимальная эффективность спина при очень быстром движении */
-export const SPIN_SPEED_MIN_EFF = 0.07;
+/** Текущие игровые параметры винта — пресет default */
+const SPIN_TUNING_DEFAULT = {
+    spinStrength: 1.5,
+    spinSidePower: 1.28,
+    spinTopPower: 0.64,
+    squirtFactor: 0.607,
+    spinTipEfficiency: 0.61,
+    spinCurveWhileSliding: 0.0021,
+    spinCurveWhileRolling: 0.00038,
+    sideSpinSlideThrow: 0.0025,
+    sideSpinRollThrow: 0.00045,
+    cushionThrow: 0.062,
+    ballSpinThrow: 0.26,
+    sideSpinCollisionThrow: 0.6,
+    drawCollisionKick: 0.38,
+    spinSpeedRef: 13.5,
+    spinSpeedFalloff: 1.1,
+    spinSpeedExp: 1.85,
+    spinSpeedMinEff: 0.24,
+    sideSpinSpeedRef: 20,
+    sideSpinSpeedFalloff: 0.58,
+    sideSpinSpeedMinEff: 0.42,
+    drawSpeedRef: 17,
+    drawSpeedFalloff: 0.44,
+    drawSpeedMinEff: 0.62,
+    sideSpinCurveMaxSliding: 0.11,
+    sideSpinCurveMaxRolling: 0.045,
+    sideSpinLateralCap: 0.085,
+    sideSpinResidualMix: 0.42,
+    slideFromSideScale: 0.75
+};
+
+export const SPIN_PRESETS = {
+    default: SPIN_TUNING_DEFAULT,
+    real: {
+        spinStrength: 1.0,
+        spinSidePower: 0.82,
+        spinTopPower: 0.48,
+        squirtFactor: 0.22,
+        spinTipEfficiency: 0.35,
+        spinCurveWhileSliding: 0.0011,
+        spinCurveWhileRolling: 0.00012,
+        sideSpinSlideThrow: 0.0012,
+        sideSpinRollThrow: 0.0002,
+        cushionThrow: 0.038,
+        ballSpinThrow: 0.16,
+        sideSpinCollisionThrow: 0.34,
+        drawCollisionKick: 0.3,
+        spinSpeedRef: 10.5,
+        spinSpeedFalloff: 1.65,
+        spinSpeedExp: 2.1,
+        spinSpeedMinEff: 0.12,
+        sideSpinSpeedRef: 15,
+        sideSpinSpeedFalloff: 0.95,
+        sideSpinSpeedMinEff: 0.28,
+        drawSpeedRef: 13,
+        drawSpeedFalloff: 0.72,
+        drawSpeedMinEff: 0.45,
+        sideSpinCurveMaxSliding: 0.06,
+        sideSpinCurveMaxRolling: 0.022,
+        sideSpinLateralCap: 0.055,
+        sideSpinResidualMix: 0.24,
+        slideFromSideScale: 0.58
+    },
+    arcade: {
+        spinStrength: 1.85,
+        spinSidePower: 1.48,
+        spinTopPower: 0.78,
+        squirtFactor: 0.48,
+        spinTipEfficiency: 0.72,
+        spinCurveWhileSliding: 0.0032,
+        spinCurveWhileRolling: 0.00055,
+        sideSpinSlideThrow: 0.0036,
+        sideSpinRollThrow: 0.00062,
+        cushionThrow: 0.082,
+        ballSpinThrow: 0.34,
+        sideSpinCollisionThrow: 0.78,
+        drawCollisionKick: 0.46,
+        spinSpeedRef: 16,
+        spinSpeedFalloff: 0.82,
+        spinSpeedExp: 1.65,
+        spinSpeedMinEff: 0.32,
+        sideSpinSpeedRef: 24,
+        sideSpinSpeedFalloff: 0.42,
+        sideSpinSpeedMinEff: 0.52,
+        drawSpeedRef: 20,
+        drawSpeedFalloff: 0.32,
+        drawSpeedMinEff: 0.72,
+        sideSpinCurveMaxSliding: 0.14,
+        sideSpinCurveMaxRolling: 0.058,
+        sideSpinLateralCap: 0.11,
+        sideSpinResidualMix: 0.55,
+        slideFromSideScale: 0.88
+    }
+};
+
+export const SPIN_PRESET_IDS = ['default', 'real', 'arcade'];
+export const SPIN_PRESET_LABELS = {
+    default: 'def',
+    real: 'real',
+    arcade: 'arc'
+};
+
+export let SPIN_PRESET = 'default';
+
+export let SPIN_CURVE_WHILE_SLIDING = SPIN_TUNING_DEFAULT.spinCurveWhileSliding;
+export let SPIN_CURVE_WHILE_ROLLING = SPIN_TUNING_DEFAULT.spinCurveWhileRolling;
+export let SIDE_SPIN_SLIDE_THROW = SPIN_TUNING_DEFAULT.sideSpinSlideThrow;
+export let SIDE_SPIN_ROLL_THROW = SPIN_TUNING_DEFAULT.sideSpinRollThrow;
+
+/** Общий множитель силы спина (1 = базовый) */
+export let SPIN_STRENGTH = SPIN_TUNING_DEFAULT.spinStrength;
+
+export let SPIN_SIDE_POWER = SPIN_TUNING_DEFAULT.spinSidePower;
+export let SPIN_TOP_POWER = SPIN_TUNING_DEFAULT.spinTopPower;
+export let SQUIRT_FACTOR = SPIN_TUNING_DEFAULT.squirtFactor;
+export let SPIN_TIP_EFFICIENCY = SPIN_TUNING_DEFAULT.spinTipEfficiency;
+
+export let CUSHION_THROW = SPIN_TUNING_DEFAULT.cushionThrow;
+export let BALL_SPIN_THROW = SPIN_TUNING_DEFAULT.ballSpinThrow;
+export let SIDE_SPIN_COLLISION_THROW = SPIN_TUNING_DEFAULT.sideSpinCollisionThrow;
+export let DRAW_COLLISION_KICK = SPIN_TUNING_DEFAULT.drawCollisionKick;
+
+export let SPIN_SPEED_REF = SPIN_TUNING_DEFAULT.spinSpeedRef;
+export let SPIN_SPEED_FALLOFF = SPIN_TUNING_DEFAULT.spinSpeedFalloff;
+export let SPIN_SPEED_EXP = SPIN_TUNING_DEFAULT.spinSpeedExp;
+export let SPIN_SPEED_MIN_EFF = SPIN_TUNING_DEFAULT.spinSpeedMinEff;
+
+export let SIDE_SPIN_SPEED_REF = SPIN_TUNING_DEFAULT.sideSpinSpeedRef;
+export let SIDE_SPIN_SPEED_FALLOFF = SPIN_TUNING_DEFAULT.sideSpinSpeedFalloff;
+export let SIDE_SPIN_SPEED_MIN_EFF = SPIN_TUNING_DEFAULT.sideSpinSpeedMinEff;
+
+export let DRAW_SPEED_REF = SPIN_TUNING_DEFAULT.drawSpeedRef;
+export let DRAW_SPEED_FALLOFF = SPIN_TUNING_DEFAULT.drawSpeedFalloff;
+export let DRAW_SPEED_MIN_EFF = SPIN_TUNING_DEFAULT.drawSpeedMinEff;
+
+export let SIDE_SPIN_CURVE_MAX_SLIDING = SPIN_TUNING_DEFAULT.sideSpinCurveMaxSliding;
+export let SIDE_SPIN_CURVE_MAX_ROLLING = SPIN_TUNING_DEFAULT.sideSpinCurveMaxRolling;
+export let SIDE_SPIN_LATERAL_CAP = SPIN_TUNING_DEFAULT.sideSpinLateralCap;
+export let SIDE_SPIN_RESIDUAL_MIX = SPIN_TUNING_DEFAULT.sideSpinResidualMix;
+export let SLIDE_FROM_SIDE_SCALE = SPIN_TUNING_DEFAULT.slideFromSideScale;
+
+function applySpinPresetValues(tuning) {
+    SPIN_STRENGTH = tuning.spinStrength;
+    SPIN_SIDE_POWER = tuning.spinSidePower;
+    SPIN_TOP_POWER = tuning.spinTopPower;
+    SQUIRT_FACTOR = tuning.squirtFactor;
+    SPIN_TIP_EFFICIENCY = tuning.spinTipEfficiency;
+    SPIN_CURVE_WHILE_SLIDING = tuning.spinCurveWhileSliding;
+    SPIN_CURVE_WHILE_ROLLING = tuning.spinCurveWhileRolling;
+    SIDE_SPIN_SLIDE_THROW = tuning.sideSpinSlideThrow;
+    SIDE_SPIN_ROLL_THROW = tuning.sideSpinRollThrow;
+    CUSHION_THROW = tuning.cushionThrow;
+    BALL_SPIN_THROW = tuning.ballSpinThrow;
+    SIDE_SPIN_COLLISION_THROW = tuning.sideSpinCollisionThrow;
+    DRAW_COLLISION_KICK = tuning.drawCollisionKick;
+    SPIN_SPEED_REF = tuning.spinSpeedRef;
+    SPIN_SPEED_FALLOFF = tuning.spinSpeedFalloff;
+    SPIN_SPEED_EXP = tuning.spinSpeedExp;
+    SPIN_SPEED_MIN_EFF = tuning.spinSpeedMinEff;
+    SIDE_SPIN_SPEED_REF = tuning.sideSpinSpeedRef;
+    SIDE_SPIN_SPEED_FALLOFF = tuning.sideSpinSpeedFalloff;
+    SIDE_SPIN_SPEED_MIN_EFF = tuning.sideSpinSpeedMinEff;
+    DRAW_SPEED_REF = tuning.drawSpeedRef;
+    DRAW_SPEED_FALLOFF = tuning.drawSpeedFalloff;
+    DRAW_SPEED_MIN_EFF = tuning.drawSpeedMinEff;
+    SIDE_SPIN_CURVE_MAX_SLIDING = tuning.sideSpinCurveMaxSliding;
+    SIDE_SPIN_CURVE_MAX_ROLLING = tuning.sideSpinCurveMaxRolling;
+    SIDE_SPIN_LATERAL_CAP = tuning.sideSpinLateralCap;
+    SIDE_SPIN_RESIDUAL_MIX = tuning.sideSpinResidualMix;
+    SLIDE_FROM_SIDE_SCALE = tuning.slideFromSideScale;
+}
+
+export function setSpinPreset(preset) {
+    if (!Object.prototype.hasOwnProperty.call(SPIN_PRESETS, preset)) return false;
+    SPIN_PRESET = preset;
+    applySpinPresetValues(SPIN_PRESETS[preset]);
+    return true;
+}
 
 export function spinSpeedEffectiveness(speed) {
     if (speed <= SLEEP_SPEED) return 1;
@@ -207,10 +363,6 @@ export function spinSpeedEffectiveness(speed) {
 }
 
 /** Ослабление бокового спина на скорости — мягче, чем у follow/draw */
-export const SIDE_SPIN_SPEED_REF = 14;
-export const SIDE_SPIN_SPEED_FALLOFF = 1.15;
-export const SIDE_SPIN_SPEED_MIN_EFF = 0.22;
-
 export function sideSpinSpeedEffectiveness(speed) {
     if (speed <= SLEEP_SPEED) return 1;
     const ratio = speed / SIDE_SPIN_SPEED_REF;
@@ -219,10 +371,6 @@ export function sideSpinSpeedEffectiveness(speed) {
 }
 
 /** Ослабление нижнего спина на скорости — мягче, чем у общего spinSpeedEffectiveness */
-export const DRAW_SPEED_REF = 12;
-export const DRAW_SPEED_FALLOFF = 0.9;
-export const DRAW_SPEED_MIN_EFF = 0.38;
-
 export function drawSpeedEffectiveness(speed) {
     if (speed <= SLEEP_SPEED) return 1;
     const ratio = speed / DRAW_SPEED_REF;

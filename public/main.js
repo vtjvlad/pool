@@ -33,6 +33,10 @@ import {
     CUSHION_RESTITUTION_PROFILE,
     PHYSICS_MODE,
     PHYSICS_MODES,
+    SPIN_PRESET,
+    SPIN_PRESET_IDS,
+    SPIN_PRESET_LABELS,
+    setSpinPreset,
     CUSHION_LIP_SCALE,
     CUSHION_LIP_SCALE_MIN,
     CUSHION_LIP_SCALE_MAX,
@@ -101,6 +105,7 @@ const ballRestitutionBtn = document.getElementById('ball-restitution-btn');
 const cushionRestitutionBtn = document.getElementById('cushion-restitution-btn');
 const physicsModeBtn = document.getElementById('physics-mode-btn');
 const cushionLipBtn = document.getElementById('cushion-lip-btn');
+const spinPresetBtn = document.getElementById('spin-preset-btn');
 const spinPad = document.getElementById('spin-pad');
 const spinThumb = document.getElementById('spin-pad-thumb');
 const spinResetBtn = document.getElementById('spin-reset-btn');
@@ -162,6 +167,7 @@ const AIM_LINE_VARIANT_KEY = 'vtj-pool-aim-line-variant';
 const BALL_RESTITUTION_PROFILE_KEY = 'vtj-pool-ball-restitution-profile';
 const CUSHION_RESTITUTION_PROFILE_KEY = 'vtj-pool-cushion-restitution-profile';
 const PHYSICS_MODE_KEY = 'vtj-pool-physics-mode';
+const SPIN_PRESET_KEY = 'vtj-pool-spin-preset';
 
 function loadAimLineVariant() {
     try {
@@ -324,6 +330,38 @@ function togglePhysicsMode() {
         // ignore storage errors
     }
     updatePhysicsModeButton();
+}
+
+function updateSpinPresetButton() {
+    if (!spinPresetBtn) return;
+    const label = SPIN_PRESET_LABELS[SPIN_PRESET] ?? SPIN_PRESET;
+    spinPresetBtn.textContent = `spin:${label}`;
+    spinPresetBtn.classList.toggle('is-active', SPIN_PRESET !== 'default');
+    spinPresetBtn.setAttribute(
+        'aria-label',
+        `Пресет винта: ${SPIN_PRESET}. Нажмите для переключения`
+    );
+}
+
+function loadSpinPreset() {
+    try {
+        const saved = localStorage.getItem(SPIN_PRESET_KEY);
+        if (saved) setSpinPreset(saved);
+    } catch {
+        // ignore storage errors
+    }
+}
+
+function toggleSpinPreset() {
+    const index = SPIN_PRESET_IDS.indexOf(SPIN_PRESET);
+    const next = SPIN_PRESET_IDS[(index + 1) % SPIN_PRESET_IDS.length];
+    setSpinPreset(next);
+    try {
+        localStorage.setItem(SPIN_PRESET_KEY, next);
+    } catch {
+        // ignore storage errors
+    }
+    updateSpinPresetButton();
 }
 
 function updateCushionLipButton() {
@@ -1010,18 +1048,25 @@ if (cushionLipBtn) {
     cushionLipBtn.addEventListener('click', cycleCushionLipScale);
 }
 
+if (spinPresetBtn) {
+    spinPresetBtn.classList.add('aim-toggle-btn');
+    spinPresetBtn.addEventListener('click', toggleSpinPreset);
+}
+
 resetBtn.addEventListener('click', initGame);
 
 loadAimLineVariant();
 loadAimModifier();
 loadRestitutionProfiles();
 loadPhysicsMode();
+loadSpinPreset();
 loadCushionLipScale();
 updateAimLineVariantButton();
 updateAimModifierButton();
 updateBallRestitutionButton();
 updateCushionRestitutionButton();
 updatePhysicsModeButton();
+updateSpinPresetButton();
 updateCushionLipButton();
 updateAimSliderVisual();
 initPowerMarks();

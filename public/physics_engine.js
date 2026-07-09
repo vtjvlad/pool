@@ -35,6 +35,10 @@ import {
     OBJECT_DRAW_BRAKE_RATIO,
     FOLLOW_COLLISION_KICK,
     CUE_FOLLOW_RATIO,
+    SIDE_SPIN_CURVE_MAX_SLIDING,
+    SIDE_SPIN_CURVE_MAX_ROLLING,
+    SIDE_SPIN_LATERAL_CAP,
+    SIDE_SPIN_RESIDUAL_MIX,
     spinSpeedEffectiveness,
     sideSpinSpeedEffectiveness,
     drawSpeedEffectiveness
@@ -57,6 +61,28 @@ function stopBall(ball) {
     ball.spin = 0;
     ball.topSpin = 0;
     ball.slide = 0;
+    ball.drawAxisX = 0;
+    ball.drawAxisY = 0;
+}
+
+function setDrawAxis(ball, axisX, axisY) {
+    const len = Math.hypot(axisX, axisY);
+    if (len <= 1e-6) return;
+    ball.drawAxisX = axisX / len;
+    ball.drawAxisY = axisY / len;
+}
+
+function clearDrawAxis(ball) {
+    ball.drawAxisX = 0;
+    ball.drawAxisY = 0;
+}
+
+function getDrawAxis(ball, dirX, dirY) {
+    const ax = ball.drawAxisX || 0;
+    const ay = ball.drawAxisY || 0;
+    const len = Math.hypot(ax, ay);
+    if (len > 0.5) return { x: ax / len, y: ay / len };
+    return { x: dirX, y: dirY };
 }
 
 function decayResidualSpin(ball, dt) {
@@ -109,7 +135,7 @@ function applySideSpinLateral(ball, speed, tanX, tanY, dt, throwStrength, slideM
 
     const speedEff = sideSpinSpeedEffectiveness(speed);
     const lateral = ball.spin * throwStrength * speedEff * slideMix * dt;
-    const cap = speed * 0.06 * speedEff * Math.max(dt * 50, 0.5);
+    const cap = speed * SIDE_SPIN_LATERAL_CAP * speedEff * Math.max(dt * 50, 0.5);
     const clamped = clamp(lateral, -cap, cap);
 
     ball.vx += tanX * clamped;
@@ -122,7 +148,7 @@ function applySideSpinCurve(ball, speed, tanX, tanY, dt, strength, maxTurn) {
     const slideFactor = clamp(ball.slide || 0, 0, 1);
     const slideMix = slideFactor > SLIDE_THRESHOLD
         ? 0.5 + slideFactor * 0.5
-        : (Math.abs(ball.spin) > SLEEP_SPIN * 2 ? 0.28 : 0);
+        : (Math.abs(ball.spin) > SLEEP_SPIN * 2 ? SIDE_SPIN_RESIDUAL_MIX : 0);
     const rollMix = 1 - slideMix;
 
     applySideSpinLateral(ball, speed, tanX, tanY, dt, SIDE_SPIN_SLIDE_THROW, slideMix);
@@ -149,12 +175,26 @@ function applySideSpinCurve(ball, speed, tanX, tanY, dt, strength, maxTurn) {
 
 function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
     const slideFactor = clamp(ball.slide || 0, 0, 1);
+    const drawAxis = getDrawAxis(ball, dirX, dirY);
+    const forwardSpeed = drawAxis.x * ball.vx + drawAxis.y * ball.vy;
+    const rollingBack = forwardSpeed < -SLEEP_SPEED;
+    const hasDrawAxis = Math.hypot(ball.drawAxisX || 0, ball.drawAxisY || 0) > 0.5;
+    const inDrawRollback = rollingBack || hasDrawAxis;
+
+    if (hasDrawAxis && speed <= SLEEP_SPEED * 4) {
+        settleLinearMotion(ball);
+        ball.topSpin = 0;
+        ball.slide = 0;
+        clearDrawAxis(ball);
+        return;
+    }
+
     let loss = rollingLoss(speed, dt) + CLOTH_SLIDE_DECEL * slideFactor * dt;
 
     const topSpin = ball.topSpin || 0;
     const speedEff = spinSpeedEffectiveness(speed);
     const drawEff = drawSpeedEffectiveness(speed);
-    if (topSpin < -SLEEP_SPIN) {
+    if (topSpin < -SLEEP_SPIN && !rollingBack) {
         loss += CLOTH_SLIDE_DECEL * clamp(-topSpin / LOW_SPEED_THRESHOLD, 0, 0.48) * dt * drawEff;
     } else if (topSpin > SLEEP_SPIN) {
         loss *= Math.max(0.35, 1 - topSpin * speedEff / (LOW_SPEED_THRESHOLD * 2.2));
@@ -164,7 +204,7 @@ function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
 
     ball.vx = dirX * nextSpeed;
     ball.vy = dirY * nextSpeed;
-    nextSpeed = applySideSpinCurve(ball, nextSpeed, tanX, tanY, dt, SPIN_CURVE_WHILE_SLIDING, 0.07);
+    nextSpeed = applySideSpinCurve(ball, nextSpeed, tanX, tanY, dt, SPIN_CURVE_WHILE_SLIDING, SIDE_SPIN_CURVE_MAX_SLIDING);
 
     if (nextSpeed > 0) {
         const len = Math.hypot(ball.vx, ball.vy) || 1;
@@ -179,28 +219,38 @@ function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
         const rollEff = topSpin < 0 ? drawSpeedEffectiveness(nextSpeed) : spinSpeedEffectiveness(nextSpeed);
         const speedFactor = 1 / (1 + nextSpeed / (LOW_SPEED_THRESHOLD * 2.4));
         const gripBoost = 1 + clamp(1 - nextSpeed / LOW_SPEED_THRESHOLD, 0, 0.75);
-        const resolve = SLIP_RESOLVE_RATE * dt * (1 + slideFactor * 0.75) * speedFactor * gripBoost * rollEff;
+        const resolveRate = rollingBack ? SLIP_RESOLVE_RATE * 0.42 : SLIP_RESOLVE_RATE;
+        const resolve = resolveRate * dt * (1 + slideFactor * 0.75) * speedFactor * gripBoost * rollEff;
         const delta = Math.min(Math.abs(topSpin), resolve) * Math.sign(topSpin);
         ball.topSpin = topSpin - delta;
 
         if (topSpin < 0) {
-            nextSpeed = Math.max(0, nextSpeed - Math.abs(delta) * DRAW_FORWARD_BRAKE * rollEff);
-            if (nextSpeed > SLEEP_SPEED) {
-                const len = Math.hypot(ball.vx, ball.vy) || 1;
-                ball.vx = (ball.vx / len) * nextSpeed;
-                ball.vy = (ball.vy / len) * nextSpeed;
+            if (!rollingBack) {
+                nextSpeed = Math.max(0, nextSpeed - Math.abs(delta) * DRAW_FORWARD_BRAKE * rollEff);
+                if (nextSpeed > SLEEP_SPEED) {
+                    const len = Math.hypot(ball.vx, ball.vy) || 1;
+                    ball.vx = (ball.vx / len) * nextSpeed;
+                    ball.vy = (ball.vy / len) * nextSpeed;
+                }
             }
 
             const reverseThreshold = LOW_SPEED_THRESHOLD * DRAW_REVERSE_SPEED_THRESHOLD;
             const spinLeft = Math.abs(ball.topSpin);
-            const alongDir = dirX * ball.vx + dirY * ball.vy;
-            if (spinLeft > SLEEP_SPIN && nextSpeed < reverseThreshold * (0.72 + rollEff * 0.28) && alongDir > -SLEEP_SPEED) {
+            const updatedForwardSpeed = drawAxis.x * ball.vx + drawAxis.y * ball.vy;
+            if (
+                !rollingBack &&
+                !hasDrawAxis &&
+                spinLeft > SLEEP_SPIN &&
+                nextSpeed < reverseThreshold * (0.72 + rollEff * 0.28) &&
+                updatedForwardSpeed >= -SLEEP_SPEED
+            ) {
                 const backSpeed = Math.min(
                     (spinLeft * DRAW_REVERSE_FACTOR + (reverseThreshold - nextSpeed) * 0.22) * rollEff,
                     LOW_SPEED_THRESHOLD * DRAW_MAX_REVERSE_SPEED_SCALE * rollEff
                 );
-                ball.vx = -dirX * backSpeed;
-                ball.vy = -dirY * backSpeed;
+                setDrawAxis(ball, drawAxis.x, drawAxis.y);
+                ball.vx = -drawAxis.x * backSpeed;
+                ball.vy = -drawAxis.y * backSpeed;
                 ball.slide = Math.max(ball.slide || 0, 0.48);
                 ball.topSpin *= 0.62;
                 return;
@@ -217,9 +267,13 @@ function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
     ball.slide = Math.max(0, slideFactor - SLIDE_RESOLVE_RATE * dt * sideSpinHold);
     ball.spin *= Math.exp(-SPIN_SLIDE_DAMP * dt);
 
+    if (inDrawRollback && speed > SLEEP_SPEED * 2) {
+        ball.slide = Math.max(ball.slide || 0, SLIDE_THRESHOLD + 0.02);
+    }
+
     if (ball.slide <= SLIDE_THRESHOLD && Math.abs(ball.topSpin) <= SLEEP_SPIN * 3) {
         ball.slide = 0;
-        ball.topSpin = 0;
+        if (!inDrawRollback) ball.topSpin = 0;
     }
 }
 
@@ -237,7 +291,7 @@ function integrateRolling(ball, speed, dirX, dirY, dt) {
     const tanY = dirX;
     ball.vx = dirX * nextSpeed;
     ball.vy = dirY * nextSpeed;
-    nextSpeed = applySideSpinCurve(ball, nextSpeed, tanX, tanY, dt, SPIN_CURVE_WHILE_ROLLING, 0.03);
+    nextSpeed = applySideSpinCurve(ball, nextSpeed, tanX, tanY, dt, SPIN_CURVE_WHILE_ROLLING, SIDE_SPIN_CURVE_MAX_ROLLING);
 
     if (nextSpeed > SLEEP_SPEED) {
         const len = Math.hypot(ball.vx, ball.vy) || 1;
@@ -347,6 +401,7 @@ function applyTopSpinCollision(striker, other, strikerPreVx, strikerPreVy, nx, n
             impactSpeed * 0.28,
             impactSpeed * 0.52 * drawEff
         );
+        setDrawAxis(striker, shotX, shotY);
         setAlongVelocity(striker, shotX, shotY, -drawBackSpeed);
 
         const objBrake = drawMag * OBJECT_DRAW_BRAKE_RATIO;
