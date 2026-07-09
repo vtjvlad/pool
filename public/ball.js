@@ -12,6 +12,13 @@ import {
     BALL_MASS_MAX_G
 } from './constants.js';
 import { getHeadSpot, getPlaySurface } from './utils.js';
+import {
+    rotateVec,
+    quatMultiply,
+    quatNormalize,
+    quatConjugate,
+    quatFromRotation
+} from './math3d.js';
 
 const IDENTITY_QUAT = { w: 1, x: 0, y: 0, z: 0 };
 const stripeCanvasCache = new Map();
@@ -43,24 +50,6 @@ function getStripeCanvas(size) {
     return stripeCanvasCache.get(size);
 }
 
-function quatNormalize(q) {
-    const len = Math.hypot(q.w, q.x, q.y, q.z) || 1;
-    return { w: q.w / len, x: q.x / len, y: q.y / len, z: q.z / len };
-}
-
-function quatMultiply(a, b) {
-    return {
-        w: a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z,
-        x: a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y,
-        y: a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x,
-        z: a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w
-    };
-}
-
-function quatConjugate(q) {
-    return { w: q.w, x: -q.x, y: -q.y, z: -q.z };
-}
-
 function hexToRgb(hex) {
     const n = parseInt(hex.slice(1), 16);
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
@@ -86,17 +75,6 @@ function sphereLocalShade(lx, ly, lz, forCue = false) {
 function shadeRgb(rgb, factor, darken = 1) {
     const k = factor * darken;
     return rgb.map(c => Math.round(c * k));
-}
-
-function rotateVec(q, x, y, z) {
-    const tx = 2 * (q.y * z - q.z * y);
-    const ty = 2 * (q.z * x - q.x * z);
-    const tz = 2 * (q.x * y - q.y * x);
-    return [
-        x + q.w * tx + (q.y * tz - q.z * ty),
-        y + q.w * ty + (q.z * tx - q.x * tz),
-        z + q.w * tz + (q.x * ty - q.y * tx)
-    ];
 }
 
 function clamp(value, min, max) {
@@ -426,13 +404,8 @@ export class Ball {
     }
 
     applyRotationVector(rx, ry, rz) {
-        const angle = Math.hypot(rx, ry, rz);
-        if (angle < 1e-10) return;
-
-        const half = angle * 0.5;
-        const s = Math.sin(half) / angle;
-        const c = Math.cos(half);
-        const delta = { w: c, x: rx * s, y: ry * s, z: rz * s };
+        const delta = quatFromRotation(rx, ry, rz);
+        if (delta.w === 1 && delta.x === 0 && delta.y === 0 && delta.z === 0) return;
         this.orientation = quatNormalize(quatMultiply(delta, this.orientation));
     }
 

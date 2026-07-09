@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>vtj pool</title>
+  <script type="module" crossorigin src="/assets/index-C9refBon.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BE2E6aaR.css">
+</head>
+<body>
+    <!-- Отключено требование альбомной ориентации
+    <div id="rotate-hint">
+        <div id="rotate-hint-icon">↻</div>
+        <p>Поверните устройство в альбомную ориентацию</p>
+    </div>
+    -->
+
+    <div id="game-container">
+        <div id="game-stage">
+        <header id="top-bar">
+            <div id="top-bar-left">
+                <div class="stat-pill">
+                    <span class="stat-label">Забито</span>
+                    <span id="score">0</span><span class="stat-total">/15</span>
+                </div>
+            </div>
+            <h1 id="game-title">vtj pool</h1>
+            <div id="top-bar-right">
+                <div id="spin-controls">
+                    <span class="control-label">Винт</span>
+                    <div id="spin-pad">
+                        <div class="spin-pad-mark spin-pad-mark-h"></div>
+                        <div class="spin-pad-mark spin-pad-mark-v"></div>
+                        <div id="spin-pad-thumb"></div>
+                    </div>
+                    <button id="spin-reset-btn" type="button">Сброс</button>
+                </div>
+                <button id="reset-btn" type="button">Новая игра</button>
+            </div>
+        </header>
+        <div id="play-area">
+            <div id="shot-controls">
+                <span id="power-value">0%</span>
+                <div id="power-pull-track">
+                    <div id="power-pull-ball" aria-hidden="true"></div>
+                    <div id="power-pull-marks" aria-hidden="true"></div>
+                    <div id="power-pull-fill"></div>
+                    <div id="power-pull-thumb"></div>
+                </div>
+            </div>
+            <div id="canvas-wrap">
+                <canvas id="billiard-canvas" width="1040" height="520"></canvas>
+            </div>
+            <div id="right-side-controls">
+                <div id="aim-controls">
+                    <span class="control-label">Прицел</span>
+                    <div id="aim-slider-track">
+                        <div id="aim-wheel">
+                            <div id="aim-wheel-cap-top"></div>
+                            <div id="aim-wheel-body">
+                                <div id="aim-wheel-notches"></div>
+                                <div id="aim-wheel-pointer"></div>
+                            </div>
+                            <div id="aim-wheel-cap-bottom"></div>
+                        </div>
+                    </div>
+                    <span id="aim-degrees">0°</span>
+                </div>
+            </div>
+        </div>
+        <div id="bottom-bar">
+            <div id="switch-panel">
+                <span class="switch-panel-label">Переключатели</span>
+                <div id="aim-toggles">
+                    <button id="aim-line-variant-btn" type="button">off</button>
+                    <button id="aim-modifier-btn" type="button">mod</button>
+                    <button id="physics-mode-btn" type="button">mode:bal</button>
+                    <button id="ball-restitution-btn" type="button">ball:t</button>
+                    <button id="cushion-restitution-btn" type="button">cush:t</button>
+                    <button id="cushion-lip-btn" type="button">lip:90%</button>
+                    <button id="spin-preset-btn" type="button">spin:def</button>
+                </div>
+            </div>
+            <p id="hint">Стол — тап или свайп · слева — сила · справа — прицел · сверху — винт</p>
+            <div id="pocketed-tray">
+                <span id="pocketed-tray-label">Забитые</span>
+                <div id="pocketed-tray-slots"></div>
+            </div>
+        </div>
+        </div>
+    </div>
+</body>
+</html>
