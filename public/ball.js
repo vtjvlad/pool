@@ -1,6 +1,7 @@
 import {
     BALL_RADIUS,
     SLEEP_SPEED,
+    SLEEP_SPIN,
     SLIDE_THRESHOLD,
     OBJECT_ENGLISH_VISUAL_SCALE,
     POCKET_FALL_SPEED_REF,
@@ -217,12 +218,32 @@ function drawTableBallShadow(ctx, x, y, r, depthScale, speed) {
 
 /** Доля визуального качения: только по ball.slide (не по spin — иначе шар «скользит» почти всегда). */
 function rollingVisualMix(ball) {
+    if (ball.isCueBall && ball.cueDrawPostHit) return 1;
+
     const slide = ball.slide || 0;
     if (slide <= 0) return 1;
     if (slide <= SLIDE_THRESHOLD) {
         return clamp(1 - slide / SLIDE_THRESHOLD, 0, 1);
     }
     return 0;
+}
+
+function cueDrawApproachRollMix(ball, topSpin, baseRollMix) {
+    const slide = ball.slide || 0;
+    let mix = baseRollMix;
+    if (slide > SLIDE_THRESHOLD) {
+        mix = Math.max(mix, 0.95);
+    } else if (slide > 0) {
+        mix = Math.max(mix, clamp(1 - slide / SLIDE_THRESHOLD * 0.12, 0.88, 1));
+    } else if (Math.abs(topSpin) > SLEEP_SPIN) {
+        mix = Math.max(mix, 0.9);
+    }
+    return mix;
+}
+
+export function clearCueDrawVisualState(ball) {
+    ball.cueDrawApproach = false;
+    ball.cueDrawPostHit = false;
 }
 
 /** Синхронизирует угловую скорость ω с кинематическим состоянием физики (v, spin, topSpin). */
@@ -233,14 +254,28 @@ export function updateBallOmega(ball) {
     const speed = Math.hypot(vx, vy);
     const spin = ball.spin || 0;
     const topSpin = ball.topSpin || 0;
-    const rollMix = rollingVisualMix(ball);
+
+    if (ball.isCueBall && ball.cueDrawPostHit) {
+        ball.omegaX = speed > 1e-8 ? -vy / r : 0;
+        ball.omegaY = speed > 1e-8 ? vx / r : 0;
+        ball.omegaZ = spin / r;
+        return;
+    }
+
+    let rollMix = rollingVisualMix(ball);
+    let rollSign = 1;
+
+    if (ball.isCueBall && ball.cueDrawApproach) {
+        rollSign = -1;
+        rollMix = cueDrawApproachRollMix(ball, topSpin, rollMix);
+    }
 
     let omegaX = 0;
     let omegaY = 0;
 
     if (speed > 1e-8 && rollMix > 1e-6) {
-        omegaX = (-vy / r) * rollMix;
-        omegaY = (vx / r) * rollMix;
+        omegaX = (-vy / r) * rollMix * rollSign;
+        omegaY = (vx / r) * rollMix * rollSign;
     }
 
     let omegaZ = spin / r;
@@ -248,7 +283,8 @@ export function updateBallOmega(ball) {
         omegaZ *= OBJECT_ENGLISH_VISUAL_SCALE;
     }
 
-    if (speed > 1e-8 && Math.abs(topSpin) > 1e-8 && rollMix > 1e-6) {
+    const skipTopSpinRoll = ball.isCueBall && ball.cueDrawApproach;
+    if (speed > 1e-8 && Math.abs(topSpin) > 1e-8 && rollMix > 1e-6 && !skipTopSpinRoll) {
         const dirX = vx / speed;
         const dirY = vy / speed;
         const topOmega = topSpin / r;
@@ -300,6 +336,8 @@ export class Ball {
         this.lastDirY = 0;
         this.drawAxisX = 0;
         this.drawAxisY = 0;
+        this.cueDrawApproach = false;
+        this.cueDrawPostHit = false;
     }
 
     startPocketFall(pocket) {
@@ -329,6 +367,7 @@ export class Ball {
         clearBallOmega(this);
         this.drawAxisX = 0;
         this.drawAxisY = 0;
+        clearCueDrawVisualState(this);
     }
 
     updatePocketFall(balls) {
@@ -687,6 +726,7 @@ export class Ball {
         this.lastDirY = 0;
         this.drawAxisX = 0;
         this.drawAxisY = 0;
+        clearCueDrawVisualState(this);
 
         for (const ball of balls) {
             if (ball === this || ball.inPocket) continue;

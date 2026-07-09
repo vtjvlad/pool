@@ -51,7 +51,7 @@ import {
 import { resolveBallCushionCollision } from './cushion_collision.js';
 import { jitterCollisionNormal } from './collision_noise.js';
 import { tryPocketBall } from './utils.js';
-import { updateBallOmega, clearBallOmega } from './ball.js';
+import { updateBallOmega, clearBallOmega, clearCueDrawVisualState } from './ball.js';
 
 function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -69,6 +69,7 @@ function stopBall(ball) {
     ball.slide = 0;
     ball.drawAxisX = 0;
     ball.drawAxisY = 0;
+    clearCueDrawVisualState(ball);
     clearBallOmega(ball);
 }
 
@@ -449,6 +450,8 @@ function applyTopSpinCollision(striker, other, strikerPreVx, strikerPreVy, nx, n
         other.slide = Math.max(other.slide || 0, slideBoost);
         striker.slide = Math.max(striker.slide || 0, slideBoost * 0.85);
         striker.topSpin = Math.min(striker.topSpin, topSpin * 0.72);
+        striker.cueDrawApproach = false;
+        striker.cueDrawPostHit = true;
         return;
     }
 
@@ -624,6 +627,16 @@ export function resolveCollision(b1, b2) {
     const slideBoost = clamp(COLLISION_SLIDE_MIN + impactSpeed * 0.018, COLLISION_SLIDE_MIN, 0.55);
     b1.slide = Math.max(b1.slide || 0, slideBoost);
     b2.slide = Math.max(b2.slide || 0, slideBoost);
+
+    const cue = b1.isCueBall ? b1 : (b2.isCueBall ? b2 : null);
+    if (cue) {
+        const other = cue === b1 ? b2 : b1;
+        if (!other.isCueBall) {
+            const hadDraw = cue.cueDrawApproach || (cue.topSpin || 0) < -SLEEP_SPIN;
+            if (hadDraw) cue.cueDrawPostHit = true;
+            cue.cueDrawApproach = false;
+        }
+    }
 
     wakeBall(b1);
     wakeBall(b2);

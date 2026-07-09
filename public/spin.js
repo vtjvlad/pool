@@ -7,11 +7,12 @@ import {
     SQUIRT_FACTOR,
     SPIN_TIP_EFFICIENCY,
     SPIN_STRENGTH,
+    SLEEP_SPIN,
     strikeSpinAmountEffectiveness,
     strikeDrawAmountEffectiveness,
     strikeSquirtEffectiveness
 } from './constants.js';
-import { updateBallOmega } from './ball.js';
+import { updateBallOmega, clearCueDrawVisualState } from './ball.js';
 
 export function spinOffsetNormalized(spinOffsetX, spinOffsetY) {
     return {
@@ -34,6 +35,7 @@ export function applySpinToBall(cueBall, power, angle, spinOffsetX, spinOffsetY)
         cueBall.slide = 0;
         cueBall.topSpin = 0;
         cueBall.spin = 0;
+        clearCueDrawVisualState(cueBall);
         updateBallOmega(cueBall);
         return false;
     }
@@ -51,6 +53,9 @@ export function applySpinToBall(cueBall, power, angle, spinOffsetX, spinOffsetY)
     const slideFromSide = Math.abs(sideOff) * SLIDE_FROM_OFFSET * SLIDE_FROM_SIDE_SCALE;
     const slideFromTop = Math.abs(topOff) * 0.88;
     cueBall.slide = Math.min(1, Math.max(slideFromSide, slideFromTop) + offCenter * 0.16);
+
+    clearCueDrawVisualState(cueBall);
+    cueBall.cueDrawApproach = cueBall.topSpin < -SLEEP_SPIN;
 
     if (Math.abs(sideOff) > 0.05) {
         const squirtEff = strikeSquirtEffectiveness(power);
