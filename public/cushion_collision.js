@@ -10,7 +10,7 @@ import {
     CUSHION_DRAW_KICK,
     SLEEP_SPIN,
     CUSHION_SLIDE,
-    sideSpinSpeedEffectiveness,
+    sideSpinTrajectoryEffectiveness,
     drawSpeedEffectiveness,
     spinSpeedEffectiveness
 } from './constants.js';
@@ -109,7 +109,7 @@ function applyCushionSpin(ball, nx, ny, preImpactSpeed, preVx, preVy, vx, vy) {
     const ty = nx;
     const spin = ball.spin || 0;
     const topSpin = ball.topSpin || 0;
-    const speedEff = sideSpinSpeedEffectiveness(preImpactSpeed);
+    const speedEff = sideSpinTrajectoryEffectiveness(preImpactSpeed);
 
     if (Math.abs(spin) > 1e-6) {
         const approachX = preVx / (preImpactSpeed || 1);

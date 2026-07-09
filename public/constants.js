@@ -180,7 +180,7 @@ const SPIN_TUNING_DEFAULT = {
     spinStrength: 1.5,
     spinSidePower: 1.28,
     spinTopPower: 0.64,
-    squirtFactor: 0.607,
+    squirtFactor: 0.17,
     spinTipEfficiency: 0.61,
     spinCurveWhileSliding: 0.0021,
     spinCurveWhileRolling: 0.00038,
@@ -190,16 +190,30 @@ const SPIN_TUNING_DEFAULT = {
     ballSpinThrow: 0.26,
     sideSpinCollisionThrow: 0.6,
     drawCollisionKick: 0.38,
-    spinSpeedRef: 13.5,
-    spinSpeedFalloff: 1.1,
-    spinSpeedExp: 1.85,
-    spinSpeedMinEff: 0.24,
-    sideSpinSpeedRef: 20,
-    sideSpinSpeedFalloff: 0.58,
-    sideSpinSpeedMinEff: 0.42,
-    drawSpeedRef: 17,
-    drawSpeedFalloff: 0.44,
-    drawSpeedMinEff: 0.62,
+    spinSpeedRef: 18,
+    spinSpeedFalloff: 0.72,
+    spinSpeedExp: 1.5,
+    spinSpeedMinEff: 0.36,
+    sideSpinTrajRefSpeed: 25,
+    sideSpinTrajMinEff: 0.015,
+    sideSpinTrajRamp: 0.42,
+    drawSpeedRef: 19,
+    drawSpeedFalloff: 0.32,
+    drawSpeedMinEff: 0.66,
+    strikeSpinMinEff: 0.78,
+    strikeSpinPlateauEff: 0.48,
+    strikeSpinMaxEff: 0.52,
+    strikeSpinRef: 12,
+    strikeSpinHighRef: 24,
+    strikeDrawMinEff: 0.8,
+    strikeDrawPlateauEff: 0.52,
+    strikeDrawMaxEff: 0.56,
+    strikeDrawRef: 13,
+    strikeDrawHighRef: 25,
+    strikeSquirtRef: 13.5,
+    strikeSquirtFalloff: 1.1,
+    strikeSquirtExp: 1.85,
+    strikeSquirtMinEff: 0.24,
     sideSpinCurveMaxSliding: 0.11,
     sideSpinCurveMaxRolling: 0.045,
     sideSpinLateralCap: 0.085,
@@ -213,7 +227,7 @@ export const SPIN_PRESETS = {
         spinStrength: 1.0,
         spinSidePower: 0.82,
         spinTopPower: 0.48,
-        squirtFactor: 0.22,
+        squirtFactor: 0.07,
         spinTipEfficiency: 0.35,
         spinCurveWhileSliding: 0.0011,
         spinCurveWhileRolling: 0.00012,
@@ -223,16 +237,30 @@ export const SPIN_PRESETS = {
         ballSpinThrow: 0.16,
         sideSpinCollisionThrow: 0.34,
         drawCollisionKick: 0.3,
-        spinSpeedRef: 10.5,
-        spinSpeedFalloff: 1.65,
-        spinSpeedExp: 2.1,
-        spinSpeedMinEff: 0.12,
-        sideSpinSpeedRef: 15,
-        sideSpinSpeedFalloff: 0.95,
-        sideSpinSpeedMinEff: 0.28,
-        drawSpeedRef: 13,
-        drawSpeedFalloff: 0.72,
-        drawSpeedMinEff: 0.45,
+        spinSpeedRef: 14,
+        spinSpeedFalloff: 0.95,
+        spinSpeedExp: 1.65,
+        spinSpeedMinEff: 0.28,
+        sideSpinTrajRefSpeed: 22,
+        sideSpinTrajMinEff: 0.01,
+        sideSpinTrajRamp: 0.38,
+        drawSpeedRef: 16,
+        drawSpeedFalloff: 0.42,
+        drawSpeedMinEff: 0.58,
+        strikeSpinMinEff: 0.74,
+        strikeSpinPlateauEff: 0.42,
+        strikeSpinMaxEff: 0.46,
+        strikeSpinRef: 11,
+        strikeSpinHighRef: 22,
+        strikeDrawMinEff: 0.76,
+        strikeDrawPlateauEff: 0.46,
+        strikeDrawMaxEff: 0.5,
+        strikeDrawRef: 12,
+        strikeDrawHighRef: 23,
+        strikeSquirtRef: 10.5,
+        strikeSquirtFalloff: 1.65,
+        strikeSquirtExp: 2.1,
+        strikeSquirtMinEff: 0.12,
         sideSpinCurveMaxSliding: 0.06,
         sideSpinCurveMaxRolling: 0.022,
         sideSpinLateralCap: 0.055,
@@ -253,16 +281,30 @@ export const SPIN_PRESETS = {
         ballSpinThrow: 0.34,
         sideSpinCollisionThrow: 0.78,
         drawCollisionKick: 0.46,
-        spinSpeedRef: 16,
-        spinSpeedFalloff: 0.82,
-        spinSpeedExp: 1.65,
-        spinSpeedMinEff: 0.32,
-        sideSpinSpeedRef: 24,
-        sideSpinSpeedFalloff: 0.42,
-        sideSpinSpeedMinEff: 0.52,
-        drawSpeedRef: 20,
-        drawSpeedFalloff: 0.32,
+        spinSpeedRef: 21,
+        spinSpeedFalloff: 0.55,
+        spinSpeedExp: 1.35,
+        spinSpeedMinEff: 0.44,
+        sideSpinTrajRefSpeed: 27,
+        sideSpinTrajMinEff: 0.02,
+        sideSpinTrajRamp: 0.48,
+        drawSpeedRef: 22,
+        drawSpeedFalloff: 0.24,
         drawSpeedMinEff: 0.72,
+        strikeSpinMinEff: 0.82,
+        strikeSpinPlateauEff: 0.54,
+        strikeSpinMaxEff: 0.58,
+        strikeSpinRef: 13,
+        strikeSpinHighRef: 26,
+        strikeDrawMinEff: 0.84,
+        strikeDrawPlateauEff: 0.58,
+        strikeDrawMaxEff: 0.62,
+        strikeDrawRef: 14,
+        strikeDrawHighRef: 27,
+        strikeSquirtRef: 16,
+        strikeSquirtFalloff: 0.82,
+        strikeSquirtExp: 1.65,
+        strikeSquirtMinEff: 0.32,
         sideSpinCurveMaxSliding: 0.14,
         sideSpinCurveMaxRolling: 0.058,
         sideSpinLateralCap: 0.11,
@@ -303,13 +345,28 @@ export let SPIN_SPEED_FALLOFF = SPIN_TUNING_DEFAULT.spinSpeedFalloff;
 export let SPIN_SPEED_EXP = SPIN_TUNING_DEFAULT.spinSpeedExp;
 export let SPIN_SPEED_MIN_EFF = SPIN_TUNING_DEFAULT.spinSpeedMinEff;
 
-export let SIDE_SPIN_SPEED_REF = SPIN_TUNING_DEFAULT.sideSpinSpeedRef;
-export let SIDE_SPIN_SPEED_FALLOFF = SPIN_TUNING_DEFAULT.sideSpinSpeedFalloff;
-export let SIDE_SPIN_SPEED_MIN_EFF = SPIN_TUNING_DEFAULT.sideSpinSpeedMinEff;
+export let SIDE_SPIN_TRAJ_REF_SPEED = SPIN_TUNING_DEFAULT.sideSpinTrajRefSpeed;
+export let SIDE_SPIN_TRAJ_MIN_EFF = SPIN_TUNING_DEFAULT.sideSpinTrajMinEff;
+export let SIDE_SPIN_TRAJ_RAMP = SPIN_TUNING_DEFAULT.sideSpinTrajRamp;
 
 export let DRAW_SPEED_REF = SPIN_TUNING_DEFAULT.drawSpeedRef;
 export let DRAW_SPEED_FALLOFF = SPIN_TUNING_DEFAULT.drawSpeedFalloff;
 export let DRAW_SPEED_MIN_EFF = SPIN_TUNING_DEFAULT.drawSpeedMinEff;
+
+export let STRIKE_SPIN_MIN_EFF = SPIN_TUNING_DEFAULT.strikeSpinMinEff;
+export let STRIKE_SPIN_PLATEAU_EFF = SPIN_TUNING_DEFAULT.strikeSpinPlateauEff;
+export let STRIKE_SPIN_MAX_EFF = SPIN_TUNING_DEFAULT.strikeSpinMaxEff;
+export let STRIKE_SPIN_REF = SPIN_TUNING_DEFAULT.strikeSpinRef;
+export let STRIKE_SPIN_HIGH_REF = SPIN_TUNING_DEFAULT.strikeSpinHighRef;
+export let STRIKE_DRAW_MIN_EFF = SPIN_TUNING_DEFAULT.strikeDrawMinEff;
+export let STRIKE_DRAW_PLATEAU_EFF = SPIN_TUNING_DEFAULT.strikeDrawPlateauEff;
+export let STRIKE_DRAW_MAX_EFF = SPIN_TUNING_DEFAULT.strikeDrawMaxEff;
+export let STRIKE_DRAW_REF = SPIN_TUNING_DEFAULT.strikeDrawRef;
+export let STRIKE_DRAW_HIGH_REF = SPIN_TUNING_DEFAULT.strikeDrawHighRef;
+export let STRIKE_SQUIRT_REF = SPIN_TUNING_DEFAULT.strikeSquirtRef;
+export let STRIKE_SQUIRT_FALLOFF = SPIN_TUNING_DEFAULT.strikeSquirtFalloff;
+export let STRIKE_SQUIRT_EXP = SPIN_TUNING_DEFAULT.strikeSquirtExp;
+export let STRIKE_SQUIRT_MIN_EFF = SPIN_TUNING_DEFAULT.strikeSquirtMinEff;
 
 export let SIDE_SPIN_CURVE_MAX_SLIDING = SPIN_TUNING_DEFAULT.sideSpinCurveMaxSliding;
 export let SIDE_SPIN_CURVE_MAX_ROLLING = SPIN_TUNING_DEFAULT.sideSpinCurveMaxRolling;
@@ -335,12 +392,26 @@ function applySpinPresetValues(tuning) {
     SPIN_SPEED_FALLOFF = tuning.spinSpeedFalloff;
     SPIN_SPEED_EXP = tuning.spinSpeedExp;
     SPIN_SPEED_MIN_EFF = tuning.spinSpeedMinEff;
-    SIDE_SPIN_SPEED_REF = tuning.sideSpinSpeedRef;
-    SIDE_SPIN_SPEED_FALLOFF = tuning.sideSpinSpeedFalloff;
-    SIDE_SPIN_SPEED_MIN_EFF = tuning.sideSpinSpeedMinEff;
+    SIDE_SPIN_TRAJ_REF_SPEED = tuning.sideSpinTrajRefSpeed;
+    SIDE_SPIN_TRAJ_MIN_EFF = tuning.sideSpinTrajMinEff;
+    SIDE_SPIN_TRAJ_RAMP = tuning.sideSpinTrajRamp;
     DRAW_SPEED_REF = tuning.drawSpeedRef;
     DRAW_SPEED_FALLOFF = tuning.drawSpeedFalloff;
     DRAW_SPEED_MIN_EFF = tuning.drawSpeedMinEff;
+    STRIKE_SPIN_MIN_EFF = tuning.strikeSpinMinEff;
+    STRIKE_SPIN_PLATEAU_EFF = tuning.strikeSpinPlateauEff;
+    STRIKE_SPIN_MAX_EFF = tuning.strikeSpinMaxEff;
+    STRIKE_SPIN_REF = tuning.strikeSpinRef;
+    STRIKE_SPIN_HIGH_REF = tuning.strikeSpinHighRef;
+    STRIKE_DRAW_MIN_EFF = tuning.strikeDrawMinEff;
+    STRIKE_DRAW_PLATEAU_EFF = tuning.strikeDrawPlateauEff;
+    STRIKE_DRAW_MAX_EFF = tuning.strikeDrawMaxEff;
+    STRIKE_DRAW_REF = tuning.strikeDrawRef;
+    STRIKE_DRAW_HIGH_REF = tuning.strikeDrawHighRef;
+    STRIKE_SQUIRT_REF = tuning.strikeSquirtRef;
+    STRIKE_SQUIRT_FALLOFF = tuning.strikeSquirtFalloff;
+    STRIKE_SQUIRT_EXP = tuning.strikeSquirtExp;
+    STRIKE_SQUIRT_MIN_EFF = tuning.strikeSquirtMinEff;
     SIDE_SPIN_CURVE_MAX_SLIDING = tuning.sideSpinCurveMaxSliding;
     SIDE_SPIN_CURVE_MAX_ROLLING = tuning.sideSpinCurveMaxRolling;
     SIDE_SPIN_LATERAL_CAP = tuning.sideSpinLateralCap;
@@ -355,27 +426,87 @@ export function setSpinPreset(preset) {
     return true;
 }
 
+function motionSpinEffectiveness(speed, ref, falloff, exp, minEff) {
+    if (speed <= SLEEP_SPEED) return 1;
+    const ratio = speed / ref;
+    const curve = exp === 2
+        ? ratio * ratio * falloff
+        : Math.pow(ratio, exp) * falloff;
+    return Math.max(minEff, 1 / (1 + curve));
+}
+
+function strikeAmountEffectiveness(
+    power,
+    minEff, plateauEff, maxEff, ref, highRef, rampExp = 0.65
+) {
+    if (power <= SLEEP_SPEED) return minEff;
+    if (power >= highRef) return maxEff;
+    if (power >= ref) {
+        const t = (power - ref) / (highRef - ref);
+        return plateauEff + (maxEff - plateauEff) * t;
+    }
+    const t = power / ref;
+    return minEff + (plateauEff - minEff) * Math.pow(t, rampExp);
+}
+
+/** Эффективность бокового винта при ударе — растёт с силой, не падает на 100% */
+export function strikeSpinAmountEffectiveness(power) {
+    return strikeAmountEffectiveness(
+        power,
+        STRIKE_SPIN_MIN_EFF,
+        STRIKE_SPIN_PLATEAU_EFF,
+        STRIKE_SPIN_MAX_EFF,
+        STRIKE_SPIN_REF,
+        STRIKE_SPIN_HIGH_REF
+    );
+}
+
+/** Эффективность draw/follow при ударе */
+export function strikeDrawAmountEffectiveness(power) {
+    return strikeAmountEffectiveness(
+        power,
+        STRIKE_DRAW_MIN_EFF,
+        STRIKE_DRAW_PLATEAU_EFF,
+        STRIKE_DRAW_MAX_EFF,
+        STRIKE_DRAW_REF,
+        STRIKE_DRAW_HIGH_REF,
+        0.55
+    );
+}
+
+/** Squirt при ударе — сильнее падает на максимальной силе (отдельно от величины spin) */
+export function strikeSquirtEffectiveness(power) {
+    return motionSpinEffectiveness(
+        power,
+        STRIKE_SQUIRT_REF,
+        STRIKE_SQUIRT_FALLOFF,
+        STRIKE_SQUIRT_EXP,
+        STRIKE_SQUIRT_MIN_EFF
+    );
+}
+
+/** Ослабление эффектов винта на текущей скорости шара (столкновения, topSpin) */
 export function spinSpeedEffectiveness(speed) {
-    if (speed <= SLEEP_SPEED) return 1;
-    const ratio = speed / SPIN_SPEED_REF;
-    const falloff = 1 / (1 + Math.pow(ratio, SPIN_SPEED_EXP) * SPIN_SPEED_FALLOFF);
-    return Math.max(SPIN_SPEED_MIN_EFF, falloff);
+    return motionSpinEffectiveness(speed, SPIN_SPEED_REF, SPIN_SPEED_FALLOFF, SPIN_SPEED_EXP, SPIN_SPEED_MIN_EFF);
 }
 
-/** Ослабление бокового спина на скорости — мягче, чем у follow/draw */
+/** Боковой винт → отклонение траектории: ~1–2% на макс. скорости, растёт при замедлении */
+export function sideSpinTrajectoryEffectiveness(speed) {
+    if (speed <= SLEEP_SPEED) return 1;
+    if (speed >= SIDE_SPIN_TRAJ_REF_SPEED) return SIDE_SPIN_TRAJ_MIN_EFF;
+    const t = speed / SIDE_SPIN_TRAJ_REF_SPEED;
+    const slowFactor = 1 - Math.pow(t, SIDE_SPIN_TRAJ_RAMP);
+    return SIDE_SPIN_TRAJ_MIN_EFF + (1 - SIDE_SPIN_TRAJ_MIN_EFF) * slowFactor;
+}
+
+/** @deprecated alias — используйте sideSpinTrajectoryEffectiveness */
 export function sideSpinSpeedEffectiveness(speed) {
-    if (speed <= SLEEP_SPEED) return 1;
-    const ratio = speed / SIDE_SPIN_SPEED_REF;
-    const falloff = 1 / (1 + ratio * ratio * SIDE_SPIN_SPEED_FALLOFF);
-    return Math.max(SIDE_SPIN_SPEED_MIN_EFF, falloff);
+    return sideSpinTrajectoryEffectiveness(speed);
 }
 
-/** Ослабление нижнего спина на скорости — мягче, чем у общего spinSpeedEffectiveness */
+/** Ослабление draw/follow на текущей скорости */
 export function drawSpeedEffectiveness(speed) {
-    if (speed <= SLEEP_SPEED) return 1;
-    const ratio = speed / DRAW_SPEED_REF;
-    const falloff = 1 / (1 + ratio * ratio * DRAW_SPEED_FALLOFF);
-    return Math.max(DRAW_SPEED_MIN_EFF, falloff);
+    return motionSpinEffectiveness(speed, DRAW_SPEED_REF, DRAW_SPEED_FALLOFF, 2, DRAW_SPEED_MIN_EFF);
 }
 
 /** Микро-джиттер угла нормали при столкновениях (только runtime-физика) */

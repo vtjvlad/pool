@@ -40,7 +40,7 @@ import {
     SIDE_SPIN_LATERAL_CAP,
     SIDE_SPIN_RESIDUAL_MIX,
     spinSpeedEffectiveness,
-    sideSpinSpeedEffectiveness,
+    sideSpinTrajectoryEffectiveness,
     drawSpeedEffectiveness
 } from './constants.js';
 import { resolveBallCushionCollision } from './cushion_collision.js';
@@ -133,9 +133,13 @@ function isSliding(ball, speed) {
 function applySideSpinLateral(ball, speed, tanX, tanY, dt, throwStrength, slideMix) {
     if (Math.abs(ball.spin) <= SLEEP_SPIN || speed <= SLEEP_SPEED || slideMix <= 0) return;
 
-    const speedEff = sideSpinSpeedEffectiveness(speed);
-    const lateral = ball.spin * throwStrength * speedEff * slideMix * dt;
-    const cap = speed * SIDE_SPIN_LATERAL_CAP * speedEff * Math.max(dt * 50, 0.5);
+    const trajEff = sideSpinTrajectoryEffectiveness(speed);
+    const lateral = ball.spin * throwStrength * trajEff * slideMix * dt;
+    const forwardTravel = speed * dt;
+    const cap = Math.min(
+        speed * SIDE_SPIN_LATERAL_CAP * trajEff * Math.max(dt * 50, 0.5),
+        forwardTravel * trajEff * 0.04
+    );
     const clamped = clamp(lateral, -cap, cap);
 
     ball.vx += tanX * clamped;
@@ -155,14 +159,17 @@ function applySideSpinCurve(ball, speed, tanX, tanY, dt, strength, maxTurn) {
     applySideSpinLateral(ball, speed, tanX, tanY, dt, SIDE_SPIN_ROLL_THROW, rollMix);
 
     const slideBoost = 1 + slideFactor * 1.4;
-    const speedEff = sideSpinSpeedEffectiveness(speed);
+    const trajEff = sideSpinTrajectoryEffectiveness(speed);
+    const forwardTravel = speed * dt;
     const curve = clamp(
-        ball.spin * strength * speed * speedEff * slideBoost * dt,
-        -speed * maxTurn * dt * speedEff,
-        speed * maxTurn * dt * speedEff
+        ball.spin * strength * speed * trajEff * slideBoost * dt,
+        -speed * maxTurn * dt * trajEff,
+        speed * maxTurn * dt * trajEff
     );
-    ball.vx += tanX * curve;
-    ball.vy += tanY * curve;
+    const curveCap = forwardTravel * trajEff * 0.04;
+    const clampedCurve = clamp(curve, -curveCap, curveCap);
+    ball.vx += tanX * clampedCurve;
+    ball.vy += tanY * clampedCurve;
 
     const newSpeed = Math.hypot(ball.vx, ball.vy);
     if (newSpeed > 1e-8) {
@@ -470,9 +477,10 @@ export function resolveCollision(b1, b2) {
     const ty = nx;
     const v1t = b1.vx * tx + b1.vy * ty;
     const v2t = b2.vx * tx + b2.vy * ty;
-    const speedEff = sideSpinSpeedEffectiveness(impactSpeed);
-    const surf1 = v1t + (b1.spin || 0) * BALL_SPIN_CONTACT * speedEff;
-    const surf2 = v2t + (b2.spin || 0) * BALL_SPIN_CONTACT * speedEff;
+    const trajEff = sideSpinTrajectoryEffectiveness(impactSpeed);
+    const contactEff = Math.max(0.3, Math.sqrt(trajEff));
+    const surf1 = v1t + (b1.spin || 0) * BALL_SPIN_CONTACT * contactEff;
+    const surf2 = v2t + (b2.spin || 0) * BALL_SPIN_CONTACT * contactEff;
     const relSurf = surf2 - surf1;
 
     const jtMax = BALL_FRICTION * Math.abs(impulse);
@@ -483,10 +491,10 @@ export function resolveCollision(b1, b2) {
     b2.vx += jt * tx / b2.mass;
     b2.vy += jt * ty / b2.mass;
 
-    b1.spin = (b1.spin || 0) + jt * BALL_SPIN_CONTACT * speedEff;
-    b2.spin = (b2.spin || 0) - jt * BALL_SPIN_CONTACT * speedEff;
+    b1.spin = (b1.spin || 0) + jt * BALL_SPIN_CONTACT * contactEff;
+    b2.spin = (b2.spin || 0) - jt * BALL_SPIN_CONTACT * contactEff;
 
-    const spinThrow = clamp((b1.spin - b2.spin) * BALL_SPIN_THROW * speedEff, -impactSpeed * 0.07 * speedEff, impactSpeed * 0.07 * speedEff);
+    const spinThrow = clamp((b1.spin - b2.spin) * BALL_SPIN_THROW * trajEff, -impactSpeed * 0.07 * trajEff, impactSpeed * 0.07 * trajEff);
     if (Math.abs(spinThrow) > 1e-6) {
         b1.vx += spinThrow * tx / b1.mass;
         b1.vy += spinThrow * ty / b1.mass;
@@ -512,15 +520,15 @@ export function resolveCollision(b1, b2) {
 
     if (striker.isCueBall && Math.abs(striker.spin || 0) > SLEEP_SPIN) {
         const spinKick = clamp(
-            striker.spin * SIDE_SPIN_COLLISION_THROW * speedEff,
-            -impactSpeed * 0.32 * speedEff,
-            impactSpeed * 0.32 * speedEff
+            striker.spin * SIDE_SPIN_COLLISION_THROW * trajEff,
+            -impactSpeed * 0.32 * trajEff,
+            impactSpeed * 0.32 * trajEff
         );
         striker.vx += spinKick * tx;
         striker.vy += spinKick * ty;
 
         const postSpeed = Math.hypot(striker.vx, striker.vy);
-        const minSpeed = impactSpeed * 0.15 * speedEff;
+        const minSpeed = impactSpeed * 0.15 * trajEff;
         if (postSpeed > SLEEP_SPEED && postSpeed < minSpeed) {
             const scale = minSpeed / postSpeed;
             striker.vx *= scale;

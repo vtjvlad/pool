@@ -7,8 +7,9 @@ import {
     SQUIRT_FACTOR,
     SPIN_TIP_EFFICIENCY,
     SPIN_STRENGTH,
-    spinSpeedEffectiveness,
-    drawSpeedEffectiveness
+    strikeSpinAmountEffectiveness,
+    strikeDrawAmountEffectiveness,
+    strikeSquirtEffectiveness
 } from './constants.js';
 
 export function spinOffsetNormalized(spinOffsetX, spinOffsetY) {
@@ -38,19 +39,20 @@ export function applySpinToBall(cueBall, power, angle, spinOffsetX, spinOffsetY)
     const tipEff = 1 - offCenter * SPIN_TIP_EFFICIENCY;
     const sideOff = Math.sign(offX) * Math.pow(Math.abs(offX), 0.9);
     const topOff = Math.sign(offY) * Math.pow(Math.abs(offY), 0.88);
-    const speedEff = spinSpeedEffectiveness(power);
-    const drawEff = drawSpeedEffectiveness(power);
-    const topSpeedEff = Math.abs(topOff) > 0.04 ? drawEff : 1;
+    const spinAmountEff = strikeSpinAmountEffectiveness(power);
+    const drawAmountEff = strikeDrawAmountEffectiveness(power);
+    const topAmountEff = Math.abs(topOff) > 0.04 ? drawAmountEff : 1;
 
-    cueBall.spin = sideOff * SPIN_SIDE_POWER * power * tipEff * speedEff * SPIN_STRENGTH;
-    cueBall.topSpin = -topOff * SPIN_TOP_POWER * power * tipEff * topSpeedEff * SPIN_STRENGTH;
+    cueBall.spin = sideOff * SPIN_SIDE_POWER * power * tipEff * spinAmountEff * SPIN_STRENGTH;
+    cueBall.topSpin = -topOff * SPIN_TOP_POWER * power * tipEff * topAmountEff * SPIN_STRENGTH;
 
     const slideFromSide = Math.abs(sideOff) * SLIDE_FROM_OFFSET * SLIDE_FROM_SIDE_SCALE;
     const slideFromTop = Math.abs(topOff) * 0.88;
     cueBall.slide = Math.min(1, Math.max(slideFromSide, slideFromTop) + offCenter * 0.16);
 
     if (Math.abs(sideOff) > 0.05) {
-        const squirtAngle = -sideOff * SQUIRT_FACTOR * (0.5 + power * 0.055) * speedEff * SPIN_STRENGTH;
+        const squirtEff = strikeSquirtEffectiveness(power);
+        const squirtAngle = -sideOff * SQUIRT_FACTOR * (0.5 + power * 0.055) * squirtEff * SPIN_STRENGTH;
         const shotAngle = angle + squirtAngle;
         cueBall.vx = Math.cos(shotAngle) * power;
         cueBall.vy = Math.sin(shotAngle) * power;
