@@ -163,9 +163,13 @@ export const MAX_SPIN_OFFSET = 0.72;
 export const SLIDE_FROM_OFFSET = 0.88;
 
 export const CUSHION_SPIN_RETAIN = 0.71;
+/** Доля касательной скорости удара о борт, переходящая в боковой spin */
+export const CUSHION_SPIN_ACQUIRE = 0.52;
 export const BALL_SPIN_CONTACT = 0.54;
 /** Доля бокового винта битка, передаваемая шару при столкновении */
 export const SIDE_SPIN_COLLISION_TRANSFER = 0.26;
+/** Передача бокового spin между шарами (не биток) */
+export const OBJECT_SPIN_COLLISION_TRANSFER = 0.2;
 /** Усиление ωz при отрисовке винта на шарах (не на битке) */
 export const OBJECT_ENGLISH_VISUAL_SCALE = 1.32;
 export const DRAW_COLLISION_MAX = 0.48;

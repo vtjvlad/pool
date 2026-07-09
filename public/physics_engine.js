@@ -24,6 +24,7 @@ import {
     BALL_SPIN_THROW,
     SIDE_SPIN_COLLISION_THROW,
     SIDE_SPIN_COLLISION_TRANSFER,
+    OBJECT_SPIN_COLLISION_TRANSFER,
     COLLISION_SLIDE_MIN,
     OBJECT_SPIN_ROLL_DAMP,
     OBJECT_SPIN_SLIDE_DAMP,
@@ -480,22 +481,25 @@ function collisionHeadOn(striker, strikerPreVx, strikerPreVy, nx, ny) {
     return Math.abs(shotX * nx + shotY * ny);
 }
 
-function applyCueEnglishTransfer(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed, trajEff) {
-    if (!striker.isCueBall || striker === other) return;
+function applyCollisionSpinTransfer(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed, trajEff) {
+    if (striker === other) return;
 
-    const cueSpin = striker.spin || 0;
-    if (Math.abs(cueSpin) <= SLEEP_SPIN) return;
+    const strikerSpin = striker.spin || 0;
+    if (Math.abs(strikerSpin) <= SLEEP_SPIN) return;
 
     const headOn = collisionHeadOn(striker, strikerPreVx, strikerPreVy, nx, ny);
+    const transferRatio = striker.isCueBall
+        ? SIDE_SPIN_COLLISION_TRANSFER
+        : OBJECT_SPIN_COLLISION_TRANSFER;
     const transfer = clamp(
-        cueSpin * SIDE_SPIN_COLLISION_TRANSFER * trajEff * Math.max(0.42, headOn),
+        strikerSpin * transferRatio * trajEff * Math.max(0.42, headOn),
         -impactSpeed * 0.22 * trajEff,
         impactSpeed * 0.22 * trajEff
     );
     if (Math.abs(transfer) <= SLEEP_SPIN * 0.5) return;
 
     other.spin = (other.spin || 0) + transfer;
-    striker.spin = cueSpin - transfer * 0.82;
+    striker.spin = strikerSpin - transfer * 0.82;
     other.slide = Math.max(other.slide || 0, COLLISION_SLIDE_MIN * 0.5);
 }
 
@@ -576,7 +580,7 @@ export function resolveCollision(b1, b2) {
     const strikerPreVx = striker === b1 ? b1PreVx : b2PreVx;
     const strikerPreVy = striker === b1 ? b1PreVy : b2PreVy;
     applyTopSpinCollision(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed);
-    applyCueEnglishTransfer(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed, trajEff);
+    applyCollisionSpinTransfer(striker, other, strikerPreVx, strikerPreVy, nx, ny, impactSpeed, trajEff);
 
     if (striker.isCueBall && Math.abs(striker.spin || 0) > SLEEP_SPIN) {
         const spinKick = clamp(

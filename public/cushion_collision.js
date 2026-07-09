@@ -7,6 +7,8 @@ import {
     LOW_SPEED_THRESHOLD,
     CUSHION_THROW,
     CUSHION_SPIN_RETAIN,
+    CUSHION_SPIN_ACQUIRE,
+    BALL_SPIN_CONTACT,
     CUSHION_DRAW_KICK,
     SLEEP_SPIN,
     CUSHION_SLIDE,
@@ -108,9 +110,19 @@ function applyCushionSpin(ball, nx, ny, preImpactSpeed, preVx, preVy, vx, vy) {
 
     const tx = -ny;
     const ty = nx;
-    const spin = ball.spin || 0;
+    let spin = ball.spin || 0;
     const topSpin = ball.topSpin || 0;
     const speedEff = sideSpinTrajectoryEffectiveness(preImpactSpeed);
+    const contactEff = Math.max(0.3, Math.sqrt(speedEff));
+
+    const preVTan = preVx * tx + preVy * ty;
+    const slipAcquire = preVTan + spin * BALL_SPIN_CONTACT * contactEff;
+    const acquired = clamp(
+        slipAcquire * CUSHION_SPIN_ACQUIRE * contactEff,
+        -preImpactSpeed * 0.22 * contactEff,
+        preImpactSpeed * 0.22 * contactEff
+    );
+    spin += acquired;
 
     if (Math.abs(spin) > 1e-6) {
         const approachX = preVx / (preImpactSpeed || 1);
@@ -122,6 +134,8 @@ function applyCushionSpin(ball, nx, ny, preImpactSpeed, preVx, preVy, vx, vy) {
         vx += throwV * tx;
         vy += throwV * ty;
         ball.spin = spin * CUSHION_SPIN_RETAIN;
+    } else {
+        ball.spin = 0;
     }
 
     if (Math.abs(topSpin) > SLEEP_SPIN) {
