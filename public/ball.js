@@ -9,7 +9,7 @@ import {
     BALL_MASS_MIN_G,
     BALL_MASS_MAX_G
 } from './constants.js';
-import { getHeadSpot } from './utils.js';
+import { getHeadSpot, getPlaySurface } from './utils.js';
 
 const IDENTITY_QUAT = { w: 1, x: 0, y: 0, z: 0 };
 const stripeCanvasCache = new Map();
@@ -28,6 +28,8 @@ const CUE_MARK_SCALE = 0.19;
 const CUE_MARK_COLOR = '#c41e3a';
 
 const SPHERE_LIGHT = [0.34, -0.26, 0.9];
+/** Включить отрисовку теней под шарами (логика в getTableShadowProfile / drawTableBallShadow). */
+const BALL_SHADOWS_ENABLED = false;
 
 function getStripeCanvas(size) {
     if (!stripeCanvasCache.has(size)) {
@@ -69,10 +71,13 @@ function parseBallRgb(color) {
     return [200, 200, 200];
 }
 
-function sphereLocalShade(lx, ly, lz) {
+function sphereLocalShade(lx, ly, lz, forCue = false) {
     const [lx0, ly0, lz0] = SPHERE_LIGHT;
     const len = Math.hypot(lx0, ly0, lz0);
     const ndotl = (lx * lx0 + ly * ly0 + lz * lz0) / len;
+    if (forCue) {
+        return clamp(0.76 + 0.24 * ndotl, 0.7, 1.0);
+    }
     return clamp(0.72 + 0.28 * ndotl, 0.64, 1.0);
 }
 
@@ -94,6 +99,119 @@ function rotateVec(q, x, y, z) {
 
 function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
+}
+
+function getTableShadowProfile(x, y, r, speed = 0) {
+    const surface = getPlaySurface();
+    const cx = surface.left + surface.width * 0.5;
+    const cy = surface.top + surface.height * 0.5;
+
+    const dx = x - cx;
+    const dy = y - cy;
+    const nx = dx / Math.max(surface.width * 0.5, 1);
+    const ny = dy / Math.max(surface.height * 0.5, 1);
+    const edge = clamp(Math.hypot(nx, ny), 0, 1);
+
+    const len = Math.hypot(dx, dy);
+    const dirX = len > 1e-6 ? dx / len : 0.7;
+    const dirY = len > 1e-6 ? dy / len : 0.3;
+    const speedFactor = clamp(speed / 8, 0, 1);
+
+    const distLeft = x - surface.left;
+    const distRight = surface.right - x;
+    const distTop = y - surface.top;
+    const distBottom = surface.bottom - y;
+    const minEdgeDist = Math.max(0, Math.min(distLeft, distRight, distTop, distBottom));
+    const edgeScale = clamp(minEdgeDist / Math.max(r * 8, 1), 0, 1);
+    const nearRail = 1 - edgeScale;
+    const railTighten = 1 - nearRail * 0.28;
+    const railStretch = 1 + nearRail * 0.42;
+
+    return {
+        edge,
+        dirX,
+        dirY,
+        // В центре тень шире/мягче, у бортов — компактнее и контрастнее.
+        rx: r * (1.58 - edge * 0.52) * railStretch,
+        ry: r * (0.94 - edge * 0.26) * railTighten,
+        offset: r * (0.1 + edge * 0.26) * (1 + nearRail * 0.22),
+        coreAlpha: 0.03 + edge * 0.22,
+        penumbraAlpha: 0.02 + edge * 0.12,
+        contactAlpha: (0.045 + edge * 0.11) * (0.65 + speedFactor * 0.35),
+        speedFactor,
+        nearRail
+    };
+}
+
+function drawSoftShadowLayer(ctx, cx, cy, rx, ry, angle, innerAlpha, outerAlpha) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    ctx.scale(rx, ry);
+    const grad = ctx.createRadialGradient(0, 0, 0.05, 0, 0, 1);
+    grad.addColorStop(0, `rgba(0, 0, 0, ${innerAlpha})`);
+    grad.addColorStop(0.62, `rgba(0, 0, 0, ${innerAlpha * 0.55})`);
+    grad.addColorStop(1, `rgba(0, 0, 0, ${outerAlpha})`);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(0, 0, 1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+}
+
+function drawTableBallShadow(ctx, x, y, r, depthScale, speed) {
+    const shadow = getTableShadowProfile(x, y, r, speed);
+    const angle = Math.atan2(shadow.dirY, shadow.dirX);
+    const offsetX = shadow.dirX * shadow.offset;
+    const offsetY = shadow.dirY * shadow.offset;
+
+    // Базовая тень от всего шара (без сильного смещения).
+    drawSoftShadowLayer(
+        ctx,
+        x,
+        y,
+        r * (0.98 + shadow.nearRail * 0.06),
+        r * (0.58 - shadow.nearRail * 0.06),
+        angle,
+        (shadow.contactAlpha * 0.9) * depthScale,
+        0
+    );
+
+    // Контактная тень под шаром — слегка сдвинута по направлению света.
+    drawSoftShadowLayer(
+        ctx,
+        x + offsetX * 0.22,
+        y + offsetY * 0.22,
+        r * 0.82,
+        r * 0.5,
+        angle,
+        shadow.contactAlpha * depthScale,
+        0
+    );
+
+    // Основная тень.
+    drawSoftShadowLayer(
+        ctx,
+        x + offsetX,
+        y + offsetY,
+        shadow.rx,
+        shadow.ry,
+        angle,
+        shadow.coreAlpha * depthScale,
+        0
+    );
+
+    // Полутень/рассеяние.
+    drawSoftShadowLayer(
+        ctx,
+        x + offsetX * 1.35,
+        y + offsetY * 1.35,
+        shadow.rx * (1.28 + shadow.nearRail * 0.2),
+        shadow.ry * (1.24 - shadow.nearRail * 0.18),
+        angle,
+        shadow.penumbraAlpha * depthScale,
+        0
+    );
 }
 
 /** Синхронизирует угловую скорость ω с кинематическим состоянием физики (v, spin, topSpin). */
@@ -369,7 +487,7 @@ export class Ball {
         ctx.drawImage(offscreen, this.x - r, this.y - r);
     }
 
-    drawSolidSphere(ctx, r, fillColor, darken = 1) {
+    drawSolidSphere(ctx, r, fillColor, darken = 1, forCue = false) {
         const d = Math.ceil(r * 2);
         const offscreen = getStripeCanvas(d);
         const offCtx = offscreen.getContext('2d');
@@ -394,7 +512,7 @@ export class Ball {
                 const sy = dy / r;
                 const sz = Math.sqrt(Math.max(0, 1 - sx * sx - sy * sy));
                 const [lx, ly, lz] = rotateVec(invQ, sx, sy, sz);
-                const rgb = shadeRgb(base, sphereLocalShade(lx, ly, lz), darken);
+                const rgb = shadeRgb(base, sphereLocalShade(lx, ly, lz, forCue), darken);
 
                 pixels[idx] = rgb[0];
                 pixels[idx + 1] = rgb[1];
@@ -466,7 +584,7 @@ export class Ball {
         const alpha = fall ? fall.alpha : 1;
         const depth = fall ? fall.depth : 0;
         const squash = fall ? 1 - depth * 0.28 : 1;
-        const shadowAlpha = fall ? 0.28 * (1 - depth * 0.85) : 0.28;
+        const shadowDepthScale = fall ? (1 - depth * 0.85) : 1;
 
         ctx.save();
 
@@ -483,13 +601,10 @@ export class Ball {
         ctx.scale(scale, scale * squash);
         ctx.translate(-this.x, -this.y);
 
-        if (shadowAlpha > 0.02) {
+        if (BALL_SHADOWS_ENABLED && shadowDepthScale > 0.01) {
             ctx.save();
-            ctx.globalAlpha = shadowAlpha * (1 - depth * 0.4);
-            ctx.beginPath();
-            ctx.arc(this.x + 1.5, this.y + 2, r, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
-            ctx.fill();
+            ctx.globalAlpha = 1 - depth * 0.4;
+            drawTableBallShadow(ctx, this.x, this.y, r, shadowDepthScale, Math.hypot(this.vx || 0, this.vy || 0));
             ctx.restore();
         }
 
@@ -514,7 +629,7 @@ export class Ball {
         if (this.ballType === 'stripe' && !this.isCueBall) {
             this.drawStripeSphere(ctx, r, depthDarken);
         } else {
-            this.drawSolidSphere(ctx, r, fillColor, depthDarken);
+            this.drawSolidSphere(ctx, r, fillColor, depthDarken, this.isCueBall);
         }
 
         if (this.isCueBall) {
