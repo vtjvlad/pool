@@ -13,6 +13,7 @@
     "start": "vite"
   },
   "dependencies": {
+    "canvaskit-wasm": "^0.41.1",
     "gl-matrix": "^3.4.4"
   },
   "devDependencies": {
