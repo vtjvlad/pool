@@ -8,18 +8,15 @@ export default defineConfig({
         minify: false,
         sourcemap: true
     },
-
-
-server: { 
-    allowedHosts: ['vtjvlad.ddns.net'], // разрешенные хосты websocket
-   // https: true,       // использовать HTTPS
-    port: 3000,          // порт для сервера разработки
-    strictPort: true,   // не менять порт автоматически
-    hmr: {
-      host: 'vtjvlad.ddns.net',
+    optimizeDeps: {
+        exclude: ['canvaskit-wasm']
+    },
+    server: {
+        allowedHosts: ['vtjvlad.ddns.net'],
+        port: 3000,
+        strictPort: true,
+        hmr: {
+            host: 'vtjvlad.ddns.net'
+        }
     }
-  },
-               build: { /* ... */ }
 });
-
-
