@@ -19,6 +19,35 @@ import {
 } from './math3d.js';
 
 const IDENTITY_QUAT = { w: 1, x: 0, y: 0, z: 0 };
+
+function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+}
+
+function rollingVisualMix(ball) {
+    if (ball.isCueBall && ball.cueDrawPostHit) return 1;
+
+    const slide = ball.slide || 0;
+    if (slide <= 0) return 1;
+    if (slide <= SLIDE_THRESHOLD) {
+        return clamp(1 - slide / SLIDE_THRESHOLD, 0, 1);
+    }
+    return 0;
+}
+
+function cueDrawApproachRollMix(ball, topSpin, baseRollMix) {
+    const slide = ball.slide || 0;
+    let mix = baseRollMix;
+    if (slide > SLIDE_THRESHOLD) {
+        mix = Math.max(mix, 0.95);
+    } else if (slide > 0) {
+        mix = Math.max(mix, clamp(1 - slide / SLIDE_THRESHOLD * 0.12, 0.88, 1));
+    } else if (Math.abs(topSpin) > SLEEP_SPIN) {
+        mix = Math.max(mix, 0.9);
+    }
+    return mix;
+}
+
 export function clearCueDrawVisualState(ball) {
     ball.cueDrawApproach = false;
     ball.cueDrawPostHit = false;

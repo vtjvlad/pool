@@ -76,7 +76,7 @@ export class Skia2DContext {
         this._height = height;
         this._typeface = null;
         this._stack = [];
-        this._path = new CK.Path();
+        this._path = new CK.PathBuilder();
         this._resetState();
         this._surface = null;
         this.imageSmoothingEnabled = true;
@@ -127,7 +127,7 @@ export class Skia2DContext {
     save() {
         this._stack.push({
             state: copyState(this._state),
-            path: this._path.copy()
+            path: new this.CK.PathBuilder(this._path.snapshot())
         });
         this._canvas.save();
     }
@@ -143,7 +143,7 @@ export class Skia2DContext {
 
     beginPath() {
         this._path.delete();
-        this._path = new this.CK.Path();
+        this._path = new this.CK.PathBuilder();
     }
 
     moveTo(x, y) { this._path.moveTo(x, y); }
@@ -169,7 +169,9 @@ export class Skia2DContext {
     }
 
     clip() {
-        this._canvas.clipPath(this._path, this.CK.ClipOp.Intersect, true);
+        const path = this._path.snapshot();
+        this._canvas.clipPath(path, this.CK.ClipOp.Intersect, true);
+        path.delete();
     }
 
     translate(dx, dy) {
@@ -272,13 +274,17 @@ export class Skia2DContext {
 
     fill() {
         const paint = this._makeFillPaint();
-        this._canvas.drawPath(this._path, paint);
+        const path = this._path.snapshot();
+        this._canvas.drawPath(path, paint);
+        path.delete();
         paint.delete();
     }
 
     stroke() {
         const paint = this._makeStrokePaint();
-        this._canvas.drawPath(this._path, paint);
+        const path = this._path.snapshot();
+        this._canvas.drawPath(path, paint);
+        path.delete();
         paint.delete();
     }
 

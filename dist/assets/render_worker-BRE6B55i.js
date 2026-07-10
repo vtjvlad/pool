@@ -356,7 +356,7 @@
 			this._height = height;
 			this._typeface = null;
 			this._stack = [];
-			this._path = new CK.Path();
+			this._path = new CK.PathBuilder();
 			this._resetState();
 			this._surface = null;
 			this.imageSmoothingEnabled = true;
@@ -443,7 +443,7 @@
 		save() {
 			this._stack.push({
 				state: copyState(this._state),
-				path: this._path.copy()
+				path: new this.CK.PathBuilder(this._path.snapshot())
 			});
 			this._canvas.save();
 		}
@@ -457,7 +457,7 @@
 		}
 		beginPath() {
 			this._path.delete();
-			this._path = new this.CK.Path();
+			this._path = new this.CK.PathBuilder();
 		}
 		moveTo(x, y) {
 			this._path.moveTo(x, y);
@@ -486,7 +486,9 @@
 			this._path.addRect(this.CK.XYWHRect(x, y, w, h));
 		}
 		clip() {
-			this._canvas.clipPath(this._path, this.CK.ClipOp.Intersect, true);
+			const path = this._path.snapshot();
+			this._canvas.clipPath(path, this.CK.ClipOp.Intersect, true);
+			path.delete();
 		}
 		translate(dx, dy) {
 			const m = this.CK.Matrix.translated(dx, dy);
@@ -579,12 +581,16 @@
 		}
 		fill() {
 			const paint = this._makeFillPaint();
-			this._canvas.drawPath(this._path, paint);
+			const path = this._path.snapshot();
+			this._canvas.drawPath(path, paint);
+			path.delete();
 			paint.delete();
 		}
 		stroke() {
 			const paint = this._makeStrokePaint();
-			this._canvas.drawPath(this._path, paint);
+			const path = this._path.snapshot();
+			this._canvas.drawPath(path, paint);
+			path.delete();
 			paint.delete();
 		}
 		fillRect(x, y, w, h) {
@@ -8807,4 +8813,4 @@
 	//#endregion
 })();
 
-//# sourceMappingURL=render_worker-Db9NVFg1.js.map
+//# sourceMappingURL=render_worker-BRE6B55i.js.map

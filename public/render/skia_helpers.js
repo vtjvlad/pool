@@ -52,9 +52,9 @@ export function withPaint(CK, setup, drawFn) {
 }
 
 export function withPath(CK, drawFn) {
-    const path = new CK.Path();
-    drawFn(path);
-    path.delete();
+    const builder = new CK.PathBuilder();
+    drawFn(builder);
+    builder.delete();
 }
 
 export function fontSizeFromCss(fontStr) {
