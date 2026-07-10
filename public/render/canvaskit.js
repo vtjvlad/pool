@@ -23,12 +23,12 @@ export async function loadCanvasKit() {
     return CanvasKitInit({ locateFile: () => wasmUrl });
 }
 
-export function createCanvasSurface(CK, offscreenCanvas) {
-    let surf = CK.MakeCanvasSurface(offscreenCanvas);
+export function createCanvasSurface(CK, canvas) {
+    let surf = CK.MakeCanvasSurface(canvas);
     if (surf) return surf;
 
     if (typeof CK.MakeSWCanvasSurface === 'function') {
-        surf = CK.MakeSWCanvasSurface(offscreenCanvas);
+        surf = CK.MakeSWCanvasSurface(canvas);
         if (surf) return surf;
     }
 

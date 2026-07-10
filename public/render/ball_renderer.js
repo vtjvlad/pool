@@ -126,7 +126,8 @@ function buildSphereImage(CK, r, orientation, fillColor, darken, forCue, isStrip
         width: d,
         height: d,
         colorType: CK.ColorType.RGBA_8888,
-        alphaType: CK.AlphaType.Unpremul
+        alphaType: CK.AlphaType.Unpremul,
+        colorSpace: CK.ColorSpace.SRGB
     };
     return CK.MakeImage(info, pixels, d * 4);
 }

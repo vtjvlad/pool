@@ -58,6 +58,11 @@ import { predictSimulatedTrajectory } from './physics_preview.js';
 import { applySpinToBall, hasSignificantSpin } from './spin.js';
 import { getCueTipPosition } from './cue_utils.js';
 import { buildRenderState } from './render/render_state.js';
+import {
+    initRenderer,
+    renderFrame,
+    invalidateRenderCaches
+} from './render/renderer.js';
 import { getHeadSpot, lighten, darken, getPockets, getPlaySurface } from './utils.js';
 
 // Полностью блокируем браузерный зум: double-tap, pinch, Ctrl/Cmd+wheel и клавиши.
@@ -116,10 +121,8 @@ const traySlots = document.getElementById('pocketed-tray-slots');
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
 
-let renderWorker = null;
 let renderReady = false;
 
-const RENDER_INIT_TIMEOUT_MS = 45000;
 const AIM_PATH_THROTTLE_MS = 80;
 const RENDER_PROFILE = typeof location !== 'undefined'
     && new URLSearchParams(location.search).has('renderProfile');
@@ -149,86 +152,10 @@ function hideLoadingOverlay() {
     loadingOverlay.hidden = true;
 }
 
-async function initRenderWorker() {
-    if (typeof OffscreenCanvas === 'undefined') {
-        throw new Error('Браузер не поддерживает OffscreenCanvas');
-    }
-
+async function initRender() {
     setLoadingStatus('Запуск рендера…');
-
-    const offscreen = canvas.transferControlToOffscreen();
-    renderWorker = new Worker(new URL('./render/render_worker.js', import.meta.url), { type: 'module' });
-
-    await new Promise((resolve, reject) => {
-        let settled = false;
-
-        const finish = (fn, value) => {
-            if (settled) return;
-            settled = true;
-            cleanup();
-            fn(value);
-        };
-
-        const cleanup = () => {
-            clearTimeout(timeoutId);
-            renderWorker.removeEventListener('message', onMessage);
-            renderWorker.removeEventListener('error', onWorkerError);
-            renderWorker.removeEventListener('messageerror', onMessageError);
-        };
-
-        const timeoutId = setTimeout(() => {
-            finish(reject, new Error(
-                'Превышено время ожидания загрузки рендера (45 с). '
-                + 'Откройте консоль браузера (F12) → вкладки Console и Network.'
-            ));
-        }, RENDER_INIT_TIMEOUT_MS);
-
-        const onMessage = (event) => {
-            const msg = event.data;
-            if (msg.type === 'progress') {
-                setLoadingStatus(msg.text || 'Загрузка…');
-                return;
-            }
-            if (msg.type === 'ready') {
-                renderReady = true;
-                finish(resolve);
-            } else if (msg.type === 'error') {
-                finish(reject, new Error(msg.message || 'Ошибка worker'));
-            }
-        };
-
-        const onWorkerError = (event) => {
-            const detail = [event.message, event.filename, event.lineno].filter(Boolean).join(' ');
-            finish(reject, new Error(
-                detail
-                    ? `Worker: ${detail}`
-                    : 'Не удалось загрузить render worker. Проверьте Network → render_worker.js и canvaskit.wasm'
-            ));
-        };
-
-        const onMessageError = () => {
-            finish(reject, new Error('Worker: ошибка десериализации сообщения'));
-        };
-
-        renderWorker.addEventListener('message', onMessage);
-        renderWorker.addEventListener('error', onWorkerError);
-        renderWorker.addEventListener('messageerror', onMessageError);
-
-        if (RENDER_PROFILE) {
-            renderWorker.addEventListener('message', (e) => {
-                if (e.data?.type === 'profile' && e.data.workerMs != null) {
-                    console.debug('[render profile]', e.data);
-                }
-            });
-        }
-
-        renderWorker.postMessage({
-            type: 'init',
-            canvas: offscreen,
-            width: CANVAS_WIDTH,
-            height: CANVAS_HEIGHT
-        }, [offscreen]);
-    });
+    await initRenderer(canvas, CANVAS_WIDTH, CANVAS_HEIGHT, setLoadingStatus);
+    renderReady = true;
 }
 
 function buildAimPathKey(angle) {
@@ -256,7 +183,7 @@ function predictAimPathThrottled(angle) {
 }
 
 function postRenderFrame() {
-    if (!renderWorker || !renderReady) return;
+    if (!renderReady) return;
     const t0 = RENDER_PROFILE ? performance.now() : 0;
     const state = buildRenderState({
         balls,
@@ -275,16 +202,19 @@ function postRenderFrame() {
         predictAimPath: predictAimPathThrottled,
         getCueTipPosition
     });
-    const serializeMs = RENDER_PROFILE ? performance.now() - t0 : 0;
-    renderWorker.postMessage({
-        type: 'frame',
-        state,
-        profile: RENDER_PROFILE ? { serializeMs } : undefined
-    });
+    const buildMs = RENDER_PROFILE ? performance.now() - t0 : 0;
+    const r0 = RENDER_PROFILE ? performance.now() : 0;
+    renderFrame(state);
+    if (RENDER_PROFILE) {
+        console.debug('[render profile]', {
+            buildMs,
+            renderMs: performance.now() - r0
+        });
+    }
 }
 
 function invalidateRenderTable() {
-    renderWorker?.postMessage({ type: 'invalidate_table' });
+    invalidateRenderCaches();
 }
 
 function fitGameLayout() {
@@ -1243,7 +1173,7 @@ initPowerMarks();
 updateSpinPadVisual();
 (async () => {
     try {
-        await initRenderWorker();
+        await initRender();
         hideLoadingOverlay();
         initGame();
         fitGameLayout();

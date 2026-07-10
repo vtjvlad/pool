@@ -334,7 +334,8 @@ export class Skia2DContext {
             width,
             height,
             colorType: CK.ColorType.RGBA_8888,
-            alphaType: CK.AlphaType.Unpremul
+            alphaType: CK.AlphaType.Unpremul,
+            colorSpace: CK.ColorSpace.SRGB
         };
         const img = CK.MakeImage(info, data, width * 4);
         if (!img) return;

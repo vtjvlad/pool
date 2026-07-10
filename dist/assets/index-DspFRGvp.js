@@ -1,4 +1,10 @@
 //#region \0rolldown/runtime.js
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __esmMin = (fn, res, err) => () => {
 	if (err) throw err[0];
 	try {
@@ -8,6 +14,20 @@ var __esmMin = (fn, res, err) => () => {
 	}
 };
 var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
+var __copyProps = (to, from, except, desc) => {
+	if (from && typeof from === "object" || typeof from === "function") for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
+		key = keys[i];
+		if (!__hasOwnProp.call(to, key) && key !== except) __defProp(to, key, {
+			get: ((k) => from[k]).bind(null, key),
+			enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+		});
+	}
+	return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
+	value: mod,
+	enumerable: true
+}) : target, mod));
 //#endregion
 //#region \0vite/modulepreload-polyfill.js
 (function polyfill() {
@@ -216,7 +236,7 @@ function powerToSliderPos(power) {
 	if (p <= 70) return (p - 10) / 60 * 85;
 	return 85 + (p - 70) / 30 * 15;
 }
-var CANVAS_WIDTH, LAYOUT_WIDTH, CENTRAL_POCKET_RADIUS, POCKET_DRAW_DIAMETER, POCKET_DRAW_RADIUS, CORNER_POCKET_DRAW_RADIUS, CENTRAL_POCKET_DRAW_RADIUS, POCKET_LAYOUT_RADIUS, POCKET_INSET, CUSHION_LIP_SCALE_MIN, CUSHION_LIP_SCALE_MAX, CUSHION_LIP_SCALE_STEP, CUSHION_LIP_SCALE, CORNER_CUSHION_POCKET_GAP, CENTRAL_CUSHION_POCKET_GAP, CUSHION_CHAMFER, MID_POCKET_INSET, CORNER_POCKET_CENTER_SHIFT, CUSHION_DEPTH, PLAY_SURFACE_INSET, RUBBER_THICKNESS, POCKET_MAGNET, POCKET_CAPTURE_BOOST, POCKET_JAW_BIAS, POCKET_FALL_SPEED_CLAMP_MIN, MAX_PHYSICS_DT, BALL_MASS, RESTITUTION_PRESETS, BALL_RESTITUTION_PROFILE, CUSHION_RESTITUTION_PROFILE, activeBallRestitution, activeCushionRestitution, BALL_RESTITUTION, BALL_RESTITUTION_SLOW, PHYSICS_MODE_PRESETS, PHYSICS_MODES, PHYSICS_MODE, activePhysicsMode, BALL_FRICTION, CUSHION_RESTITUTION, CUSHION_RESTITUTION_SLOW, CUSHION_FRICTION, CLOTH_ROLL_DECEL, CLOTH_ROLL_SPEED_SCALE, LOW_SPEED_THRESHOLD, SLEEP_SPEED, CLOTH_SLIDE_DECEL, SLIP_RESOLVE_RATE, SLIDE_RESOLVE_RATE, SLIDE_THRESHOLD, SPIN_ROLL_DAMP, SPIN_SLIDE_DAMP, OBJECT_SPIN_ROLL_DAMP, OBJECT_SPIN_SLIDE_DAMP, SLEEP_SPIN, MAX_SPIN_OFFSET, SLIDE_FROM_OFFSET, CUSHION_SPIN_RETAIN, CUSHION_SPIN_ACQUIRE, BALL_SPIN_CONTACT, OBJECT_SPIN_COLLISION_TRANSFER, BALL_SPIN_COLLISION_GAIN, OBJECT_ENGLISH_VISUAL_SCALE, DRAW_COLLISION_MAX, DRAW_SPIN_TRANSFER, DRAW_REVERSE_FACTOR, DRAW_FORWARD_BRAKE, DRAW_REVERSE_SPEED_THRESHOLD, DRAW_MAX_REVERSE_SPEED_SCALE, OBJECT_DRAW_BRAKE_RATIO, FOLLOW_COLLISION_KICK, CUSHION_DRAW_KICK, COLLISION_SLIDE_MIN, CUSHION_SLIDE, SPIN_TUNING_DEFAULT, SPIN_PRESETS, SPIN_PRESET_IDS, SPIN_PRESET_LABELS, SPIN_PRESET, SPIN_CURVE_WHILE_SLIDING, SPIN_CURVE_WHILE_ROLLING, SIDE_SPIN_SLIDE_THROW, SIDE_SPIN_ROLL_THROW, SPIN_STRENGTH, SPIN_SIDE_POWER, SPIN_TOP_POWER, SQUIRT_FACTOR, SPIN_TIP_EFFICIENCY, CUSHION_THROW, BALL_SPIN_THROW, SIDE_SPIN_COLLISION_THROW, DRAW_COLLISION_KICK, SPIN_SPEED_REF, SPIN_SPEED_FALLOFF, SPIN_SPEED_EXP, SPIN_SPEED_MIN_EFF, SIDE_SPIN_TRAJ_REF_SPEED, SIDE_SPIN_TRAJ_MIN_EFF, SIDE_SPIN_TRAJ_RAMP, DRAW_SPEED_REF, DRAW_SPEED_FALLOFF, DRAW_SPEED_MIN_EFF, STRIKE_SPIN_MIN_EFF, STRIKE_SPIN_PLATEAU_EFF, STRIKE_SPIN_MAX_EFF, STRIKE_SPIN_REF, STRIKE_SPIN_HIGH_REF, STRIKE_DRAW_MIN_EFF, STRIKE_DRAW_PLATEAU_EFF, STRIKE_DRAW_MAX_EFF, STRIKE_DRAW_REF, STRIKE_DRAW_HIGH_REF, STRIKE_SQUIRT_REF, STRIKE_SQUIRT_FALLOFF, STRIKE_SQUIRT_EXP, STRIKE_SQUIRT_MIN_EFF, SIDE_SPIN_CURVE_MAX_SLIDING, SIDE_SPIN_CURVE_MAX_ROLLING, SIDE_SPIN_LATERAL_CAP, SIDE_SPIN_RESIDUAL_MIX, SLIDE_FROM_SIDE_SCALE, SPIN_MOTION_PEAK_EFF, SPIN_MOTION_MEDIUM_EFF, SPIN_MOTION_LOW_EFF, SPIN_MOTION_HIGH_END_EFF, DRAW_MOTION_EFF_BIAS, STRIKE_SPIN_EFF_FLOOR, STRIKE_DRAW_EFF_FLOOR, COLLISION_NORMAL_JITTER, BALL_BOUNCE, BALL_SURFACE_FRICTION, CUSHION_BOUNCE, CUSHION_TANGENTIAL_DAMPING, BALL_FRICTION_COEFF, AIM_SLIDER_SENSITIVITY, POWER_FACTOR, POWER_MARK_PERCENTS, AIM_LINE_VARIANTS, AIM_LINE_LABELS, AIM_MODIFIER_STORAGE_KEY, BALL_DEFS, RACK_POSITION_JITTER, RACK_ORDER;
+var CANVAS_WIDTH, LAYOUT_WIDTH, CENTRAL_POCKET_RADIUS, POCKET_DRAW_DIAMETER, POCKET_DRAW_RADIUS, CORNER_POCKET_DRAW_RADIUS, CENTRAL_POCKET_DRAW_RADIUS, POCKET_LAYOUT_RADIUS, POCKET_INSET, CUSHION_LIP_SCALE_MIN, CUSHION_LIP_SCALE_MAX, CUSHION_LIP_SCALE_STEP, CUSHION_LIP_SCALE, CORNER_CUSHION_POCKET_GAP, CENTRAL_CUSHION_POCKET_GAP, CUSHION_CHAMFER, MID_POCKET_INSET, CORNER_POCKET_CENTER_SHIFT, CUSHION_DEPTH, PLAY_SURFACE_INSET, RUBBER_THICKNESS, POCKET_MAGNET, POCKET_CAPTURE_BOOST, POCKET_JAW_BIAS, POCKET_FALL_SPEED_CLAMP_MIN, MAX_PHYSICS_DT, BALL_MASS, RESTITUTION_PRESETS, BALL_RESTITUTION_PROFILE, CUSHION_RESTITUTION_PROFILE, activeBallRestitution, activeCushionRestitution, BALL_RESTITUTION, BALL_RESTITUTION_SLOW, PHYSICS_MODE_PRESETS, PHYSICS_MODES, PHYSICS_MODE, activePhysicsMode, BALL_FRICTION, CUSHION_RESTITUTION, CUSHION_RESTITUTION_SLOW, CUSHION_FRICTION, CLOTH_ROLL_DECEL, CLOTH_ROLL_SPEED_SCALE, LOW_SPEED_THRESHOLD, SLEEP_SPEED, CLOTH_SLIDE_DECEL, SLIP_RESOLVE_RATE, SLIDE_RESOLVE_RATE, SLIDE_THRESHOLD, SPIN_ROLL_DAMP, SPIN_SLIDE_DAMP, OBJECT_SPIN_ROLL_DAMP, OBJECT_SPIN_SLIDE_DAMP, SLEEP_SPIN, MAX_SPIN_OFFSET, SLIDE_FROM_OFFSET, CUSHION_SPIN_RETAIN, CUSHION_SPIN_ACQUIRE, BALL_SPIN_CONTACT, OBJECT_SPIN_COLLISION_TRANSFER, BALL_SPIN_COLLISION_GAIN, OBJECT_ENGLISH_VISUAL_SCALE, DRAW_COLLISION_MAX, DRAW_SPIN_TRANSFER, DRAW_REVERSE_FACTOR, DRAW_FORWARD_BRAKE, DRAW_REVERSE_SPEED_THRESHOLD, DRAW_MAX_REVERSE_SPEED_SCALE, OBJECT_DRAW_BRAKE_RATIO, FOLLOW_COLLISION_KICK, CUSHION_DRAW_KICK, COLLISION_SLIDE_MIN, CUSHION_SLIDE, SPIN_TUNING_DEFAULT, SPIN_PRESETS, SPIN_PRESET_IDS, SPIN_PRESET_LABELS, SPIN_PRESET, SPIN_CURVE_WHILE_SLIDING, SPIN_CURVE_WHILE_ROLLING, SIDE_SPIN_SLIDE_THROW, SIDE_SPIN_ROLL_THROW, SPIN_STRENGTH, SPIN_SIDE_POWER, SPIN_TOP_POWER, SQUIRT_FACTOR, SPIN_TIP_EFFICIENCY, CUSHION_THROW, BALL_SPIN_THROW, SIDE_SPIN_COLLISION_THROW, DRAW_COLLISION_KICK, SPIN_SPEED_REF, SPIN_SPEED_FALLOFF, SPIN_SPEED_EXP, SPIN_SPEED_MIN_EFF, SIDE_SPIN_TRAJ_REF_SPEED, SIDE_SPIN_TRAJ_MIN_EFF, SIDE_SPIN_TRAJ_RAMP, DRAW_SPEED_REF, DRAW_SPEED_FALLOFF, DRAW_SPEED_MIN_EFF, STRIKE_SPIN_MIN_EFF, STRIKE_SPIN_PLATEAU_EFF, STRIKE_SPIN_MAX_EFF, STRIKE_SPIN_REF, STRIKE_SPIN_HIGH_REF, STRIKE_DRAW_MIN_EFF, STRIKE_DRAW_PLATEAU_EFF, STRIKE_DRAW_MAX_EFF, STRIKE_DRAW_REF, STRIKE_DRAW_HIGH_REF, STRIKE_SQUIRT_REF, STRIKE_SQUIRT_FALLOFF, STRIKE_SQUIRT_EXP, STRIKE_SQUIRT_MIN_EFF, SIDE_SPIN_CURVE_MAX_SLIDING, SIDE_SPIN_CURVE_MAX_ROLLING, SIDE_SPIN_LATERAL_CAP, SIDE_SPIN_RESIDUAL_MIX, SLIDE_FROM_SIDE_SCALE, SPIN_MOTION_PEAK_EFF, SPIN_MOTION_MEDIUM_EFF, SPIN_MOTION_LOW_EFF, SPIN_MOTION_HIGH_END_EFF, DRAW_MOTION_EFF_BIAS, STRIKE_SPIN_EFF_FLOOR, STRIKE_DRAW_EFF_FLOOR, COLLISION_NORMAL_JITTER, BALL_BOUNCE, BALL_SURFACE_FRICTION, CUSHION_BOUNCE, CUSHION_TANGENTIAL_DAMPING, BALL_FRICTION_COEFF, COLORS, CUE_WIDTH, AIM_SLIDER_SENSITIVITY, POWER_FACTOR, POWER_MARK_PERCENTS, AIM_LINE_VARIANTS, AIM_LINE_LABELS, AIM_MODIFIER_STORAGE_KEY, BALL_DEFS, RACK_POSITION_JITTER, RACK_ORDER;
 var init_constants = __esmMin((() => {
 	CANVAS_WIDTH = 1040;
 	LAYOUT_WIDTH = 1244;
@@ -560,6 +580,61 @@ var init_constants = __esmMin((() => {
 	BALL_SURFACE_FRICTION = BALL_FRICTION;
 	CUSHION_BOUNCE = CUSHION_RESTITUTION;
 	CUSHION_TANGENTIAL_DAMPING = CUSHION_FRICTION;
+	COLORS = {
+		felt: "#2a8cb8",
+		feltDark: "#1a6a94",
+		feltLight: "#3aa8d4",
+		background: "#0d1520",
+		cueStick: "#f5deb3",
+		cueStickDark: "#8b6914",
+		aimLine: "rgba(255,255,255,0.85)",
+		aimLineGhost: "rgba(255,255,255,0.3)",
+		baulkLine: "rgba(255,255,255,0.55)",
+		pocket: "#0a0908",
+		pocketDeep: "#000000",
+		pocketLeather: "#14110e",
+		pocketLiner: "#1c1712",
+		pocketRim: "#2a2218",
+		pocketRimLight: "#4a3d30",
+		pocketNet: "rgba(72, 64, 54, 0.72)",
+		pocketNetShadow: "rgba(20, 16, 12, 0.85)",
+		pocketNetKnot: "rgba(95, 85, 72, 0.55)",
+		cushion: "#1f6f96",
+		cushionLight: "#3aa8d4",
+		cushionDark: "#164f6e",
+		cushionEdge: "rgba(255, 255, 255, 0.16)",
+		woodBase: "#8b5e34",
+		woodLight: "#b8844f",
+		woodDark: "#4a3018",
+		woodGrain: "rgba(35, 18, 6, 0.14)",
+		woodEdge: "rgba(0, 0, 0, 0.28)",
+		rubber: "#155e7f",
+		rubberDark: "#0e3a52",
+		rubberLight: "#1f7399",
+		/** Оттенки губ vs градиент сукна: сверху темнее feltLight, снизу светлее feltDark */
+		rubberPalettes: {
+			top: {
+				dark: "#082636",
+				mid: "#104a62",
+				light: "#145e78"
+			},
+			bottom: {
+				dark: "#0a2836",
+				mid: "#184e66",
+				light: "#3ca6cc"
+			}
+		},
+		rubberHighlight: "rgba(255, 255, 255, 0.09)",
+		rubberShadow: "rgba(0, 0, 0, 0.34)",
+		rubberFeltEdge: "rgba(0, 0, 0, 0.28)",
+		cushionFeltShadow: "rgba(0, 0, 0, 0.34)",
+		metalBase: "#adb4bf",
+		metalLight: "#e8ecf2",
+		metalDark: "#636b78",
+		metalEdge: "rgba(255, 255, 255, 0.38)",
+		metalShadow: "rgba(18, 22, 30, 0.42)"
+	};
+	CUE_WIDTH = 6.5;
 	AIM_SLIDER_SENSITIVITY = .0037 / 8;
 	POWER_FACTOR = .22;
 	POWER_MARK_PERCENTS = [
@@ -894,6 +969,21 @@ function fromValues(x, y, z) {
 	return out;
 }
 /**
+* Set the components of a vec3 to the given values
+*
+* @param {vec3} out the receiving vector
+* @param {Number} x X component
+* @param {Number} y Y component
+* @param {Number} z Z component
+* @returns {vec3} out
+*/
+function set$2(out, x, y, z) {
+	out[0] = x;
+	out[1] = y;
+	out[2] = z;
+	return out;
+}
+/**
 * Normalize a vec3
 *
 * @param {vec3} out the receiving vector
@@ -935,6 +1025,29 @@ function cross(out, a, b) {
 	out[0] = ay * bz - az * by;
 	out[1] = az * bx - ax * bz;
 	out[2] = ax * by - ay * bx;
+	return out;
+}
+/**
+* Transforms the vec3 with a quat
+* Can also be used for dual quaternions. (Multiply it with the real part)
+*
+* @param {vec3} out the receiving vector
+* @param {ReadonlyVec3} a the vector to transform
+* @param {ReadonlyQuat} q normalized quaternion to transform with
+* @returns {vec3} out
+*/
+function transformQuat(out, a, q) {
+	var qx = q[0], qy = q[1], qz = q[2], qw = q[3];
+	var vx = a[0], vy = a[1], vz = a[2];
+	var tx = qy * vz - qz * vy;
+	var ty = qz * vx - qx * vz;
+	var tz = qx * vy - qy * vx;
+	tx = tx + tx;
+	ty = ty + ty;
+	tz = tz + tz;
+	out[0] = vx + qw * tx + qy * tz - qz * ty;
+	out[1] = vy + qw * ty + qz * tx - qx * tz;
+	out[2] = vz + qw * tz + qx * ty - qy * tx;
 	return out;
 }
 var len;
@@ -1137,6 +1250,21 @@ function slerp(out, a, b, t) {
 	return out;
 }
 /**
+* Calculates the conjugate of a quat
+* If the quaternion is normalized, this function is faster than quat.inverse and produces the same result.
+*
+* @param {quat} out the receiving quaternion
+* @param {ReadonlyQuat} a quat to calculate conjugate of
+* @returns {quat} out
+*/
+function conjugate(out, a) {
+	out[0] = -a[0];
+	out[1] = -a[1];
+	out[2] = -a[2];
+	out[3] = a[3];
+	return out;
+}
+/**
 * Creates a quaternion from the given 3x3 rotation matrix.
 *
 * NOTE: The resultant quaternion is not normalized, so you should be sure
@@ -1253,12 +1381,26 @@ function quatToObject(q) {
 		w: q[3]
 	};
 }
+function rotateVec(qObj, x, y, z) {
+	const q = quatFromObject(qObj);
+	set$2(_v, x, y, z);
+	transformQuat(_v, _v, q);
+	return [
+		_v[0],
+		_v[1],
+		_v[2]
+	];
+}
 function quatMultiply(aObj, bObj) {
 	multiply(_q, quatFromObject(aObj, _qa), quatFromObject(bObj, _qb));
 	return quatToObject(_q);
 }
 function quatNormalize(qObj) {
 	normalize(_q, quatFromObject(qObj));
+	return quatToObject(_q);
+}
+function quatConjugate(qObj) {
+	conjugate(_q, quatFromObject(qObj));
 	return quatToObject(_q);
 }
 function quatFromRotation(rx, ry, rz) {
@@ -1278,31 +1420,31 @@ function quatFromRotation(rx, ry, rz) {
 		z: rz * s
 	});
 }
-var _q, _qa, _qb;
+var _v, _q, _qa, _qb;
 var init_math3d = __esmMin((() => {
 	init_esm();
-	create$2();
+	_v = create$2();
 	_q = create();
 	_qa = create();
 	_qb = create();
 }));
 //#endregion
 //#region public/ball.js
-function clamp$3(value, min, max) {
+function clamp$4(value, min, max) {
 	return Math.max(min, Math.min(max, value));
 }
 function rollingVisualMix(ball) {
 	if (ball.isCueBall && ball.cueDrawPostHit) return 1;
 	const slide = ball.slide || 0;
 	if (slide <= 0) return 1;
-	if (slide <= .035) return clamp$3(1 - slide / SLIDE_THRESHOLD, 0, 1);
+	if (slide <= .035) return clamp$4(1 - slide / SLIDE_THRESHOLD, 0, 1);
 	return 0;
 }
 function cueDrawApproachRollMix(ball, topSpin, baseRollMix) {
 	const slide = ball.slide || 0;
 	let mix = baseRollMix;
 	if (slide > .035) mix = Math.max(mix, .95);
-	else if (slide > 0) mix = Math.max(mix, clamp$3(1 - slide / SLIDE_THRESHOLD * .12, .88, 1));
+	else if (slide > 0) mix = Math.max(mix, clamp$4(1 - slide / SLIDE_THRESHOLD * .12, .88, 1));
 	else if (Math.abs(topSpin) > .12) mix = Math.max(mix, .9);
 	return mix;
 }
@@ -1432,9 +1574,9 @@ var init_ball = __esmMin((() => {
 			if (!this.pocketFall) return false;
 			const { pocketX, pocketY, startX, startY, startTime, duration, entryAngle, entrySpeed } = this.pocketFall;
 			const t = Math.min((performance.now() - startTime) / duration, 1);
-			const speedFactor = clamp$3(entrySpeed / 10, .35, 2.6);
-			const rollPhase = clamp$3(.4 - (speedFactor - 1) * .14, .22, .4);
-			const dropStart = clamp$3(.3 - (speedFactor - 1) * .12, .14, .3);
+			const speedFactor = clamp$4(entrySpeed / 10, .35, 2.6);
+			const rollPhase = clamp$4(.4 - (speedFactor - 1) * .14, .22, .4);
+			const dropStart = clamp$4(.3 - (speedFactor - 1) * .12, .14, .3);
 			const rollT = Math.min(t / rollPhase, 1);
 			const rollEase = rollT * rollT * (3 - 2 * rollT);
 			const dropT = t < dropStart ? 0 : Math.min((t - dropStart) / (1 - dropStart), 1);
@@ -1628,6 +1770,193 @@ function verticalSegment(side, pocketA, pocketB, play) {
 		chamferEnd: isCornerPocket(pocketB.id)
 	};
 }
+/** Металлическая рамка в углах за лузами — только отрисовка, без физики и резины. */
+function cornerBehindSegments(play) {
+	const pockets = pocketById();
+	const gap = (pocketId) => POCKET_LAYOUT_RADIUS + pocketEndGap(pocketId);
+	const tl = pockets.tl;
+	const tr = pockets.tr;
+	const bl = pockets.bl;
+	const br = pockets.br;
+	return [
+		{
+			id: "cushion-corner-tl-top",
+			side: "top",
+			pocketIds: ["tl"],
+			x: play.left,
+			y: play.top,
+			width: tl.x + gap("tl") - play.left,
+			height: CUSHION_DEPTH,
+			chamferStart: true,
+			chamferEnd: true
+		},
+		{
+			id: "cushion-corner-tl-left",
+			side: "left",
+			pocketIds: ["tl"],
+			x: play.left,
+			y: play.top,
+			width: CUSHION_DEPTH,
+			height: tl.y + gap("tl") - play.top,
+			chamferStart: true,
+			chamferEnd: true
+		},
+		{
+			id: "cushion-corner-tr-top",
+			side: "top",
+			pocketIds: ["tr"],
+			x: tr.x - gap("tr"),
+			y: play.top,
+			width: play.right - (tr.x - gap("tr")),
+			height: CUSHION_DEPTH,
+			chamferStart: true,
+			chamferEnd: true
+		},
+		{
+			id: "cushion-corner-tr-right",
+			side: "right",
+			pocketIds: ["tr"],
+			x: play.right - CUSHION_DEPTH,
+			y: play.top,
+			width: CUSHION_DEPTH,
+			height: tr.y + gap("tr") - play.top,
+			chamferStart: true,
+			chamferEnd: true
+		},
+		{
+			id: "cushion-corner-bl-left",
+			side: "left",
+			pocketIds: ["bl"],
+			x: play.left,
+			y: bl.y - gap("bl"),
+			width: CUSHION_DEPTH,
+			height: play.bottom - (bl.y - gap("bl")),
+			chamferStart: true,
+			chamferEnd: true
+		},
+		{
+			id: "cushion-corner-bl-bottom",
+			side: "bottom",
+			pocketIds: ["bl"],
+			x: play.left,
+			y: play.bottom - CUSHION_DEPTH,
+			width: bl.x + gap("bl") - play.left,
+			height: CUSHION_DEPTH,
+			chamferStart: true,
+			chamferEnd: true
+		},
+		{
+			id: "cushion-corner-br-bottom",
+			side: "bottom",
+			pocketIds: ["br"],
+			x: br.x - gap("br"),
+			y: play.bottom - CUSHION_DEPTH,
+			width: play.right - (br.x - gap("br")),
+			height: CUSHION_DEPTH,
+			chamferStart: true,
+			chamferEnd: true
+		},
+		{
+			id: "cushion-corner-br-right",
+			side: "right",
+			pocketIds: ["br"],
+			x: play.right - CUSHION_DEPTH,
+			y: br.y - gap("br"),
+			width: CUSHION_DEPTH,
+			height: play.bottom - (br.y - gap("br")),
+			chamferStart: true,
+			chamferEnd: true
+		}
+	];
+}
+function getCornerBehindSegments() {
+	return cornerBehindSegments(getPlayArea());
+}
+/** Треугольный клин между L-образными сегментами — «челюсть» угловой лузы. */
+function cornerPocketWedges(play) {
+	const pockets = pocketById();
+	const d = CUSHION_DEPTH;
+	const railEnd = (id) => POCKET_LAYOUT_RADIUS + pocketEndGap(id) + (id === "tl" || id === "bl" ? pockets[id].x : play.right - pockets[id].x);
+	const railEndY = (id) => POCKET_LAYOUT_RADIUS + pocketEndGap(id) + (id === "tl" || id === "tr" ? pockets[id].y : play.bottom - pockets[id].y);
+	const jaw = (end) => end + CUSHION_CHAMFER;
+	return [
+		{
+			id: "cushion-corner-tl-wedge",
+			corner: "tl",
+			points: [
+				{
+					x: d,
+					y: d
+				},
+				{
+					x: jaw(railEnd("tl")),
+					y: d
+				},
+				{
+					x: d,
+					y: jaw(railEndY("tl"))
+				}
+			]
+		},
+		{
+			id: "cushion-corner-tr-wedge",
+			corner: "tr",
+			points: [
+				{
+					x: play.right - d,
+					y: d
+				},
+				{
+					x: play.right - jaw(railEnd("tr")),
+					y: d
+				},
+				{
+					x: play.right - d,
+					y: jaw(railEndY("tr"))
+				}
+			]
+		},
+		{
+			id: "cushion-corner-bl-wedge",
+			corner: "bl",
+			points: [
+				{
+					x: d,
+					y: play.bottom - d
+				},
+				{
+					x: d,
+					y: play.bottom - jaw(railEndY("bl"))
+				},
+				{
+					x: jaw(railEnd("bl")),
+					y: play.bottom - d
+				}
+			]
+		},
+		{
+			id: "cushion-corner-br-wedge",
+			corner: "br",
+			points: [
+				{
+					x: play.right - d,
+					y: play.bottom - d
+				},
+				{
+					x: play.right - d,
+					y: play.bottom - jaw(railEndY("br"))
+				},
+				{
+					x: play.right - jaw(railEnd("br")),
+					y: play.bottom - d
+				}
+			]
+		}
+	];
+}
+function getCornerBehindWedges() {
+	return cornerPocketWedges(getPlayArea());
+}
 /** @returns {Array<{ id: string, side: string, pocketIds: string[], x: number, y: number, width: number, height: number, chamferStart: boolean, chamferEnd: boolean }>} */
 function getCushionSegments() {
 	const play = getPlayArea();
@@ -1639,13 +1968,13 @@ function getCushionSegments() {
 	for (const [pocketAId, pocketBId] of CUSHION_CHAINS.right) segments.push(verticalSegment("right", pockets[pocketAId], pockets[pocketBId], play));
 	return segments;
 }
-function chamferSize(segment) {
+function chamferSize$1(segment) {
 	const limit = Math.min(segment.width, segment.height) / 2 - .5;
 	return Math.min(CUSHION_CHAMFER, Math.max(0, limit));
 }
 function innerEdgeLinesForSegment(segment) {
 	const { x, y, width, height, side, chamferStart, chamferEnd } = segment;
-	const c = chamferSize(segment);
+	const c = chamferSize$1(segment);
 	const w = width;
 	const h = height;
 	const lines = [];
@@ -1735,7 +2064,7 @@ function pocketRubberChamferAngle(pocketId) {
 }
 function rubberEdgeLinesForSegment(segment) {
 	const { x, y, width, height, side, chamferStart, chamferEnd, pocketIds } = segment;
-	const c = chamferSize(segment);
+	const c = chamferSize$1(segment);
 	const w = width;
 	const h = height;
 	let line;
@@ -1804,7 +2133,7 @@ var init_cushions = __esmMin((() => {
 }));
 //#endregion
 //#region public/cushion_rubber.js
-function edgeNormal$1(x1, y1, x2, y2) {
+function edgeNormal$2(x1, y1, x2, y2) {
 	const len = Math.hypot(x2 - x1, y2 - y1) || 1;
 	const edx = x2 - x1;
 	const edy = y2 - y1;
@@ -1812,7 +2141,7 @@ function edgeNormal$1(x1, y1, x2, y2) {
 	let ny = edx / len;
 	const mx = (x1 + x2) / 2;
 	const my = (y1 + y2) / 2;
-	if ((PLAY_CENTER_X$1 - mx) * nx + (PLAY_CENTER_Y$1 - my) * ny < 0) {
+	if ((PLAY_CENTER_X$2 - mx) * nx + (PLAY_CENTER_Y$2 - my) * ny < 0) {
 		nx = -nx;
 		ny = -ny;
 	}
@@ -1823,11 +2152,11 @@ function edgeNormal$1(x1, y1, x2, y2) {
 		ty: edy / len
 	};
 }
-function chamferRunAlongEdge(thickness, angleDeg) {
+function chamferRunAlongEdge$1(thickness, angleDeg) {
 	return thickness / Math.tan(angleDeg * Math.PI / 180);
 }
 function rubberCollisionLinesFrom(line) {
-	const { nx, ny, tx, ty } = edgeNormal$1(line.x1, line.y1, line.x2, line.y2);
+	const { nx, ny, tx, ty } = edgeNormal$2(line.x1, line.y1, line.x2, line.y2);
 	const t = RUBBER_THICKNESS;
 	const { x1, y1, x2, y2, chamferStartAngle, chamferEndAngle } = line;
 	const ix1 = x1 + nx * t;
@@ -1842,7 +2171,7 @@ function rubberCollisionLinesFrom(line) {
 	const minCurve = .5;
 	const maxCurve = t * .85;
 	if (chamferEndAngle != null) {
-		const runEnd = chamferRunAlongEdge(t, chamferEndAngle);
+		const runEnd = chamferRunAlongEdge$1(t, chamferEndAngle);
 		ox2 = ix2 - tx * runEnd;
 		oy2 = iy2 - ty * runEnd;
 		const curve = Math.min(runEnd * .65, maxCurve);
@@ -1879,7 +2208,7 @@ function rubberCollisionLinesFrom(line) {
 		});
 	}
 	if (chamferStartAngle != null) {
-		const runStart = chamferRunAlongEdge(t, chamferStartAngle);
+		const runStart = chamferRunAlongEdge$1(t, chamferStartAngle);
 		ox1 = ix1 + tx * runStart;
 		oy1 = iy1 + ty * runStart;
 		const curve = Math.min(runStart * .65, maxCurve);
@@ -1931,22 +2260,22 @@ function getRubberCollisionEdges() {
 	}
 	return lines;
 }
-var PLAY_CENTER_X$1, PLAY_CENTER_Y$1;
+var PLAY_CENTER_X$2, PLAY_CENTER_Y$2;
 var init_cushion_rubber = __esmMin((() => {
 	init_constants();
 	init_cushions();
-	PLAY_CENTER_X$1 = CANVAS_WIDTH / 2;
-	PLAY_CENTER_Y$1 = 520 / 2;
+	PLAY_CENTER_X$2 = CANVAS_WIDTH / 2;
+	PLAY_CENTER_Y$2 = 520 / 2;
 }));
 //#endregion
 //#region public/collision_noise.js
-function clamp$2(value, min, max) {
+function clamp$3(value, min, max) {
 	return Math.max(min, Math.min(max, value));
 }
 function jitterScale(impactSpeed) {
 	const { minImpactSpeed, minSpeedFactor, slowSpeedScale } = COLLISION_NORMAL_JITTER;
 	if (impactSpeed <= minImpactSpeed) return 0;
-	return clamp$2(impactSpeed / 8, minSpeedFactor, 1) * (impactSpeed < LOW_SPEED_THRESHOLD ? slowSpeedScale : 1);
+	return clamp$3(impactSpeed / 8, minSpeedFactor, 1) * (impactSpeed < LOW_SPEED_THRESHOLD ? slowSpeedScale : 1);
 }
 /** Слегка поворачивает нормаль столкновения в пределах maxDeg * speedScale */
 function jitterCollisionNormal(nx, ny, kind, impactSpeed, enabled = COLLISION_NORMAL_JITTER.enabled) {
@@ -1977,7 +2306,7 @@ var init_collision_noise = __esmMin((() => {
 }));
 //#endregion
 //#region public/cushion_collision.js
-function edgeNormal(line) {
+function edgeNormal$1(line) {
 	const mx = (line.x1 + line.x2) / 2;
 	const my = (line.y1 + line.y2) / 2;
 	const edx = line.x2 - line.x1;
@@ -1986,7 +2315,7 @@ function edgeNormal(line) {
 	const len = Math.hypot(nx, ny) || 1;
 	nx /= len;
 	ny /= len;
-	if ((PLAY_CENTER_X - mx) * nx + (PLAY_CENTER_Y - my) * ny < 0) {
+	if ((PLAY_CENTER_X$1 - mx) * nx + (PLAY_CENTER_Y$1 - my) * ny < 0) {
 		nx = -nx;
 		ny = -ny;
 	}
@@ -1997,7 +2326,7 @@ function edgeNormal(line) {
 }
 function buildCollisionEdges() {
 	const withNormals = (line) => {
-		const { nx, ny } = edgeNormal(line);
+		const { nx, ny } = edgeNormal$1(line);
 		return {
 			...line,
 			nx,
@@ -2039,7 +2368,7 @@ function circleSegmentCollision(bx, by, radius, line) {
 		overlap: radius - dist
 	};
 }
-function clamp$1(value, min, max) {
+function clamp$2(value, min, max) {
 	return Math.max(min, Math.min(max, value));
 }
 function applyCushionSpin(ball, nx, ny, preImpactSpeed, preVx, preVy, vx, vy) {
@@ -2053,7 +2382,7 @@ function applyCushionSpin(ball, nx, ny, preImpactSpeed, preVx, preVy, vx, vy) {
 	const topSpin = ball.topSpin || 0;
 	const speedEff = sideSpinTrajectoryEffectiveness(preImpactSpeed);
 	const contactEff = Math.max(.3, Math.sqrt(speedEff));
-	const acquired = clamp$1((preVx * tx + preVy * ty + spin * BALL_SPIN_CONTACT * contactEff) * CUSHION_SPIN_ACQUIRE * contactEff, -preImpactSpeed * .22 * contactEff, preImpactSpeed * .22 * contactEff);
+	const acquired = clamp$2((preVx * tx + preVy * ty + spin * BALL_SPIN_CONTACT * contactEff) * CUSHION_SPIN_ACQUIRE * contactEff, -preImpactSpeed * .22 * contactEff, preImpactSpeed * .22 * contactEff);
 	spin += acquired;
 	if (Math.abs(spin) > 1e-6) {
 		const approachX = preVx / (preImpactSpeed || 1);
@@ -2061,7 +2390,7 @@ function applyCushionSpin(ball, nx, ny, preImpactSpeed, preVx, preVy, vx, vy) {
 		const incidence = Math.abs(approachX * nx + approachY * ny);
 		const throwScale = .55 + .45 * (1 - incidence);
 		const throwCap = preImpactSpeed * (.085 + incidence * .028) * speedEff;
-		const throwV = clamp$1(spin * CUSHION_THROW * preImpactSpeed * throwScale * speedEff, -throwCap, throwCap);
+		const throwV = clamp$2(spin * CUSHION_THROW * preImpactSpeed * throwScale * speedEff, -throwCap, throwCap);
 		vx += throwV * tx;
 		vy += throwV * ty;
 		ball.spin = spin * CUSHION_SPIN_RETAIN;
@@ -2072,12 +2401,12 @@ function applyCushionSpin(ball, nx, ny, preImpactSpeed, preVx, preVy, vx, vy) {
 		const inDirX = vx / inSpeed;
 		const inDirY = vy / inSpeed;
 		if (topSpin > 0) {
-			const followKick = clamp$1(topSpin * .016 * topEff, 0, preImpactSpeed * .023 * topEff);
+			const followKick = clamp$2(topSpin * .016 * topEff, 0, preImpactSpeed * .023 * topEff);
 			vx += followKick * inDirX;
 			vy += followKick * inDirY;
 			ball.topSpin = topSpin * .68;
 		} else {
-			const drawKick = clamp$1(topSpin * CUSHION_DRAW_KICK * topEff, -preImpactSpeed * .04 * topEff, 0);
+			const drawKick = clamp$2(topSpin * CUSHION_DRAW_KICK * topEff, -preImpactSpeed * .04 * topEff, 0);
 			vx += drawKick * inDirX;
 			vy += drawKick * inDirY;
 			ball.topSpin = topSpin * .72;
@@ -2190,20 +2519,20 @@ function rayCushionHit(ox, oy, dx, dy, radius) {
 	}
 	return best;
 }
-var PLAY_CENTER_X, PLAY_CENTER_Y, cachedCollisionEdges;
+var PLAY_CENTER_X$1, PLAY_CENTER_Y$1, cachedCollisionEdges;
 var init_cushion_collision = __esmMin((() => {
 	init_constants();
 	init_cushions();
 	init_cushion_rubber();
 	init_collision_noise();
 	init_ball();
-	PLAY_CENTER_X = CANVAS_WIDTH / 2;
-	PLAY_CENTER_Y = 520 / 2;
+	PLAY_CENTER_X$1 = CANVAS_WIDTH / 2;
+	PLAY_CENTER_Y$1 = 520 / 2;
 	cachedCollisionEdges = null;
 }));
 //#endregion
 //#region public/physics_engine.js
-function clamp(value, min, max) {
+function clamp$1(value, min, max) {
 	return Math.max(min, Math.min(max, value));
 }
 function settleLinearMotion(ball) {
@@ -2278,7 +2607,7 @@ function updateSleepState(ball) {
 	} else wakeBall(ball);
 }
 function rollingLoss(speed, dt) {
-	const speedRatio = clamp(speed / LOW_SPEED_THRESHOLD, 0, 1);
+	const speedRatio = clamp$1(speed / LOW_SPEED_THRESHOLD, 0, 1);
 	return (CLOTH_ROLL_DECEL + speed * CLOTH_ROLL_SPEED_SCALE) * dt * (.62 + .38 * speedRatio);
 }
 function isSliding(ball, speed) {
@@ -2294,13 +2623,13 @@ function applySideSpinLateral(ball, speed, tanX, tanY, dt, throwStrength, slideM
 	const lateral = ball.spin * throwStrength * trajEff * slideMix * dt;
 	const forwardTravel = speed * dt;
 	const cap = Math.min(speed * SIDE_SPIN_LATERAL_CAP * trajEff * Math.max(dt * 50, .5), forwardTravel * trajEff * .075);
-	const clamped = clamp(lateral, -cap, cap);
+	const clamped = clamp$1(lateral, -cap, cap);
 	ball.vx += tanX * clamped;
 	ball.vy += tanY * clamped;
 }
 function applySideSpinCurve(ball, speed, tanX, tanY, dt, strength, maxTurn) {
 	if (Math.abs(ball.spin) <= .12 || speed <= .014) return speed;
-	const slideFactor = clamp(ball.slide || 0, 0, 1);
+	const slideFactor = clamp$1(ball.slide || 0, 0, 1);
 	const slideMix = slideFactor > .035 ? .5 + slideFactor * .5 : Math.abs(ball.spin) > .12 * 2 ? SIDE_SPIN_RESIDUAL_MIX : 0;
 	const rollMix = 1 - slideMix;
 	if (slideMix <= 0 && rollMix <= 0) return speed;
@@ -2309,9 +2638,9 @@ function applySideSpinCurve(ball, speed, tanX, tanY, dt, strength, maxTurn) {
 	const slideBoost = 1 + slideFactor * 1.4;
 	const trajEff = sideSpinTrajectoryEffectiveness(speed);
 	const forwardTravel = speed * dt;
-	const curve = clamp(ball.spin * strength * speed * trajEff * slideBoost * dt, -speed * maxTurn * dt * trajEff, speed * maxTurn * dt * trajEff);
+	const curve = clamp$1(ball.spin * strength * speed * trajEff * slideBoost * dt, -speed * maxTurn * dt * trajEff, speed * maxTurn * dt * trajEff);
 	const curveCap = forwardTravel * trajEff * .078;
-	const clampedCurve = clamp(curve, -curveCap, curveCap);
+	const clampedCurve = clamp$1(curve, -curveCap, curveCap);
 	ball.vx += tanX * clampedCurve;
 	ball.vy += tanY * clampedCurve;
 	const newSpeed = Math.hypot(ball.vx, ball.vy);
@@ -2323,7 +2652,7 @@ function applySideSpinCurve(ball, speed, tanX, tanY, dt, strength, maxTurn) {
 	return speed;
 }
 function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
-	const slideFactor = clamp(ball.slide || 0, 0, 1);
+	const slideFactor = clamp$1(ball.slide || 0, 0, 1);
 	const drawAxis = getDrawAxis(ball, dirX, dirY);
 	const rollingBack = drawAxis.x * ball.vx + drawAxis.y * ball.vy < -SLEEP_SPEED;
 	const hasDrawAxis = Math.hypot(ball.drawAxisX || 0, ball.drawAxisY || 0) > .5;
@@ -2339,7 +2668,7 @@ function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
 	const topSpin = ball.topSpin || 0;
 	const speedEff = spinSpeedEffectiveness(speed);
 	const drawEff = drawSpeedEffectiveness(speed);
-	if (topSpin < -.12 && !rollingBack) loss += CLOTH_SLIDE_DECEL * clamp(-topSpin / LOW_SPEED_THRESHOLD, 0, .48) * dt * drawEff;
+	if (topSpin < -.12 && !rollingBack) loss += CLOTH_SLIDE_DECEL * clamp$1(-topSpin / LOW_SPEED_THRESHOLD, 0, .48) * dt * drawEff;
 	else if (topSpin > .12) loss *= Math.max(.35, 1 - topSpin * speedEff / (LOW_SPEED_THRESHOLD * 2.2));
 	let nextSpeed = Math.max(0, speed - loss);
 	ball.vx = dirX * nextSpeed;
@@ -2356,7 +2685,7 @@ function integrateSliding(ball, speed, dirX, dirY, tanX, tanY, dt) {
 	if (Math.abs(topSpin) > .12) {
 		const rollEff = topSpin < 0 ? drawSpeedEffectiveness(nextSpeed) : spinSpeedEffectiveness(nextSpeed);
 		const speedFactor = 1 / (1 + nextSpeed / (LOW_SPEED_THRESHOLD * 2.4));
-		const gripBoost = 1 + clamp(1 - nextSpeed / LOW_SPEED_THRESHOLD, 0, .75);
+		const gripBoost = 1 + clamp$1(1 - nextSpeed / LOW_SPEED_THRESHOLD, 0, .75);
 		const resolve = (rollingBack ? SLIP_RESOLVE_RATE * .42 : SLIP_RESOLVE_RATE) * dt * (1 + slideFactor * .75) * speedFactor * gripBoost * rollEff;
 		const delta = Math.min(Math.abs(topSpin), resolve) * Math.sign(topSpin);
 		ball.topSpin = topSpin - delta;
@@ -2504,18 +2833,18 @@ function applyTopSpinCollision(striker, other, strikerPreVx, strikerPreVy, nx, n
 	const drawEff = drawSpeedEffectiveness(impactSpeed);
 	if (topSpin < -.12) {
 		const drawSpin = -topSpin;
-		const drawMag = clamp(drawSpin * DRAW_COLLISION_KICK * headOn * drawEff, 0, impactSpeed * DRAW_COLLISION_MAX * drawEff);
+		const drawMag = clamp$1(drawSpin * DRAW_COLLISION_KICK * headOn * drawEff, 0, impactSpeed * DRAW_COLLISION_MAX * drawEff);
 		if (drawMag <= .12) return;
 		const transferred = topSpin * DRAW_SPIN_TRANSFER * Math.max(.35, headOn) * drawEff;
 		other.topSpin = (other.topSpin || 0) + transferred;
 		striker.topSpin = topSpin - transferred;
-		const drawBackSpeed = clamp(drawSpin * .45 * drawEff + impactSpeed * .14, impactSpeed * .28, impactSpeed * .52 * drawEff);
+		const drawBackSpeed = clamp$1(drawSpin * .45 * drawEff + impactSpeed * .14, impactSpeed * .28, impactSpeed * .52 * drawEff);
 		setDrawAxis(striker, shotX, shotY);
 		setAlongVelocity(striker, shotX, shotY, -drawBackSpeed);
 		const objBrake = drawMag * OBJECT_DRAW_BRAKE_RATIO;
 		other.vx -= objBrake * shotX;
 		other.vy -= objBrake * shotY;
-		const slideBoost = clamp(.38 + drawMag / Math.max(impactSpeed, .1) * .48, .38, .82);
+		const slideBoost = clamp$1(.38 + drawMag / Math.max(impactSpeed, .1) * .48, .38, .82);
 		other.slide = Math.max(other.slide || 0, slideBoost);
 		striker.slide = Math.max(striker.slide || 0, slideBoost * .85);
 		striker.topSpin = Math.min(striker.topSpin, topSpin * .72);
@@ -2526,8 +2855,8 @@ function applyTopSpinCollision(striker, other, strikerPreVx, strikerPreVy, nx, n
 	if (topSpin > .12) {
 		const followEff = drawSpeedEffectiveness(impactSpeed);
 		const along = striker.vx * shotX + striker.vy * shotY;
-		const followMag = clamp(topSpin * FOLLOW_COLLISION_KICK * headOn * followEff, 0, impactSpeed * .14 * followEff);
-		const followMin = clamp(topSpin * .38 * followEff + impactSpeed * .22, impactSpeed * .32, impactSpeed * .52 * followEff);
+		const followMag = clamp$1(topSpin * FOLLOW_COLLISION_KICK * headOn * followEff, 0, impactSpeed * .14 * followEff);
+		const followMin = clamp$1(topSpin * .38 * followEff + impactSpeed * .22, impactSpeed * .32, impactSpeed * .52 * followEff);
 		setAlongVelocity(striker, shotX, shotY, Math.max(along, followMin));
 		other.vx += followMag * shotX;
 		other.vy += followMag * shotY;
@@ -2570,7 +2899,7 @@ function applyCollisionSpinTransfer(b1, b2, b1PreVx, b1PreVy, b2PreVx, b2PreVy, 
 	}
 	const donorSpin = donor.spin || 0;
 	const headOn = collisionHeadOn(donor, donorPreVx, donorPreVy, nx, ny);
-	const transfer = clamp(donorSpin * (donor.isCueBall ? 1 : OBJECT_SPIN_COLLISION_TRANSFER) * trajEff * Math.max(.42, headOn), -impactSpeed * .9 * trajEff, impactSpeed * .9 * trajEff);
+	const transfer = clamp$1(donorSpin * (donor.isCueBall ? 1 : OBJECT_SPIN_COLLISION_TRANSFER) * trajEff * Math.max(.42, headOn), -impactSpeed * .9 * trajEff, impactSpeed * .9 * trajEff);
 	if (Math.abs(transfer) <= .12 * .5) return;
 	receiver.spin = (receiver.spin || 0) + transfer;
 	donor.spin = donorSpin - transfer * .78;
@@ -2611,7 +2940,7 @@ function resolveCollision(b1, b2) {
 	const surf1 = v1t + (b1.spin || 0) * BALL_SPIN_CONTACT * contactEff;
 	const relSurf = v2t + (b2.spin || 0) * BALL_SPIN_CONTACT * contactEff - surf1;
 	const jtMax = BALL_FRICTION * Math.abs(impulse);
-	const jt = clamp(-relSurf / (invMassSum * 1.55), -jtMax, jtMax);
+	const jt = clamp$1(-relSurf / (invMassSum * 1.55), -jtMax, jtMax);
 	b1.vx -= jt * tx / b1.mass;
 	b1.vy -= jt * ty / b1.mass;
 	b2.vx += jt * tx / b2.mass;
@@ -2619,7 +2948,7 @@ function resolveCollision(b1, b2) {
 	const spinFromJt = jt * BALL_SPIN_CONTACT * contactEff * BALL_SPIN_COLLISION_GAIN;
 	b1.spin = (b1.spin || 0) + spinFromJt;
 	b2.spin = (b2.spin || 0) - spinFromJt;
-	const spinThrow = clamp((b1.spin - b2.spin) * BALL_SPIN_THROW * trajEff, -impactSpeed * .07 * trajEff, impactSpeed * .07 * trajEff);
+	const spinThrow = clamp$1((b1.spin - b2.spin) * BALL_SPIN_THROW * trajEff, -impactSpeed * .07 * trajEff, impactSpeed * .07 * trajEff);
 	if (Math.abs(spinThrow) > 1e-6) {
 		b1.vx += spinThrow * tx / b1.mass;
 		b1.vy += spinThrow * ty / b1.mass;
@@ -2641,7 +2970,7 @@ function resolveCollision(b1, b2) {
 	applyTopSpinCollision(striker, other, striker === b1 ? b1PreVx : b2PreVx, striker === b1 ? b1PreVy : b2PreVy, nx, ny, impactSpeed);
 	applyCollisionSpinTransfer(b1, b2, b1PreVx, b1PreVy, b2PreVx, b2PreVy, nx, ny, impactSpeed, trajEff);
 	if (striker.isCueBall && Math.abs(striker.spin || 0) > .12) {
-		const spinKick = clamp(striker.spin * SIDE_SPIN_COLLISION_THROW * trajEff, -impactSpeed * .32 * trajEff, impactSpeed * .32 * trajEff);
+		const spinKick = clamp$1(striker.spin * SIDE_SPIN_COLLISION_THROW * trajEff, -impactSpeed * .32 * trajEff, impactSpeed * .32 * trajEff);
 		striker.vx += spinKick * tx;
 		striker.vy += spinKick * ty;
 		const postSpeed = Math.hypot(striker.vx, striker.vy);
@@ -2652,7 +2981,7 @@ function resolveCollision(b1, b2) {
 			striker.vy *= scale;
 		}
 	}
-	const slideBoost = clamp(COLLISION_SLIDE_MIN + impactSpeed * .018, COLLISION_SLIDE_MIN, .55);
+	const slideBoost = clamp$1(COLLISION_SLIDE_MIN + impactSpeed * .018, COLLISION_SLIDE_MIN, .55);
 	b1.slide = Math.max(b1.slide || 0, slideBoost);
 	b2.slide = Math.max(b2.slide || 0, slideBoost);
 	const cue = b1.isCueBall ? b1 : b2.isCueBall ? b2 : null;
@@ -3376,6 +3705,2086 @@ var init_render_state = __esmMin((() => {
 	init_constants();
 	init_utils();
 }));
+//#endregion
+//#region public/render/skia_helpers.js
+/** Парсинг CSS-цвета в RGBA 0..1 для CanvasKit. */
+function parseColorInput(input) {
+	if (!input) return [
+		0,
+		0,
+		0,
+		1
+	];
+	if (typeof input === "object" && input.__skiaShader) return null;
+	if (typeof input !== "string") return [
+		0,
+		0,
+		0,
+		1
+	];
+	const s = input.trim();
+	if (s.startsWith("#")) {
+		const hex = s.slice(1);
+		const n = parseInt(hex.length === 3 ? hex.split("").map((c) => c + c).join("") : hex, 16);
+		return [
+			(n >> 16 & 255) / 255,
+			(n >> 8 & 255) / 255,
+			(n & 255) / 255,
+			1
+		];
+	}
+	const rgba = s.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)(?:\s*,\s*([\d.]+))?\s*\)/i);
+	if (rgba) return [
+		Number(rgba[1]) / 255,
+		Number(rgba[2]) / 255,
+		Number(rgba[3]) / 255,
+		rgba[4] !== void 0 ? Number(rgba[4]) : 1
+	];
+	return [
+		0,
+		0,
+		0,
+		1
+	];
+}
+function blendModeFromComposite(op, CK) {
+	switch (op) {
+		case "destination-out": return CK.BlendMode.DstOut;
+		case "screen": return CK.BlendMode.Screen;
+		case "multiply": return CK.BlendMode.Multiply;
+		default: return CK.BlendMode.SrcOver;
+	}
+}
+function fontSizeFromCss(fontStr) {
+	const m = String(fontStr || "").match(/(\d+(?:\.\d+)?)px/);
+	return m ? Number(m[1]) : 10;
+}
+var init_skia_helpers = __esmMin((() => {}));
+//#endregion
+//#region public/render/skia_ctx.js
+function copyState(state) {
+	return {
+		fillStyle: state.fillStyle,
+		strokeStyle: state.strokeStyle,
+		lineWidth: state.lineWidth,
+		globalAlpha: state.globalAlpha,
+		compositeOp: state.compositeOp,
+		lineJoin: state.lineJoin,
+		lineCap: state.lineCap,
+		fontStr: state.fontStr,
+		textAlign: state.textAlign,
+		textBaseline: state.textBaseline,
+		dash: state.dash ? [...state.dash] : null
+	};
+}
+function createOffscreenContext(CK, width, height) {
+	const surface = CK.MakeSurface(width, height);
+	const canvas = surface.getCanvas();
+	const ctx = new Skia2DContext(canvas, CK, width, height);
+	ctx._surface = surface;
+	return ctx;
+}
+function wrapSkCanvas(skCanvas, CK, width, height) {
+	return new Skia2DContext(skCanvas, CK, width, height);
+}
+var SkiaGradient, SkiaPattern, Skia2DContext;
+var init_skia_ctx = __esmMin((() => {
+	init_skia_helpers();
+	SkiaGradient = class {
+		constructor(type, CK, coords, stops = []) {
+			this.type = type;
+			this.CK = CK;
+			this.coords = coords;
+			this.stops = stops;
+			this.__skiaShader = true;
+		}
+		addColorStop(offset, color) {
+			this.stops.push({
+				offset,
+				color
+			});
+		}
+		buildShader() {
+			const CK = this.CK;
+			const colors = this.stops.map((s) => CK.Color4f(...parseColorInput(s.color)));
+			const positions = this.stops.map((s) => s.offset);
+			if (this.type === "linear") {
+				const [x0, y0, x1, y1] = this.coords;
+				return CK.Shader.MakeLinearGradient([x0, y0], [x1, y1], colors, positions, CK.TileMode.Clamp);
+			}
+			const [x0, y0, r0, x1, y1, r1] = this.coords;
+			return CK.Shader.MakeTwoPointConicalGradient([x0, y0], r0, [x1, y1], r1, colors, positions, CK.TileMode.Clamp);
+		}
+	};
+	SkiaPattern = class {
+		constructor(image, repetition) {
+			this.image = image;
+			this.repetition = repetition;
+			this.__skiaShader = true;
+		}
+	};
+	Skia2DContext = class {
+		constructor(skCanvas, CK, width, height) {
+			this._canvas = skCanvas;
+			this.CK = CK;
+			this._width = width;
+			this._height = height;
+			this._typeface = null;
+			this._stack = [];
+			this._path = new CK.PathBuilder();
+			this._resetState();
+			this._surface = null;
+			this.imageSmoothingEnabled = true;
+			this.imageSmoothingQuality = "high";
+		}
+		setTypeface(typeface) {
+			this._typeface = typeface;
+		}
+		_resetState() {
+			this._state = {
+				fillStyle: "#000000",
+				strokeStyle: "#000000",
+				lineWidth: 1,
+				globalAlpha: 1,
+				compositeOp: "source-over",
+				lineJoin: "miter",
+				lineCap: "butt",
+				fontStr: "10px sans-serif",
+				textAlign: "start",
+				textBaseline: "alphabetic",
+				dash: null
+			};
+		}
+		get fillStyle() {
+			return this._state.fillStyle;
+		}
+		set fillStyle(v) {
+			this._state.fillStyle = v;
+		}
+		get strokeStyle() {
+			return this._state.strokeStyle;
+		}
+		set strokeStyle(v) {
+			this._state.strokeStyle = v;
+		}
+		get lineWidth() {
+			return this._state.lineWidth;
+		}
+		set lineWidth(v) {
+			this._state.lineWidth = v;
+		}
+		get globalAlpha() {
+			return this._state.globalAlpha;
+		}
+		set globalAlpha(v) {
+			this._state.globalAlpha = v;
+		}
+		get globalCompositeOperation() {
+			return this._state.compositeOp;
+		}
+		set globalCompositeOperation(v) {
+			this._state.compositeOp = v;
+		}
+		get lineJoin() {
+			return this._state.lineJoin;
+		}
+		set lineJoin(v) {
+			this._state.lineJoin = v;
+		}
+		get lineCap() {
+			return this._state.lineCap;
+		}
+		set lineCap(v) {
+			this._state.lineCap = v;
+		}
+		get font() {
+			return this._state.fontStr;
+		}
+		set font(v) {
+			this._state.fontStr = v;
+		}
+		get textAlign() {
+			return this._state.textAlign;
+		}
+		set textAlign(v) {
+			this._state.textAlign = v;
+		}
+		get textBaseline() {
+			return this._state.textBaseline;
+		}
+		set textBaseline(v) {
+			this._state.textBaseline = v;
+		}
+		save() {
+			this._stack.push({
+				state: copyState(this._state),
+				path: new this.CK.PathBuilder(this._path.snapshot())
+			});
+			this._canvas.save();
+		}
+		restore() {
+			const item = this._stack.pop();
+			if (!item) return;
+			this._state = item.state;
+			this._path.delete();
+			this._path = item.path;
+			this._canvas.restore();
+		}
+		beginPath() {
+			this._path.delete();
+			this._path = new this.CK.PathBuilder();
+		}
+		moveTo(x, y) {
+			this._path.moveTo(x, y);
+		}
+		lineTo(x, y) {
+			this._path.lineTo(x, y);
+		}
+		closePath() {
+			this._path.close();
+		}
+		quadraticCurveTo(cpx, cpy, x, y) {
+			this._path.quadTo(cpx, cpy, x, y);
+		}
+		arc(x, y, r, startAngle, endAngle, counterclockwise = false) {
+			this._path.arc(x, y, r, startAngle, endAngle, counterclockwise);
+		}
+		ellipse(cx, cy, rx, ry, rotation, startAngle, endAngle, counterclockwise = false) {
+			const CK = this.CK;
+			if (Math.abs(rotation) < 1e-6 && Math.abs(endAngle - startAngle - Math.PI * 2) < 1e-4) {
+				this._path.addOval(CK.LTRBRect(cx - rx, cy - ry, cx + rx, cy + ry));
+				return;
+			}
+			this._path.addOval(CK.LTRBRect(cx - rx, cy - ry, cx + rx, cy + ry));
+		}
+		rect(x, y, w, h) {
+			this._path.addRect(this.CK.XYWHRect(x, y, w, h));
+		}
+		clip() {
+			const path = this._path.snapshot();
+			this._canvas.clipPath(path, this.CK.ClipOp.Intersect, true);
+			path.delete();
+		}
+		translate(dx, dy) {
+			const m = this.CK.Matrix.translated(dx, dy);
+			this._canvas.concat(m);
+		}
+		rotate(angle) {
+			const m = this.CK.Matrix.rotated(angle);
+			this._canvas.concat(m);
+		}
+		scale(sx, sy) {
+			const m = this.CK.Matrix.scaled(sx, sy ?? sx);
+			this._canvas.concat(m);
+		}
+		createLinearGradient(x0, y0, x1, y1) {
+			return new SkiaGradient("linear", this.CK, [
+				x0,
+				y0,
+				x1,
+				y1
+			]);
+		}
+		createRadialGradient(x0, y0, r0, x1, y1, r1) {
+			return new SkiaGradient("radial", this.CK, [
+				x0,
+				y0,
+				r0,
+				x1,
+				y1,
+				r1
+			]);
+		}
+		createPattern(source, repetition) {
+			const image = source?.getImage?.() ?? source;
+			return new SkiaPattern(image, repetition);
+		}
+		_applyStyleToPaint(paint, style, isStroke) {
+			const CK = this.CK;
+			paint.setAlphaf(this._state.globalAlpha);
+			paint.setBlendMode(blendModeFromComposite(this._state.compositeOp, CK));
+			if (style && typeof style === "object" && style.__skiaShader) {
+				if (style instanceof SkiaGradient) {
+					const shader = style.buildShader();
+					paint.setShader(shader);
+					shader.delete();
+					return;
+				}
+				if (style instanceof SkiaPattern && style.image) {
+					const shader = style.image.makeShaderCubic(CK.TileMode.Repeat, CK.TileMode.Repeat, 1 / 3, 1 / 3);
+					paint.setShader(shader);
+					shader.delete();
+					return;
+				}
+			}
+			const rgba = parseColorInput(style);
+			paint.setColor(CK.Color4f(rgba[0], rgba[1], rgba[2], rgba[3]));
+			if (isStroke) {
+				paint.setStyle(CK.PaintStyle.Stroke);
+				paint.setStrokeWidth(this._state.lineWidth);
+				paint.setStrokeJoin(this._lineJoinToSkia(this._state.lineJoin));
+				paint.setStrokeCap(this._lineCapToSkia(this._state.lineCap));
+				if (this._state.dash) {
+					const effect = CK.PathEffect.MakeDash(this._state.dash, 0);
+					paint.setPathEffect(effect);
+					effect.delete();
+				}
+			} else paint.setStyle(CK.PaintStyle.Fill);
+		}
+		_lineJoinToSkia(join) {
+			const CK = this.CK;
+			if (join === "round") return CK.StrokeJoin.Round;
+			if (join === "bevel") return CK.StrokeJoin.Bevel;
+			return CK.StrokeJoin.Miter;
+		}
+		_lineCapToSkia(cap) {
+			const CK = this.CK;
+			if (cap === "round") return CK.StrokeCap.Round;
+			if (cap === "square") return CK.StrokeCap.Square;
+			return CK.StrokeCap.Butt;
+		}
+		_makeFillPaint() {
+			const paint = new this.CK.Paint();
+			paint.setAntiAlias(true);
+			this._applyStyleToPaint(paint, this._state.fillStyle, false);
+			return paint;
+		}
+		_makeStrokePaint() {
+			const paint = new this.CK.Paint();
+			paint.setAntiAlias(true);
+			this._applyStyleToPaint(paint, this._state.strokeStyle, true);
+			return paint;
+		}
+		fill() {
+			const paint = this._makeFillPaint();
+			const path = this._path.snapshot();
+			this._canvas.drawPath(path, paint);
+			path.delete();
+			paint.delete();
+		}
+		stroke() {
+			const paint = this._makeStrokePaint();
+			const path = this._path.snapshot();
+			this._canvas.drawPath(path, paint);
+			path.delete();
+			paint.delete();
+		}
+		fillRect(x, y, w, h) {
+			const paint = this._makeFillPaint();
+			this._canvas.drawRect(this.CK.XYWHRect(x, y, w, h), paint);
+			paint.delete();
+		}
+		setLineDash(segments) {
+			this._state.dash = segments ? [...segments] : null;
+		}
+		_resolveImage(source) {
+			if (!source) return null;
+			if (source.getImage) return source.getImage();
+			return source;
+		}
+		drawImage(source, ...args) {
+			const image = this._resolveImage(source);
+			if (!image) return;
+			const paint = new this.CK.Paint();
+			paint.setAntiAlias(true);
+			paint.setAlphaf(this._state.globalAlpha);
+			paint.setBlendMode(blendModeFromComposite(this._state.compositeOp, this.CK));
+			if (args.length === 2) this._canvas.drawImage(image, args[0], args[1], paint);
+			else if (args.length === 4) {
+				const [dx, dy, dw, dh] = args;
+				const src = this.CK.XYWHRect(0, 0, image.width(), image.height());
+				const dst = this.CK.XYWHRect(dx, dy, dw, dh);
+				this._canvas.drawImageRect(image, src, dst, paint);
+			}
+			paint.delete();
+		}
+		createImageData(w, h) {
+			return {
+				width: w,
+				height: h,
+				data: new Uint8ClampedArray(w * h * 4)
+			};
+		}
+		putImageData(imageData, x, y) {
+			const CK = this.CK;
+			const { width, height, data } = imageData;
+			const info = {
+				width,
+				height,
+				colorType: CK.ColorType.RGBA_8888,
+				alphaType: CK.AlphaType.Unpremul,
+				colorSpace: CK.ColorSpace.SRGB
+			};
+			const img = CK.MakeImage(info, data, width * 4);
+			if (!img) return;
+			const paint = new CK.Paint();
+			this._canvas.drawImage(img, x, y, paint);
+			paint.delete();
+			img.delete();
+		}
+		_getFont() {
+			const CK = this.CK;
+			const size = fontSizeFromCss(this._state.fontStr);
+			return new CK.Font(this._typeface, size);
+		}
+		_textX(text, x) {
+			if (this._state.textAlign === "center") return x;
+			if (this._state.textAlign === "right" || this._state.textAlign === "end") return x;
+			return x;
+		}
+		fillText(text, x, y) {
+			const font = this._getFont();
+			const paint = this._makeFillPaint();
+			let drawY = y;
+			if (this._state.textBaseline === "middle") drawY += font.getSize() * .35;
+			this._canvas.drawText(String(text), this._textX(text, x), drawY, paint, font);
+			paint.delete();
+			font.delete();
+		}
+		drawPicture(picture) {
+			const paint = new this.CK.Paint();
+			this._canvas.drawPicture(picture);
+			paint.delete();
+		}
+		clearCanvas(color) {
+			this._canvas.clear(this.CK.Color4f(...parseColorInput(color)));
+		}
+		getImage() {
+			return this._surface?.makeImageSnapshot() ?? null;
+		}
+		destroy() {
+			this._path.delete();
+			if (this._surface) {
+				this._surface.delete();
+				this._surface = null;
+			}
+		}
+	};
+}));
+//#endregion
+//#region node_modules/canvaskit-wasm/bin/canvaskit.wasm?url
+var canvaskit_default;
+var init_canvaskit$1 = __esmMin((() => {
+	canvaskit_default = "/assets/canvaskit-DB1zH3nD.wasm";
+}));
+//#endregion
+//#region \0vite/preload-helper.js
+var scriptRel, assetsURL, seen, __vitePreload;
+var init_preload_helper = __esmMin((() => {
+	scriptRel = "modulepreload";
+	assetsURL = function(dep) {
+		return "/" + dep;
+	};
+	seen = {};
+	__vitePreload = function preload(baseModule, deps, importerUrl) {
+		let promise = Promise.resolve();
+		if (deps && deps.length > 0) {
+			const links = document.getElementsByTagName("link");
+			const cspNonceMeta = document.querySelector("meta[property=csp-nonce]");
+			const cspNonce = cspNonceMeta?.nonce || cspNonceMeta?.getAttribute("nonce");
+			function allSettled(promises) {
+				return Promise.all(promises.map((p) => Promise.resolve(p).then((value) => ({
+					status: "fulfilled",
+					value
+				}), (reason) => ({
+					status: "rejected",
+					reason
+				}))));
+			}
+			function importMetaResolve(specifier) {
+				if (import.meta.resolve) return import.meta.resolve(specifier);
+				return new URL(
+					specifier,
+					/** #__KEEP__ */
+					import.meta.url
+				).href;
+			}
+			promise = allSettled(deps.map((dep) => {
+				dep = assetsURL(dep, importerUrl);
+				dep = importMetaResolve(dep);
+				if (dep in seen) return;
+				seen[dep] = true;
+				const isCss = dep.endsWith(".css");
+				for (let i = links.length - 1; i >= 0; i--) {
+					const link = links[i];
+					if (link.href === dep && (!isCss || link.rel === "stylesheet")) return;
+				}
+				const link = document.createElement("link");
+				link.rel = isCss ? "stylesheet" : scriptRel;
+				if (!isCss) link.as = "script";
+				link.crossOrigin = "";
+				link.href = dep;
+				if (cspNonce) link.setAttribute("nonce", cspNonce);
+				document.head.appendChild(link);
+				if (isCss) return new Promise((res, rej) => {
+					link.addEventListener("load", res);
+					link.addEventListener("error", () => rej(/* @__PURE__ */ new Error(`Unable to preload CSS for ${dep}`)));
+				});
+			}));
+		}
+		function handlePreloadError(err) {
+			const e = new Event("vite:preloadError", { cancelable: true });
+			e.payload = err;
+			window.dispatchEvent(e);
+			if (!e.defaultPrevented) throw err;
+		}
+		return promise.then((res) => {
+			for (const item of res || []) {
+				if (item.status !== "rejected") continue;
+				handlePreloadError(item.reason);
+			}
+			return baseModule().catch(handlePreloadError);
+		});
+	};
+}));
+//#endregion
+//#region public/render/canvaskit.js
+async function loadCanvasKit() {
+	const mod = await __vitePreload(() => import("./canvaskit-DgsnmqmU.js").then((m) => /* @__PURE__ */ __toESM(m.default, 1)), []);
+	let CanvasKitInit = [
+		mod,
+		mod?.default,
+		mod?.default?.default,
+		mod?.CanvasKitInit,
+		mod?.default?.CanvasKitInit,
+		globalThis?.CanvasKitInit
+	].find((c) => typeof c === "function");
+	if (!CanvasKitInit && mod && typeof mod === "object") CanvasKitInit = Object.values(mod).find((v) => typeof v === "function");
+	if (!CanvasKitInit) throw new Error("CanvasKit init export not found");
+	return CanvasKitInit({ locateFile: () => canvaskit_default });
+}
+function createCanvasSurface(CK, canvas) {
+	let surf = CK.MakeCanvasSurface(canvas);
+	if (surf) return surf;
+	if (typeof CK.MakeSWCanvasSurface === "function") {
+		surf = CK.MakeSWCanvasSurface(canvas);
+		if (surf) return surf;
+	}
+	return null;
+}
+async function fetchWithTimeout(url, timeoutMs = FETCH_TIMEOUT_MS) {
+	const controller = new AbortController();
+	const timer = setTimeout(() => controller.abort(), timeoutMs);
+	try {
+		return await fetch(url, { signal: controller.signal });
+	} finally {
+		clearTimeout(timer);
+	}
+}
+async function loadTypeface(CK, onProgress) {
+	try {
+		onProgress?.("Шрифт (локальный)…");
+		const local = await fetchWithTimeout(new URL("../fonts/NotoSans-Regular.ttf", "" + import.meta.url), 8e3);
+		if (local.ok) {
+			const bytes = await local.arrayBuffer();
+			const face = CK.Typeface.MakeFreeTypeFaceFromData(bytes);
+			if (face) return face;
+		}
+	} catch {}
+	try {
+		onProgress?.("Шрифт (CDN)…");
+		const res = await fetchWithTimeout(FONT_URL);
+		if (!res.ok) throw new Error(`HTTP ${res.status}`);
+		const bytes = await res.arrayBuffer();
+		const face = CK.Typeface.MakeFreeTypeFaceFromData(bytes);
+		if (face) return face;
+	} catch {}
+	return null;
+}
+function flushSurface(surface) {
+	surface?.flush();
+}
+var FONT_URL, FETCH_TIMEOUT_MS;
+var init_canvaskit = __esmMin((() => {
+	init_canvaskit$1();
+	init_preload_helper();
+	FONT_URL = "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@v2.004/hinted/ttf/NotoSans/NotoSans-Regular.ttf";
+	FETCH_TIMEOUT_MS = 2e4;
+}));
+//#endregion
+//#region public/render/wood_texture.js
+function buildWoodTile(CK) {
+	const ctx = createOffscreenContext(CK, TILE_SIZE$1, TILE_SIZE$1);
+	const base = ctx.createLinearGradient(0, 0, 0, TILE_SIZE$1);
+	base.addColorStop(0, COLORS.woodLight);
+	base.addColorStop(.45, COLORS.woodBase);
+	base.addColorStop(1, COLORS.woodDark);
+	ctx.fillStyle = base;
+	ctx.fillRect(0, 0, TILE_SIZE$1, TILE_SIZE$1);
+	for (let i = 0; i < 36; i++) {
+		const y = i / 36 * TILE_SIZE$1;
+		const wave = Math.sin(i * 1.7) * 1.2;
+		ctx.strokeStyle = COLORS.woodGrain;
+		ctx.lineWidth = .6 + i % 3 * .35;
+		ctx.beginPath();
+		ctx.moveTo(0, y + wave);
+		for (let x = 0; x <= TILE_SIZE$1; x += 6) ctx.lineTo(x, y + wave + Math.sin(x * .11 + i * .8) * 1.4);
+		ctx.stroke();
+	}
+	for (let i = 0; i < 5; i++) {
+		const y = (i * 23 + 11) % TILE_SIZE$1;
+		ctx.fillStyle = `rgba(30, 15, 5, ${.04 + i % 2 * .03})`;
+		ctx.fillRect(0, y, TILE_SIZE$1, 1.5 + i % 3);
+	}
+	const image = ctx.getImage();
+	ctx.destroy();
+	return image;
+}
+function getWoodPattern(ctx) {
+	if (!woodPatternImage) woodPatternImage = buildWoodTile(ctx.CK);
+	return ctx.createPattern(woodPatternImage, "repeat");
+}
+function fillWoodTexture(ctx, x, y, width, height, horizontal) {
+	ctx.save();
+	if (horizontal) {
+		ctx.fillStyle = getWoodPattern(ctx);
+		ctx.fillRect(x, y, width, height);
+	} else {
+		ctx.translate(x + width / 2, y + height / 2);
+		ctx.rotate(Math.PI / 2);
+		ctx.fillStyle = getWoodPattern(ctx);
+		ctx.fillRect(-height / 2, -width / 2, height, width);
+	}
+	ctx.restore();
+}
+function invalidateWoodPattern() {
+	woodPatternImage?.delete?.();
+	woodPatternImage = null;
+}
+var TILE_SIZE$1, woodPatternImage;
+var init_wood_texture = __esmMin((() => {
+	init_constants();
+	init_skia_ctx();
+	TILE_SIZE$1 = 128;
+	woodPatternImage = null;
+}));
+//#endregion
+//#region public/render/metal_texture.js
+function buildMetalTile(CK) {
+	const ctx = createOffscreenContext(CK, TILE_SIZE, TILE_SIZE);
+	const base = ctx.createLinearGradient(0, 0, 0, TILE_SIZE);
+	base.addColorStop(0, COLORS.metalLight);
+	base.addColorStop(.42, COLORS.metalBase);
+	base.addColorStop(1, COLORS.metalDark);
+	ctx.fillStyle = base;
+	ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+	for (let i = 0; i < 48; i++) {
+		const y = i / 48 * TILE_SIZE;
+		const alpha = .04 + i % 4 * .018;
+		ctx.strokeStyle = i % 2 === 0 ? `rgba(255,255,255,${alpha})` : `rgba(30,36,48,${alpha * .9})`;
+		ctx.lineWidth = .5 + i % 3 * .25;
+		ctx.beginPath();
+		ctx.moveTo(0, y);
+		ctx.lineTo(TILE_SIZE, y + Math.sin(i * 1.3) * .6);
+		ctx.stroke();
+	}
+	for (let i = 0; i < 6; i++) {
+		const x = (i * 19 + 7) % TILE_SIZE;
+		ctx.fillStyle = `rgba(255,255,255,${.03 + i % 2 * .025})`;
+		ctx.fillRect(x, 0, 1.2, TILE_SIZE);
+	}
+	const image = ctx.getImage();
+	ctx.destroy();
+	return image;
+}
+function getMetalPattern(ctx) {
+	if (!metalPatternImage) metalPatternImage = buildMetalTile(ctx.CK);
+	return ctx.createPattern(metalPatternImage, "repeat");
+}
+function fillMetalTexture(ctx, x, y, width, height, horizontal = true) {
+	ctx.save();
+	if (horizontal) {
+		ctx.fillStyle = getMetalPattern(ctx);
+		ctx.fillRect(x, y, width, height);
+	} else {
+		ctx.translate(x + width / 2, y + height / 2);
+		ctx.rotate(Math.PI / 2);
+		ctx.fillStyle = getMetalPattern(ctx);
+		ctx.fillRect(-height / 2, -width / 2, height, width);
+	}
+	ctx.restore();
+}
+function metalShadeGradient(ctx, x, y, width, height, cornerId) {
+	const cx = cornerId === "tr" || cornerId === "br" ? x + width : x;
+	const cy = cornerId === "bl" || cornerId === "br" ? y + height : y;
+	const gx = x + width * .62;
+	const gy = y + height * .62;
+	const grad = ctx.createLinearGradient(cx, cy, gx, gy);
+	grad.addColorStop(0, COLORS.metalLight);
+	grad.addColorStop(.38, COLORS.metalBase);
+	grad.addColorStop(1, COLORS.metalDark);
+	return grad;
+}
+function invalidateMetalPattern() {
+	metalPatternImage?.delete?.();
+	metalPatternImage = null;
+}
+var TILE_SIZE, metalPatternImage;
+var init_metal_texture = __esmMin((() => {
+	init_constants();
+	init_skia_ctx();
+	TILE_SIZE = 128;
+	metalPatternImage = null;
+}));
+//#endregion
+//#region public/render/cushions_draw.js
+function chamferSize(segment) {
+	const limit = Math.min(segment.width, segment.height) / 2 - .5;
+	return Math.min(CUSHION_CHAMFER, Math.max(0, limit));
+}
+function traceSegmentOutline(ctx, segment) {
+	const { x, y, width, height, side, chamferStart, chamferEnd } = segment;
+	const c = chamferSize(segment);
+	const w = width;
+	const h = height;
+	if (side === "top") {
+		ctx.moveTo(x, y);
+		ctx.lineTo(x + w, y);
+		if (chamferEnd) {
+			ctx.lineTo(x + w, y + h - c);
+			ctx.lineTo(x + w - c, y + h);
+		} else ctx.lineTo(x + w, y + h);
+		if (chamferStart) {
+			ctx.lineTo(x + c, y + h);
+			ctx.lineTo(x, y + h - c);
+		} else ctx.lineTo(x, y + h);
+	} else if (side === "bottom") {
+		ctx.moveTo(x, y + h);
+		ctx.lineTo(x + w, y + h);
+		if (chamferEnd) {
+			ctx.lineTo(x + w, y + c);
+			ctx.lineTo(x + w - c, y);
+		} else ctx.lineTo(x + w, y);
+		if (chamferStart) {
+			ctx.lineTo(x + c, y);
+			ctx.lineTo(x, y + c);
+		} else ctx.lineTo(x, y);
+	} else if (side === "left") {
+		ctx.moveTo(x, y);
+		ctx.lineTo(x, y + h);
+		if (chamferEnd) {
+			ctx.lineTo(x + w - c, y + h);
+			ctx.lineTo(x + w, y + h - c);
+		} else ctx.lineTo(x + w, y + h);
+		if (chamferStart) {
+			ctx.lineTo(x + w, y + c);
+			ctx.lineTo(x + w - c, y);
+		} else ctx.lineTo(x + w, y);
+	} else {
+		ctx.moveTo(x + w, y);
+		ctx.lineTo(x + w, y + h);
+		if (chamferEnd) {
+			ctx.lineTo(x + c, y + h);
+			ctx.lineTo(x, y + h - c);
+		} else ctx.lineTo(x, y + h);
+		if (chamferStart) {
+			ctx.lineTo(x, y + c);
+			ctx.lineTo(x + c, y);
+		} else ctx.lineTo(x, y);
+	}
+	ctx.closePath();
+}
+function traceInnerEdge(ctx, segment) {
+	const { x, y, width, height, side, chamferStart, chamferEnd } = segment;
+	const c = chamferSize(segment);
+	const w = width;
+	const h = height;
+	if (side === "top") {
+		if (chamferStart) ctx.moveTo(x, y + h - c);
+		else ctx.moveTo(x, y + h);
+		if (chamferStart) ctx.lineTo(x + c, y + h);
+		ctx.lineTo(chamferEnd ? x + w - c : x + w, y + h);
+		if (chamferEnd) ctx.lineTo(x + w, y + h - c);
+	} else if (side === "bottom") {
+		if (chamferStart) ctx.moveTo(x, y + c);
+		else ctx.moveTo(x, y);
+		if (chamferStart) ctx.lineTo(x + c, y);
+		ctx.lineTo(chamferEnd ? x + w - c : x + w, y);
+		if (chamferEnd) ctx.lineTo(x + w, y + c);
+	} else if (side === "left") {
+		if (chamferStart) ctx.moveTo(x + w - c, y);
+		else ctx.moveTo(x + w, y);
+		if (chamferStart) ctx.lineTo(x + w, y + c);
+		ctx.lineTo(x + w, chamferEnd ? y + h - c : y + h);
+		if (chamferEnd) ctx.lineTo(x + w - c, y + h);
+	} else {
+		if (chamferStart) ctx.moveTo(x + c, y);
+		else ctx.moveTo(x, y);
+		if (chamferStart) ctx.lineTo(x, y + c);
+		ctx.lineTo(x, chamferEnd ? y + h - c : y + h);
+		if (chamferEnd) ctx.lineTo(x + c, y + h);
+	}
+}
+function drawSegmentBody(ctx, segment) {
+	const { x, y, width, height, side } = segment;
+	const isHorizontal = side === "top" || side === "bottom";
+	ctx.save();
+	ctx.beginPath();
+	traceSegmentOutline(ctx, segment);
+	ctx.clip();
+	const shade = isHorizontal ? ctx.createLinearGradient(x, y, x, y + height) : ctx.createLinearGradient(x, y, x + width, y);
+	if (side === "top" || side === "left") {
+		shade.addColorStop(0, COLORS.woodDark);
+		shade.addColorStop(.4, COLORS.woodBase);
+		shade.addColorStop(1, COLORS.woodLight);
+	} else {
+		shade.addColorStop(0, COLORS.woodLight);
+		shade.addColorStop(.6, COLORS.woodBase);
+		shade.addColorStop(1, COLORS.woodDark);
+	}
+	ctx.fillStyle = shade;
+	ctx.fillRect(x, y, width, height);
+	ctx.globalAlpha = .82;
+	fillWoodTexture(ctx, x, y, width, height, isHorizontal);
+	ctx.globalAlpha = 1;
+	ctx.restore();
+}
+function drawSegmentInnerEdge(ctx, segment) {
+	ctx.save();
+	ctx.strokeStyle = COLORS.woodEdge;
+	ctx.lineWidth = 1.8;
+	ctx.lineJoin = "round";
+	ctx.lineCap = "round";
+	ctx.beginPath();
+	traceInnerEdge(ctx, segment);
+	ctx.stroke();
+	ctx.restore();
+}
+function drawSegmentList(ctx, segments) {
+	for (const segment of segments) {
+		if (segment.width <= 0 || segment.height <= 0) continue;
+		drawSegmentBody(ctx, segment);
+		drawSegmentInnerEdge(ctx, segment);
+	}
+}
+function wedgeBounds(points) {
+	const xs = points.map((p) => p.x);
+	const ys = points.map((p) => p.y);
+	const minX = Math.min(...xs);
+	const minY = Math.min(...ys);
+	return {
+		x: minX,
+		y: minY,
+		width: Math.max(...xs) - minX,
+		height: Math.max(...ys) - minY
+	};
+}
+function cornerIdFromSegment(segment) {
+	const id = segment.pocketIds?.[0];
+	if (id === "tl" || id === "tr" || id === "bl" || id === "br") return id;
+	return "tl";
+}
+function drawCornerSegmentBody(ctx, segment) {
+	const { x, y, width, height, side } = segment;
+	const isHorizontal = side === "top" || side === "bottom";
+	const cornerId = cornerIdFromSegment(segment);
+	ctx.save();
+	ctx.beginPath();
+	traceSegmentOutline(ctx, segment);
+	ctx.clip();
+	ctx.fillStyle = metalShadeGradient(ctx, x, y, width, height, cornerId);
+	ctx.fillRect(x, y, width, height);
+	ctx.globalAlpha = .88;
+	fillMetalTexture(ctx, x, y, width, height, isHorizontal);
+	ctx.globalAlpha = 1;
+	ctx.restore();
+}
+function drawCornerSegmentInnerEdge(ctx, segment) {
+	ctx.save();
+	ctx.strokeStyle = COLORS.metalEdge;
+	ctx.lineWidth = 1.6;
+	ctx.lineJoin = "round";
+	ctx.lineCap = "round";
+	ctx.beginPath();
+	traceInnerEdge(ctx, segment);
+	ctx.stroke();
+	ctx.restore();
+}
+function drawCornerSegmentList(ctx, segments) {
+	for (const segment of segments) {
+		if (segment.width <= 0 || segment.height <= 0) continue;
+		drawCornerSegmentBody(ctx, segment);
+		drawCornerSegmentInnerEdge(ctx, segment);
+	}
+}
+function drawCornerWedgeBody(ctx, wedge) {
+	const { points, corner } = wedge;
+	const { x, y, width, height } = wedgeBounds(points);
+	ctx.save();
+	ctx.beginPath();
+	ctx.moveTo(points[0].x, points[0].y);
+	for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+	ctx.closePath();
+	ctx.clip();
+	ctx.fillStyle = metalShadeGradient(ctx, x, y, width, height, corner);
+	ctx.fillRect(x, y, width, height);
+	ctx.globalAlpha = .88;
+	fillMetalTexture(ctx, x, y, width, height, true);
+	ctx.globalAlpha = 1;
+	ctx.restore();
+}
+function drawCornerWedgeInnerEdge(ctx, wedge) {
+	const a = wedge.points[1];
+	const b = wedge.points[2];
+	ctx.save();
+	ctx.strokeStyle = COLORS.metalShadow;
+	ctx.lineWidth = 1.4;
+	ctx.lineJoin = "round";
+	ctx.lineCap = "round";
+	ctx.beginPath();
+	ctx.moveTo(a.x, a.y);
+	ctx.lineTo(b.x, b.y);
+	ctx.stroke();
+	ctx.restore();
+}
+function drawCornerWedgeList(ctx, wedges) {
+	for (const wedge of wedges) {
+		drawCornerWedgeBody(ctx, wedge);
+		drawCornerWedgeInnerEdge(ctx, wedge);
+	}
+}
+/** Псевдо-борт в углах — металл, без физики и резины. */
+function drawCornerBehindSegments(ctx) {
+	drawCornerSegmentList(ctx, getCornerBehindSegments());
+	drawCornerWedgeList(ctx, getCornerBehindWedges());
+}
+function drawCushionSegments(ctx) {
+	drawSegmentList(ctx, getCushionSegments());
+}
+var init_cushions_draw = __esmMin((() => {
+	init_constants();
+	init_cushions();
+	init_wood_texture();
+	init_metal_texture();
+}));
+//#endregion
+//#region public/render/cushion_rubber_draw.js
+function edgeNormal(x1, y1, x2, y2) {
+	const len = Math.hypot(x2 - x1, y2 - y1) || 1;
+	const edx = x2 - x1;
+	const edy = y2 - y1;
+	let nx = -edy / len;
+	let ny = edx / len;
+	const mx = (x1 + x2) / 2;
+	const my = (y1 + y2) / 2;
+	if ((PLAY_CENTER_X - mx) * nx + (PLAY_CENTER_Y - my) * ny < 0) {
+		nx = -nx;
+		ny = -ny;
+	}
+	return {
+		nx,
+		ny,
+		tx: edx / len,
+		ty: edy / len
+	};
+}
+function chamferRunAlongEdge(thickness, angleDeg) {
+	return thickness / Math.tan(angleDeg * Math.PI / 180);
+}
+function drawRubberShadowOnFelt(ctx, line) {
+	const { nx, ny } = edgeNormal(line.x1, line.y1, line.x2, line.y2);
+	const depth = CUSHION_SHADOW_DEPTH;
+	const { x1, y1, x2, y2 } = line;
+	const grad = ctx.createLinearGradient((x1 + x2) / 2, (y1 + y2) / 2, (x1 + x2) / 2 + nx * depth, (y1 + y2) / 2 + ny * depth);
+	grad.addColorStop(0, COLORS.cushionFeltShadow);
+	grad.addColorStop(.45, "rgba(0, 0, 0, 0.12)");
+	grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+	ctx.beginPath();
+	ctx.moveTo(x1, y1);
+	ctx.lineTo(x2, y2);
+	ctx.lineTo(x2 + nx * depth, y2 + ny * depth);
+	ctx.lineTo(x1 + nx * depth, y1 + ny * depth);
+	ctx.closePath();
+	ctx.fillStyle = grad;
+	ctx.fill();
+}
+function drawRubberShadows(ctx) {
+	const surface = getPlaySurface();
+	ctx.save();
+	ctx.beginPath();
+	ctx.rect(surface.left, surface.top, surface.width, surface.height);
+	ctx.clip();
+	for (const line of getRubberInnerEdges()) {
+		if (Math.hypot(line.x2 - line.x1, line.y2 - line.y1) < .5) continue;
+		drawRubberShadowOnFelt(ctx, line);
+	}
+	ctx.restore();
+}
+function createRubberFillGradient(ctx, line, nx, ny, t) {
+	const { x1, y1, x2, y2, side } = line;
+	const ix1 = x1 + nx * t;
+	const iy1 = y1 + ny * t;
+	const palettes = COLORS.rubberPalettes;
+	if (side === "top" || side === "bottom") {
+		const pal = palettes[side];
+		const grad = ctx.createLinearGradient(x1, y1, ix1, iy1);
+		grad.addColorStop(0, pal.dark);
+		grad.addColorStop(.42, pal.mid);
+		grad.addColorStop(1, pal.light);
+		return grad;
+	}
+	const topP = palettes.top;
+	const botP = palettes.bottom;
+	const grad = ctx.createLinearGradient(x1, y1, x2, y2);
+	grad.addColorStop(0, topP.dark);
+	grad.addColorStop(.22, topP.light);
+	grad.addColorStop(.78, botP.mid);
+	grad.addColorStop(1, botP.light);
+	return grad;
+}
+function traceRubberInnerEdge(ctx, points) {
+	const { hasEndCurve, hasStartCurve, innerEndX, innerEndY, innerStartX, innerStartY, beforeEndCurveX, beforeEndCurveY, afterEndCurveX, afterEndCurveY, beforeStartCurveX, beforeStartCurveY, afterStartCurveX, afterStartCurveY } = points;
+	ctx.moveTo(hasEndCurve ? afterEndCurveX : innerEndX, hasEndCurve ? afterEndCurveY : innerEndY);
+	ctx.lineTo(beforeStartCurveX, beforeStartCurveY);
+	if (hasStartCurve) ctx.quadraticCurveTo(innerStartX, innerStartY, afterStartCurveX, afterStartCurveY);
+	else ctx.lineTo(innerStartX, innerStartY);
+}
+function drawRubberStrip(ctx, line) {
+	const { nx, ny, tx, ty } = edgeNormal(line.x1, line.y1, line.x2, line.y2);
+	const t = RUBBER_THICKNESS;
+	const { x1, y1, x2, y2, chamferStartAngle, chamferEndAngle } = line;
+	const ix1 = x1 + nx * t;
+	const iy1 = y1 + ny * t;
+	const ix2 = x2 + nx * t;
+	const iy2 = y2 + ny * t;
+	const runEnd = chamferEndAngle != null ? chamferRunAlongEdge(t, chamferEndAngle) : 0;
+	const runStart = chamferStartAngle != null ? chamferRunAlongEdge(t, chamferStartAngle) : 0;
+	const innerEndX = chamferEndAngle != null ? ix2 - tx * runEnd : ix2;
+	const innerEndY = chamferEndAngle != null ? iy2 - ty * runEnd : iy2;
+	const innerStartX = chamferStartAngle != null ? ix1 + tx * runStart : ix1;
+	const innerStartY = chamferStartAngle != null ? iy1 + ty * runStart : iy1;
+	const minCurve = .5;
+	const maxCurve = t * .35;
+	const startCurve = chamferStartAngle != null ? Math.min(runStart * .65, maxCurve) : 0;
+	const endCurve = chamferEndAngle != null ? Math.min(runEnd * .65, maxCurve) : 0;
+	const hasStartCurve = startCurve >= minCurve;
+	const hasEndCurve = endCurve >= minCurve;
+	const endChamferDx = innerEndX - x2;
+	const endChamferDy = innerEndY - y2;
+	const endChamferLen = Math.hypot(endChamferDx, endChamferDy) || 1;
+	const endChamferUx = endChamferDx / endChamferLen;
+	const endChamferUy = endChamferDy / endChamferLen;
+	const endCurveSafe = Math.min(endCurve, endChamferLen * .45);
+	const startChamferDx = x1 - innerStartX;
+	const startChamferDy = y1 - innerStartY;
+	const startChamferLen = Math.hypot(startChamferDx, startChamferDy) || 1;
+	const startChamferUx = startChamferDx / startChamferLen;
+	const startChamferUy = startChamferDy / startChamferLen;
+	const startCurveSafe = Math.min(startCurve, startChamferLen * .45);
+	const beforeEndCurveX = hasEndCurve ? innerEndX - endChamferUx * endCurveSafe : innerEndX;
+	const beforeEndCurveY = hasEndCurve ? innerEndY - endChamferUy * endCurveSafe : innerEndY;
+	const afterEndCurveX = hasEndCurve ? innerEndX - tx * endCurveSafe : innerEndX;
+	const afterEndCurveY = hasEndCurve ? innerEndY - ty * endCurveSafe : innerEndY;
+	const beforeStartCurveX = hasStartCurve ? innerStartX + tx * startCurveSafe : innerStartX;
+	const beforeStartCurveY = hasStartCurve ? innerStartY + ty * startCurveSafe : innerStartY;
+	const afterStartCurveX = hasStartCurve ? innerStartX + startChamferUx * startCurveSafe : innerStartX;
+	const afterStartCurveY = hasStartCurve ? innerStartY + startChamferUy * startCurveSafe : innerStartY;
+	ctx.beginPath();
+	ctx.moveTo(x1, y1);
+	ctx.lineTo(x2, y2);
+	ctx.lineTo(beforeEndCurveX, beforeEndCurveY);
+	if (hasEndCurve) ctx.quadraticCurveTo(innerEndX, innerEndY, afterEndCurveX, afterEndCurveY);
+	else ctx.lineTo(innerEndX, innerEndY);
+	ctx.lineTo(beforeStartCurveX, beforeStartCurveY);
+	if (hasStartCurve) ctx.quadraticCurveTo(innerStartX, innerStartY, afterStartCurveX, afterStartCurveY);
+	else ctx.lineTo(innerStartX, innerStartY);
+	ctx.lineTo(x1, y1);
+	ctx.closePath();
+	ctx.fillStyle = createRubberFillGradient(ctx, line, nx, ny, t);
+	ctx.fill();
+	const edgePoints = {
+		hasEndCurve,
+		hasStartCurve,
+		innerEndX,
+		innerEndY,
+		innerStartX,
+		innerStartY,
+		beforeEndCurveX,
+		beforeEndCurveY,
+		afterEndCurveX,
+		afterEndCurveY,
+		beforeStartCurveX,
+		beforeStartCurveY,
+		afterStartCurveX,
+		afterStartCurveY
+	};
+	ctx.save();
+	ctx.lineJoin = "round";
+	ctx.lineCap = "butt";
+	ctx.beginPath();
+	traceRubberInnerEdge(ctx, edgePoints);
+	ctx.strokeStyle = COLORS.rubberFeltEdge;
+	ctx.lineWidth = 1.1;
+	ctx.stroke();
+	ctx.beginPath();
+	traceRubberInnerEdge(ctx, edgePoints);
+	ctx.strokeStyle = COLORS.rubberHighlight;
+	ctx.lineWidth = .7;
+	ctx.stroke();
+	ctx.beginPath();
+	ctx.moveTo(x1, y1);
+	ctx.lineTo(x2, y2);
+	ctx.strokeStyle = COLORS.rubberShadow;
+	ctx.lineWidth = 1.2;
+	ctx.stroke();
+	ctx.restore();
+}
+function drawRubberGums(ctx) {
+	ctx.save();
+	for (const line of getRubberInnerEdges()) {
+		if (Math.hypot(line.x2 - line.x1, line.y2 - line.y1) < .5) continue;
+		drawRubberStrip(ctx, line);
+	}
+	ctx.restore();
+}
+var CUSHION_SHADOW_DEPTH, PLAY_CENTER_X, PLAY_CENTER_Y;
+var init_cushion_rubber_draw = __esmMin((() => {
+	init_constants();
+	init_cushions();
+	init_utils();
+	CUSHION_SHADOW_DEPTH = 9;
+	PLAY_CENTER_X = CANVAS_WIDTH / 2;
+	PLAY_CENTER_Y = 520 / 2;
+}));
+//#endregion
+//#region public/render/pocket_texture.js
+function buildPocketSprite(CK) {
+	const ctx = createOffscreenContext(CK, TEX_SIZE, TEX_SIZE);
+	const cx = TEX_SIZE / 2;
+	const cy = TEX_SIZE / 2;
+	const r = TEX_SIZE / 2 - 3;
+	ctx.save();
+	ctx.beginPath();
+	ctx.arc(cx, cy, r, 0, Math.PI * 2);
+	ctx.clip();
+	const lightX = cx - r * .28;
+	const lightY = cy - r * .34;
+	const depth = ctx.createRadialGradient(lightX, lightY, r * .03, cx, 84.62, r);
+	depth.addColorStop(0, COLORS.pocketDeep);
+	depth.addColorStop(.22, COLORS.pocket);
+	depth.addColorStop(.52, COLORS.pocketLeather);
+	depth.addColorStop(.78, COLORS.pocketLiner);
+	depth.addColorStop(1, COLORS.pocketRim);
+	ctx.fillStyle = depth;
+	ctx.fillRect(0, 0, TEX_SIZE, TEX_SIZE);
+	const spokes = 16;
+	for (let i = 0; i < spokes; i++) {
+		const angle = i / spokes * Math.PI * 2 + .08;
+		const endX = cx + Math.cos(angle) * r * .96;
+		const endY = cy + Math.sin(angle) * r * .96;
+		const ctrlX = cx + Math.cos(angle) * r * .48;
+		const ctrlY = cy + Math.sin(angle) * r * .48 + r * .11;
+		ctx.beginPath();
+		ctx.moveTo(cx, cy);
+		ctx.quadraticCurveTo(ctrlX, ctrlY, endX, endY);
+		ctx.strokeStyle = COLORS.pocketNet;
+		ctx.lineWidth = 1.1;
+		ctx.stroke();
+	}
+	for (let ring = 1; ring <= 5; ring++) {
+		const ringR = r * (ring / 6.2);
+		const sag = ring * 1.4;
+		ctx.beginPath();
+		ctx.ellipse(cx, cy + sag * .35, ringR, ringR * (.92 - ring * .015), 0, 0, Math.PI * 2);
+		ctx.strokeStyle = `rgba(58, 52, 46, ${.42 - ring * .05})`;
+		ctx.lineWidth = .85;
+		ctx.stroke();
+	}
+	for (let i = 0; i < 22; i++) {
+		const angle = i / 22 * Math.PI * 2;
+		const dist = r * (.18 + i % 5 * .11);
+		const px = cx + Math.cos(angle) * dist;
+		const py = cy + Math.sin(angle) * dist + dist * .08;
+		ctx.fillStyle = i % 2 === 0 ? COLORS.pocketNetKnot : COLORS.pocketNetShadow;
+		ctx.beginPath();
+		ctx.arc(px, py, .9 + i % 3 * .35, 0, Math.PI * 2);
+		ctx.fill();
+	}
+	const abyss = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * .52);
+	abyss.addColorStop(0, "rgba(0, 0, 0, 0.98)");
+	abyss.addColorStop(.55, "rgba(0, 0, 0, 0.72)");
+	abyss.addColorStop(1, "rgba(0, 0, 0, 0)");
+	ctx.fillStyle = abyss;
+	ctx.fillRect(0, 0, TEX_SIZE, TEX_SIZE);
+	const lipShadow = ctx.createRadialGradient(cx, cy, r * .62, cx, cy, r);
+	lipShadow.addColorStop(0, "rgba(0, 0, 0, 0)");
+	lipShadow.addColorStop(.55, "rgba(0, 0, 0, 0.55)");
+	lipShadow.addColorStop(1, "rgba(0, 0, 0, 0.92)");
+	ctx.fillStyle = lipShadow;
+	ctx.fillRect(0, 0, TEX_SIZE, TEX_SIZE);
+	ctx.globalCompositeOperation = "screen";
+	ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
+	ctx.lineWidth = 2;
+	ctx.beginPath();
+	ctx.arc(cx - r * .1, cy - r * .12, r * .9, -Math.PI * .92, -Math.PI * .08);
+	ctx.stroke();
+	ctx.restore();
+	const image = ctx.getImage();
+	ctx.destroy();
+	return image;
+}
+function getPocketSprite(CK, radius) {
+	const key = Math.round(radius * 100);
+	if (!spriteCache.has(key)) spriteCache.set(key, buildPocketSprite(CK));
+	return spriteCache.get(key);
+}
+function drawPocketTexture(ctx, pocket) {
+	const { x, y, drawRadius: r } = pocket;
+	const sprite = getPocketSprite(ctx.CK, r);
+	const size = r * 2 + 1;
+	ctx.save();
+	ctx.drawImage(sprite, x - size / 2, y - size / 2, size, size);
+	ctx.restore();
+}
+function drawPocketRim(ctx, pocket) {
+	const { x, y, drawRadius: r } = pocket;
+	ctx.save();
+	ctx.beginPath();
+	ctx.arc(x, y, r - .5, 0, Math.PI * 2);
+	const lip = ctx.createLinearGradient(x - r, y - r, x + r * .45, y + r * .5);
+	lip.addColorStop(0, COLORS.pocketRimLight);
+	lip.addColorStop(.35, COLORS.pocketLiner);
+	lip.addColorStop(.72, COLORS.pocketRim);
+	lip.addColorStop(1, COLORS.pocketDeep);
+	ctx.strokeStyle = lip;
+	ctx.lineWidth = 2.4;
+	ctx.stroke();
+	ctx.beginPath();
+	ctx.arc(x - r * .08, y - r * .1, r * .86, -Math.PI * .9, -Math.PI * .12);
+	ctx.strokeStyle = "rgba(255, 255, 255, 0.16)";
+	ctx.lineWidth = 1.1;
+	ctx.stroke();
+	ctx.restore();
+}
+function invalidatePocketSprites() {
+	for (const img of spriteCache.values()) img.delete();
+	spriteCache.clear();
+}
+var TEX_SIZE, spriteCache;
+var init_pocket_texture = __esmMin((() => {
+	init_constants();
+	init_skia_ctx();
+	TEX_SIZE = 160;
+	spriteCache = /* @__PURE__ */ new Map();
+}));
+//#endregion
+//#region public/render/drawing_table.js
+function cutPocketHole(ctx, pocket) {
+	ctx.beginPath();
+	ctx.arc(pocket.x, pocket.y, pocket.drawRadius, 0, Math.PI * 2);
+	ctx.fill();
+}
+function drawTableStatic(ctx, debugDrawRubber = true) {
+	ctx.fillStyle = COLORS.background;
+	ctx.fillRect(0, 0, CANVAS_WIDTH, 520);
+	const surface = getPlaySurface();
+	const felt = ctx.createLinearGradient(0, surface.top, 0, surface.bottom);
+	felt.addColorStop(0, COLORS.feltLight);
+	felt.addColorStop(.5, COLORS.felt);
+	felt.addColorStop(1, COLORS.feltDark);
+	ctx.fillStyle = felt;
+	ctx.fillRect(surface.left, surface.top, surface.width, surface.height);
+	drawRubberShadows(ctx);
+	drawCushionSegments(ctx);
+	drawCornerBehindSegments(ctx);
+	if (debugDrawRubber) drawRubberGums(ctx);
+	ctx.save();
+	ctx.globalCompositeOperation = "destination-out";
+	ctx.fillStyle = "#000";
+	getPockets().forEach((p) => cutPocketHole(ctx, p));
+	ctx.restore();
+	getPockets().forEach((p) => {
+		drawPocketTexture(ctx, p);
+		drawPocketRim(ctx, p);
+	});
+	const baulk = surface.left + surface.width * .25;
+	ctx.strokeStyle = COLORS.baulkLine;
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.moveTo(baulk, surface.top + 2);
+	ctx.lineTo(baulk, surface.bottom - 2);
+	ctx.stroke();
+	ctx.fillStyle = COLORS.baulkLine;
+	[getHeadSpot(), getFootSpot()].forEach((s) => {
+		ctx.beginPath();
+		ctx.arc(s.x, s.y, 2.5, 0, Math.PI * 2);
+		ctx.fill();
+	});
+}
+function buildTablePicture(ctx) {
+	const CK = ctx.CK;
+	if (tablePicture) {
+		tablePicture.delete();
+		tablePicture = null;
+	}
+	const recorder = new CK.PictureRecorder();
+	const bounds = CK.LTRBRect(0, 0, CANVAS_WIDTH, 520);
+	const recCtx = wrapSkCanvas(recorder.beginRecording(bounds), CK, CANVAS_WIDTH, 520);
+	if (ctx._typeface) recCtx.setTypeface(ctx._typeface);
+	drawTableStatic(recCtx);
+	tablePicture = recorder.finishRecordingAsPicture();
+	recorder.delete();
+	return tablePicture;
+}
+function drawTable(ctx, debugDrawRubber = true) {
+	if (tablePicture) {
+		ctx.drawPicture(tablePicture);
+		return;
+	}
+	drawTableStatic(ctx, debugDrawRubber);
+}
+function invalidateTablePicture() {
+	tablePicture?.delete();
+	tablePicture = null;
+}
+var tablePicture;
+var init_drawing_table = __esmMin((() => {
+	init_constants();
+	init_cushions_draw();
+	init_cushion_rubber_draw();
+	init_pocket_texture();
+	init_utils();
+	init_skia_ctx();
+	tablePicture = null;
+}));
+//#endregion
+//#region public/render/ball_renderer.js
+function clamp(value, min, max) {
+	return Math.max(min, Math.min(max, value));
+}
+function hexToRgb(hex) {
+	const n = parseInt(hex.slice(1), 16);
+	return [
+		n >> 16 & 255,
+		n >> 8 & 255,
+		n & 255
+	];
+}
+function parseBallRgb(color) {
+	if (color.startsWith("#")) return hexToRgb(color);
+	const m = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+	if (m) return [
+		Number(m[1]),
+		Number(m[2]),
+		Number(m[3])
+	];
+	return [
+		200,
+		200,
+		200
+	];
+}
+function sphereLocalShade(lx, ly, lz, forCue = false) {
+	const [lx0, ly0, lz0] = SPHERE_LIGHT;
+	const len = Math.hypot(lx0, ly0, lz0);
+	const ndotl = (lx * lx0 + ly * ly0 + lz * lz0) / len;
+	if (forCue) return clamp(.76 + .24 * ndotl, .7, 1);
+	return clamp(.72 + .28 * ndotl, .64, 1);
+}
+function shadeRgb(rgb, factor, darken = 1) {
+	const k = factor * darken;
+	return rgb.map((c) => Math.round(c * k));
+}
+function quatKey(q) {
+	return [
+		q.w,
+		q.x,
+		q.y,
+		q.z
+	].map((v) => Math.round(v * 40)).join(",");
+}
+function cacheSet(key, image) {
+	if (ballImageCache.has(key)) ballImageCache.get(key).delete();
+	ballImageCache.set(key, image);
+	const idx = cacheOrder.indexOf(key);
+	if (idx >= 0) cacheOrder.splice(idx, 1);
+	cacheOrder.push(key);
+	while (cacheOrder.length > CACHE_LIMIT) {
+		const old = cacheOrder.shift();
+		ballImageCache.get(old)?.delete();
+		ballImageCache.delete(old);
+	}
+}
+function projectSurfacePoint(orientation, ballX, ballY, radius, lx, ly, lz, minDepth = .1) {
+	const [px, py, pz] = rotateVec(orientation, lx, ly, lz);
+	if (pz < minDepth) return null;
+	return {
+		x: ballX + px * radius,
+		y: ballY + py * radius,
+		depth: pz
+	};
+}
+function projectSurfacePointFade(orientation, ballX, ballY, radius, lx, ly, lz) {
+	const [px, py, pz] = rotateVec(orientation, lx, ly, lz);
+	if (pz <= 0) return null;
+	const fade = Math.min(1, pz / .12);
+	return {
+		x: ballX + px * radius,
+		y: ballY + py * radius,
+		depth: pz,
+		fade
+	};
+}
+function buildSphereImage(CK, r, orientation, fillColor, darken, forCue, isStripe, stripeColor) {
+	const d = Math.ceil(r * 2);
+	const pixels = new Uint8Array(d * d * 4);
+	const center = r;
+	const invQ = quatConjugate(orientation);
+	const stripeSin = Math.sin(.66);
+	const stripeEdge = .045;
+	const color = stripeColor ? hexToRgb(stripeColor) : null;
+	const white = [
+		252,
+		252,
+		250
+	];
+	const base = parseBallRgb(fillColor);
+	for (let y = 0; y < d; y++) for (let x = 0; x < d; x++) {
+		const idx = (y * d + x) * 4;
+		const dx = x - center + .5;
+		const dy = y - center + .5;
+		if (dx * dx + dy * dy > r * r) {
+			pixels[idx + 3] = 0;
+			continue;
+		}
+		const sx = dx / r;
+		const sy = dy / r;
+		const [lx, ly, lz] = rotateVec(invQ, sx, sy, Math.sqrt(Math.max(0, 1 - sx * sx - sy * sy)));
+		const shade = sphereLocalShade(lx, ly, lz, forCue) * darken;
+		let rgb;
+		if (isStripe) {
+			rgb = shadeRgb(Math.abs(ly) <= stripeSin ? color : white, shade);
+			const edgeDist = Math.abs(Math.abs(ly) - stripeSin);
+			if (edgeDist < stripeEdge) {
+				const edge = (1 - edgeDist / stripeEdge) * .3;
+				rgb = rgb.map((c) => Math.round(c * (1 - edge)));
+			}
+		} else rgb = shadeRgb(base, sphereLocalShade(lx, ly, lz, forCue), darken);
+		pixels[idx] = rgb[0];
+		pixels[idx + 1] = rgb[1];
+		pixels[idx + 2] = rgb[2];
+		pixels[idx + 3] = 255;
+	}
+	const info = {
+		width: d,
+		height: d,
+		colorType: CK.ColorType.RGBA_8888,
+		alphaType: CK.AlphaType.Unpremul,
+		colorSpace: CK.ColorSpace.SRGB
+	};
+	return CK.MakeImage(info, pixels, d * 4);
+}
+function getSphereImage(CK, ball, r, fillColor, darken, forCue, isStripe) {
+	const key = `${ball.ballType}-${fillColor}-${isStripe ? ball.color : ""}-${quatKey(ball.orientation)}-${darken}-${forCue}`;
+	if (ballImageCache.has(key)) return ballImageCache.get(key);
+	const image = buildSphereImage(CK, r, ball.orientation, fillColor, darken, forCue, isStripe, ball.color);
+	if (image) cacheSet(key, image);
+	return image;
+}
+function drawNumberPatch(ctx, ball, r, typeface) {
+	const center = projectSurfacePointFade(ball.orientation, ball.x, ball.y, r, 0, 0, .93);
+	if (!center) return;
+	const tangent = projectSurfacePoint(ball.orientation, ball.x, ball.y, r, .14, 0, .92, 0);
+	const textAngle = tangent ? Math.atan2(tangent.y - center.y, tangent.x - center.x) : 0;
+	const fade = center.fade;
+	const spotR = r * .64 * (.9 + .1 * fade);
+	ctx.save();
+	ctx.globalAlpha *= fade;
+	ctx.beginPath();
+	ctx.arc(center.x, center.y, spotR, 0, Math.PI * 2);
+	ctx.fillStyle = ball.ballType === "eight" ? "#ffffff" : "#fafafa";
+	ctx.fill();
+	if (typeface) {
+		ctx.translate(center.x, center.y);
+		ctx.rotate(textAngle);
+		ctx.fillStyle = ball.ballType === "eight" ? "#111" : "#222";
+		ctx.font = `bold ${r * 1.05}px sans-serif`;
+		ctx.textAlign = "center";
+		ctx.textBaseline = "middle";
+		ctx.setTypeface(typeface);
+		ctx.fillText(String(ball.number), 0, .5);
+	}
+	ctx.restore();
+}
+function drawCueMarks(ctx, ball, r) {
+	const marks = CUE_MARK_DIRS.map(([dx, dy, dz]) => projectSurfacePoint(ball.orientation, ball.x, ball.y, r, dx * CUE_MARK_SURFACE, dy * CUE_MARK_SURFACE, dz * CUE_MARK_SURFACE)).filter(Boolean);
+	marks.sort((a, b) => a.depth - b.depth);
+	ctx.fillStyle = CUE_MARK_COLOR;
+	for (const mark of marks) {
+		ctx.beginPath();
+		ctx.arc(mark.x, mark.y, r * CUE_MARK_SCALE * mark.depth, 0, Math.PI * 2);
+		ctx.fill();
+	}
+}
+function drawBall(ctx, ball, typeface) {
+	if (ball.inPocket) return;
+	const r = ball.radius;
+	const fall = ball.pocketFall;
+	const scale = fall ? fall.scale : 1;
+	const alpha = fall ? fall.alpha : 1;
+	const depth = fall ? fall.depth : 0;
+	const squash = fall ? 1 - depth * .28 : 1;
+	ctx.save();
+	if (fall) {
+		const clipR = fall.pocketDrawRadius * (1.04 - depth * .1);
+		ctx.beginPath();
+		ctx.arc(fall.pocketX, fall.pocketY, clipR, 0, Math.PI * 2);
+		ctx.clip();
+	}
+	ctx.globalAlpha = alpha * (1 - depth * .4);
+	ctx.translate(ball.x, ball.y);
+	ctx.scale(scale, scale * squash);
+	ctx.translate(-ball.x, -ball.y);
+	let fillColor;
+	if (ball.isCueBall) fillColor = "#f5f3ee";
+	else if (ball.ballType === "eight") fillColor = "#1a1a1a";
+	else fillColor = ball.color;
+	const depthDarken = depth > .15 ? 1 - depth * .45 : 1;
+	const isStripe = ball.ballType === "stripe" && !ball.isCueBall;
+	const image = getSphereImage(ctx.CK, ball, r, fillColor, depthDarken, ball.isCueBall, isStripe);
+	ctx.save();
+	ctx.beginPath();
+	ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2);
+	ctx.clip();
+	if (image) ctx.drawImage(image, ball.x - r, ball.y - r);
+	if (ball.isCueBall) drawCueMarks(ctx, ball, r);
+	else drawNumberPatch(ctx, ball, r, typeface);
+	ctx.restore();
+	const highlightAlpha = .55 * (1 - depth * .7);
+	if (highlightAlpha > .05) {
+		ctx.beginPath();
+		ctx.arc(ball.x - r * .32, ball.y - r * .32, r * .18, 0, Math.PI * 2);
+		ctx.fillStyle = `rgba(255, 255, 255, ${highlightAlpha})`;
+		ctx.fill();
+	}
+	ctx.restore();
+}
+function clearBallImageCache() {
+	for (const img of ballImageCache.values()) img.delete();
+	ballImageCache.clear();
+	cacheOrder.length = 0;
+}
+var SPHERE_LIGHT, CUE_MARK_DIRS, CUE_MARK_SURFACE, CUE_MARK_SCALE, CUE_MARK_COLOR, CACHE_LIMIT, ballImageCache, cacheOrder;
+var init_ball_renderer = __esmMin((() => {
+	init_math3d();
+	SPHERE_LIGHT = [
+		.34,
+		-.26,
+		.9
+	];
+	CUE_MARK_DIRS = [
+		[
+			1,
+			0,
+			0
+		],
+		[
+			-1,
+			0,
+			0
+		],
+		[
+			0,
+			1,
+			0
+		],
+		[
+			0,
+			-1,
+			0
+		],
+		[
+			0,
+			0,
+			1
+		],
+		[
+			0,
+			0,
+			-1
+		]
+	];
+	CUE_MARK_SURFACE = .9;
+	CUE_MARK_SCALE = .19;
+	CUE_MARK_COLOR = "#c41e3a";
+	CACHE_LIMIT = 200;
+	ballImageCache = /* @__PURE__ */ new Map();
+	cacheOrder = [];
+}));
+//#endregion
+//#region public/render/drawing_cue.js
+function taperedSegmentPath(ctx, x0, x1, halfW0, halfW1) {
+	ctx.beginPath();
+	ctx.moveTo(x0, -halfW0);
+	ctx.lineTo(x1, -halfW1);
+	ctx.lineTo(x1, halfW1);
+	ctx.lineTo(x0, halfW0);
+	ctx.closePath();
+}
+function fillTaperedSegment(ctx, x0, x1, halfW0, halfW1, fillStyle) {
+	taperedSegmentPath(ctx, x0, x1, halfW0, halfW1);
+	ctx.fillStyle = fillStyle;
+	ctx.fill();
+}
+function strokeTaperedSegment(ctx, x0, x1, halfW0, halfW1, strokeStyle, lineWidth) {
+	taperedSegmentPath(ctx, x0, x1, halfW0, halfW1);
+	ctx.strokeStyle = strokeStyle;
+	ctx.lineWidth = lineWidth;
+	ctx.stroke();
+}
+function drawCueWoodGrain(ctx, x0, x1, halfW) {
+	const span = x1 - x0;
+	if (span < 8) return;
+	ctx.save();
+	taperedSegmentPath(ctx, x0, x1, halfW * .92, halfW * 1.02);
+	ctx.clip();
+	const grainCount = Math.max(6, Math.floor(span / 24));
+	for (let i = 0; i < grainCount; i++) {
+		const t = (i + .5) / grainCount;
+		const gx = x0 + span * t;
+		const wave = Math.sin(t * Math.PI * 3.6) * halfW * .2;
+		ctx.beginPath();
+		ctx.moveTo(gx, -halfW * .75 + wave);
+		ctx.lineTo(gx + span * .07, halfW * .75 + wave * .35);
+		ctx.strokeStyle = "rgba(58, 32, 8, 0.14)";
+		ctx.lineWidth = .55;
+		ctx.stroke();
+	}
+	ctx.restore();
+}
+function drawCueWrapTexture(ctx, x0, x1, halfW) {
+	ctx.save();
+	taperedSegmentPath(ctx, x0, x1, halfW * .96, halfW * 1.04);
+	ctx.clip();
+	const rings = Math.max(6, Math.floor((x1 - x0) / 6.5));
+	for (let i = 0; i <= rings; i++) {
+		const t = i / rings;
+		const rx = x0 + (x1 - x0) * t;
+		const rw = halfW * (.9 + t * .16);
+		ctx.beginPath();
+		ctx.moveTo(rx, -rw);
+		ctx.lineTo(rx, rw);
+		ctx.strokeStyle = i % 2 === 0 ? "rgba(0, 0, 0, 0.32)" : "rgba(255, 255, 255, 0.07)";
+		ctx.lineWidth = .65;
+		ctx.stroke();
+	}
+	const diamonds = Math.max(3, Math.floor((x1 - x0) / 22));
+	for (let i = 0; i < diamonds; i++) {
+		const t = (i + .5) / diamonds;
+		const dx = x0 + (x1 - x0) * t;
+		const ds = halfW * .22;
+		ctx.beginPath();
+		ctx.moveTo(dx, -ds);
+		ctx.lineTo(dx + ds * .7, 0);
+		ctx.lineTo(dx, ds);
+		ctx.lineTo(dx - ds * .7, 0);
+		ctx.closePath();
+		ctx.fillStyle = "rgba(196, 30, 58, 0.35)";
+		ctx.fill();
+		ctx.strokeStyle = "rgba(255, 220, 180, 0.18)";
+		ctx.lineWidth = .4;
+		ctx.stroke();
+	}
+	ctx.restore();
+}
+function drawMetalRing(ctx, x, halfW0, halfW1, width = 3) {
+	const ringGrad = ctx.createLinearGradient(0, -halfW1, 0, halfW1);
+	ringGrad.addColorStop(0, COLORS.metalLight);
+	ringGrad.addColorStop(.4, COLORS.metalBase);
+	ringGrad.addColorStop(.75, COLORS.metalDark);
+	ringGrad.addColorStop(1, "rgba(255,255,255,0.35)");
+	fillTaperedSegment(ctx, x, x + width, halfW0, halfW1, ringGrad);
+	strokeTaperedSegment(ctx, x, x + width, halfW0, halfW1, "rgba(255,255,255,0.28)", .45);
+}
+function drawButtJewel(ctx, x, halfW) {
+	const r = halfW * .42;
+	const jewelGrad = ctx.createRadialGradient(x - r * .25, -r * .25, r * .1, x, 0, r);
+	jewelGrad.addColorStop(0, "#ff6b8a");
+	jewelGrad.addColorStop(.45, "#c41e3a");
+	jewelGrad.addColorStop(.85, "#6b0f1f");
+	jewelGrad.addColorStop(1, "#2a0810");
+	ctx.beginPath();
+	ctx.arc(x, 0, r, 0, Math.PI * 2);
+	ctx.fillStyle = jewelGrad;
+	ctx.fill();
+	ctx.strokeStyle = "rgba(255, 220, 200, 0.45)";
+	ctx.lineWidth = .5;
+	ctx.stroke();
+	ctx.beginPath();
+	ctx.arc(x - r * .28, -r * .28, r * .18, 0, Math.PI * 2);
+	ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+	ctx.fill();
+}
+function drawCueStick(ctx, tipX, tipY, angle) {
+	const len = 380;
+	const tipHalf = CUE_WIDTH * .27;
+	const ferruleHalf = CUE_WIDTH * .35;
+	const shaftHalf = CUE_WIDTH * .44;
+	const wrapHalf = CUE_WIDTH * .52;
+	const buttHalf = CUE_WIDTH * .62;
+	const ferruleStart = 10;
+	const ferruleEnd = 25;
+	const wrapStart = len * .64;
+	const wrapEnd = len * .88;
+	const buttStart = wrapEnd;
+	const jewelX = len - 5;
+	ctx.save();
+	ctx.translate(tipX, tipY);
+	ctx.rotate(angle + Math.PI);
+	ctx.save();
+	ctx.translate(4, 3);
+	ctx.globalAlpha = .18;
+	taperedSegmentPath(ctx, 0, len, tipHalf, buttHalf);
+	ctx.fillStyle = "#000";
+	ctx.fill();
+	ctx.globalAlpha = .08;
+	taperedSegmentPath(ctx, 2, 382, tipHalf * .9, buttHalf * .95);
+	ctx.fill();
+	ctx.restore();
+	const tipGrad = ctx.createLinearGradient(0, -tipHalf, 0, tipHalf);
+	tipGrad.addColorStop(0, "#8ed8ff");
+	tipGrad.addColorStop(.4, "#4db5e8");
+	tipGrad.addColorStop(.75, "#2a8ec4");
+	tipGrad.addColorStop(1, "#1a6a96");
+	fillTaperedSegment(ctx, 0, ferruleStart, tipHalf * .8, tipHalf, tipGrad);
+	const ferruleGrad = ctx.createLinearGradient(0, -ferruleHalf, 0, ferruleHalf);
+	ferruleGrad.addColorStop(0, COLORS.metalLight);
+	ferruleGrad.addColorStop(.3, COLORS.metalBase);
+	ferruleGrad.addColorStop(.65, COLORS.metalDark);
+	ferruleGrad.addColorStop(1, COLORS.metalEdge);
+	fillTaperedSegment(ctx, ferruleStart, ferruleEnd, tipHalf, ferruleHalf, ferruleGrad);
+	drawMetalRing(ctx, ferruleEnd - 2.5, ferruleHalf * .98, ferruleHalf, 2.5);
+	const woodGrad = ctx.createLinearGradient(0, -shaftHalf, 0, shaftHalf);
+	woodGrad.addColorStop(0, "#b8844a");
+	woodGrad.addColorStop(.22, COLORS.cueStick);
+	woodGrad.addColorStop(.48, "#f8e8c8");
+	woodGrad.addColorStop(.72, "#e0c090");
+	woodGrad.addColorStop(1, COLORS.cueStickDark);
+	fillTaperedSegment(ctx, ferruleEnd, wrapStart, ferruleHalf, shaftHalf, woodGrad);
+	drawCueWoodGrain(ctx, 33, wrapStart - 6, shaftHalf);
+	const wrapGrad = ctx.createLinearGradient(0, -wrapHalf, 0, wrapHalf);
+	wrapGrad.addColorStop(0, "#2a2218");
+	wrapGrad.addColorStop(.35, "#12100e");
+	wrapGrad.addColorStop(.65, "#0a0908");
+	wrapGrad.addColorStop(1, "#302820");
+	fillTaperedSegment(ctx, wrapStart, wrapEnd, shaftHalf, wrapHalf, wrapGrad);
+	drawCueWrapTexture(ctx, wrapStart, wrapEnd, wrapHalf);
+	drawMetalRing(ctx, wrapStart - 1.5, shaftHalf * 1.02, shaftHalf * 1.04, 2);
+	drawMetalRing(ctx, wrapEnd - 1, wrapHalf * 1.02, wrapHalf * 1.04, 2);
+	const buttGrad = ctx.createLinearGradient(0, -buttHalf, 0, buttHalf);
+	buttGrad.addColorStop(0, "#9a6838");
+	buttGrad.addColorStop(.35, COLORS.woodLight);
+	buttGrad.addColorStop(.7, "#c99552");
+	buttGrad.addColorStop(1, COLORS.woodDark);
+	fillTaperedSegment(ctx, buttStart, len, wrapHalf, buttHalf, buttGrad);
+	drawButtJewel(ctx, jewelX, buttHalf);
+	ctx.save();
+	taperedSegmentPath(ctx, ferruleEnd, wrapStart, ferruleHalf * .5, shaftHalf * .5);
+	ctx.clip();
+	ctx.beginPath();
+	ctx.moveTo(31, -shaftHalf * .32);
+	ctx.lineTo(len * .52, -shaftHalf * .32);
+	ctx.strokeStyle = "rgba(255, 255, 255, 0.22)";
+	ctx.lineWidth = .9;
+	ctx.stroke();
+	ctx.beginPath();
+	ctx.moveTo(45, shaftHalf * .18);
+	ctx.lineTo(len * .45, shaftHalf * .18);
+	ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
+	ctx.lineWidth = .5;
+	ctx.stroke();
+	ctx.restore();
+	taperedSegmentPath(ctx, 0, len, tipHalf, buttHalf);
+	ctx.strokeStyle = "rgba(0, 0, 0, 0.28)";
+	ctx.lineWidth = .6;
+	ctx.stroke();
+	ctx.beginPath();
+	ctx.arc(0, 0, tipHalf * .5, 0, Math.PI * 2);
+	ctx.fillStyle = "#6ec8f0";
+	ctx.fill();
+	ctx.strokeStyle = "rgba(255,255,255,0.35)";
+	ctx.lineWidth = .4;
+	ctx.stroke();
+	ctx.restore();
+}
+function drawSpinMark(ctx, cueBall, aimAngle, spinOffsetX, spinOffsetY) {
+	if (Math.abs(spinOffsetX) < .04 && Math.abs(spinOffsetY) < .04) return;
+	const r = 11;
+	const perpX = -Math.sin(aimAngle);
+	const perpY = Math.cos(aimAngle);
+	const backX = -Math.cos(aimAngle);
+	const backY = -Math.sin(aimAngle);
+	const mx = cueBall.x + backX * r + perpX * spinOffsetX * r * .9 + backX * spinOffsetY * r * .35;
+	const my = cueBall.y + backY * r + perpY * spinOffsetX * r * .9 + backY * spinOffsetY * r * .35;
+	ctx.save();
+	ctx.beginPath();
+	ctx.arc(mx, my, 3.8, 0, Math.PI * 2);
+	ctx.fillStyle = "#2a8aff";
+	ctx.fill();
+	ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+	ctx.lineWidth = 1.2;
+	ctx.stroke();
+	ctx.restore();
+}
+function drawCueBallGhost(ctx, x, y, alpha = 1) {
+	const r = 11;
+	ctx.save();
+	ctx.globalAlpha = alpha;
+	ctx.beginPath();
+	ctx.arc(x, y, r, 0, Math.PI * 2);
+	ctx.fillStyle = "rgba(255, 255, 255, 0.18)";
+	ctx.fill();
+	ctx.strokeStyle = "rgba(255, 255, 255, 0.72)";
+	ctx.lineWidth = 1.5;
+	ctx.stroke();
+	ctx.beginPath();
+	ctx.arc(x + r * .35, y, r * .11, 0, Math.PI * 2);
+	ctx.fillStyle = "rgba(196, 30, 58, 0.55)";
+	ctx.fill();
+	ctx.restore();
+}
+function drawObjectBallGhost(ctx, ball) {
+	const r = 11;
+	const { x, y, color, ballType } = ball;
+	ctx.save();
+	ctx.beginPath();
+	ctx.arc(x, y, r, 0, Math.PI * 2);
+	ctx.fillStyle = color;
+	ctx.globalAlpha = .28;
+	ctx.fill();
+	ctx.globalAlpha = 1;
+	ctx.strokeStyle = "rgba(255, 255, 255, 0.72)";
+	ctx.lineWidth = 1.5;
+	ctx.stroke();
+	if (ballType === "stripe") {
+		ctx.beginPath();
+		ctx.arc(x, y, r * .55, 0, Math.PI * 2);
+		ctx.fillStyle = "rgba(255, 255, 255, 0.38)";
+		ctx.fill();
+	}
+	ctx.restore();
+}
+function drawHitBallGhosts(ctx, path, showTargetGhost = true) {
+	if (path.hitType === "ball" || path.hitType === "wall") drawCueBallGhost(ctx, path.contactX, path.contactY);
+	else if (path.simulated && path.hitType === "none") drawCueBallGhost(ctx, path.stopX, path.stopY);
+	if (showTargetGhost && path.hitType === "ball" && path.hitBall) drawObjectBallGhost(ctx, path.hitBall);
+}
+function strokeLine(ctx, x1, y1, x2, y2, color, width, alpha = 1, dash = null) {
+	ctx.save();
+	ctx.globalAlpha = alpha;
+	ctx.beginPath();
+	ctx.moveTo(x1, y1);
+	ctx.lineTo(x2, y2);
+	ctx.strokeStyle = color;
+	ctx.lineWidth = width;
+	if (dash) ctx.setLineDash(dash);
+	ctx.stroke();
+	ctx.restore();
+}
+/** Пунктир после 2-го касания: с каждым сегментом штрихи реже */
+function sparseDashPattern(step) {
+	return [Math.max(2, 5 - step), 6 + step * 6];
+}
+function dashForOnSegment(segmentIndex) {
+	if (segmentIndex < 2) return null;
+	return sparseDashPattern(segmentIndex - 2);
+}
+function decimatePoints(points, minDist = 2.5) {
+	if (points.length <= 2) return points;
+	const out = [points[0]];
+	for (let i = 1; i < points.length; i++) {
+		const prev = out[out.length - 1];
+		if (Math.hypot(points[i].x - prev.x, points[i].y - prev.y) >= minDist || i === points.length - 1) out.push(points[i]);
+	}
+	return out;
+}
+function strokePolyline(ctx, points, color, width) {
+	if (!points || points.length < 2) return;
+	ctx.save();
+	ctx.beginPath();
+	ctx.moveTo(points[0].x, points[0].y);
+	for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+	ctx.strokeStyle = color;
+	ctx.lineWidth = width;
+	ctx.stroke();
+	ctx.restore();
+}
+function drawSimulatedAimPath(ctx, startX, startY, path) {
+	const samples = decimatePoints(path.fullSamples ?? path.aimSamples ?? []);
+	if (samples.length < 1) return;
+	const splitAt = path.firstContactSampleIdx ?? -1;
+	if (splitAt >= 0 && path.hitType !== "none" && splitAt < samples.length - 1) {
+		const aimPts = [{
+			x: startX,
+			y: startY
+		}, ...samples.slice(1, splitAt + 1)];
+		const bouncePts = samples.slice(splitAt);
+		if (aimPts.length >= 2) strokePolyline(ctx, aimPts, COLORS.aimLine, 1.5);
+		if (bouncePts.length >= 2) strokePolyline(ctx, bouncePts, "rgba(120, 210, 255, 0.8)", 1.5);
+		return;
+	}
+	const linePts = [{
+		x: startX,
+		y: startY
+	}, ...samples.slice(1)];
+	if (linePts.length >= 2) strokePolyline(ctx, linePts, COLORS.aimLine, 1.5);
+}
+function drawOffTrajectory(ctx, startX, startY, path) {
+	const bounceLen = 72;
+	if (path.simulated && (path.fullSamples?.length || path.aimSamples?.length)) {
+		drawSimulatedAimPath(ctx, startX, startY, path);
+		if (path.hasTargetLine) {
+			const tx = path.targetEndX ?? path.contactX + path.targetDx * bounceLen;
+			const ty = path.targetEndY ?? path.contactY + path.targetDy * bounceLen;
+			strokeLine(ctx, path.contactX, path.contactY, tx, ty, "rgba(255, 210, 80, 0.75)", 1.2);
+		}
+		drawHitBallGhosts(ctx, path, false);
+		return;
+	}
+	strokeLine(ctx, startX, startY, path.contactX, path.contactY, COLORS.aimLine, 1.5);
+	strokeLine(ctx, path.contactX, path.contactY, path.endX, path.endY, COLORS.aimLineGhost, 1);
+	if (path.hasBounce) {
+		const bx = path.bounceEndX ?? path.contactX + path.bounceDx * bounceLen;
+		const by = path.bounceEndY ?? path.contactY + path.bounceDy * bounceLen;
+		strokeLine(ctx, path.contactX, path.contactY, bx, by, "rgba(120, 210, 255, 0.8)", 1.5);
+	}
+	if (path.hasTargetLine) {
+		const sx = path.targetStartX ?? path.contactX;
+		const sy = path.targetStartY ?? path.contactY;
+		strokeLine(ctx, sx, sy, path.targetEndX ?? sx + path.targetDx * 88, path.targetEndY ?? sy + path.targetDy * 88, "rgba(255, 210, 80, 0.75)", 1.2);
+	}
+	drawHitBallGhosts(ctx, path, false);
+}
+function segmentAlpha(index, total) {
+	if (total <= 1) return 1;
+	return .45 + .55 * (total - index) / total;
+}
+function drawOnTrajectory(ctx, startX, startY, path, variant = "on") {
+	const cueSegments = path.cueSegments ?? [];
+	const targetSegments = path.targetSegments ?? [];
+	const useSparseDash = variant === "on";
+	if (cueSegments.length > 0) {
+		const first = cueSegments[0];
+		strokeLine(ctx, startX, startY, first.x2, first.y2, COLORS.aimLine, 1.5);
+		for (let i = 1; i < cueSegments.length; i++) {
+			const seg = cueSegments[i];
+			const dash = useSparseDash ? dashForOnSegment(i) : null;
+			strokeLine(ctx, seg.x1, seg.y1, seg.x2, seg.y2, "rgba(120, 210, 255, 0.85)", 1.4, segmentAlpha(i, cueSegments.length), dash);
+		}
+	}
+	for (let i = 0; i < targetSegments.length; i++) {
+		const seg = targetSegments[i];
+		const dash = useSparseDash ? dashForOnSegment(i) : null;
+		strokeLine(ctx, seg.x1, seg.y1, seg.x2, seg.y2, "rgba(255, 210, 80, 0.8)", 1.2, segmentAlpha(i, targetSegments.length), dash);
+	}
+	drawHitBallGhosts(ctx, path);
+}
+function drawTrajectory(ctx, angle, cueBall, aimX, aimY, path, variant = "off", modifierEnabled = false) {
+	const startX = cueBall.x + Math.cos(angle) * 11;
+	const startY = cueBall.y + Math.sin(angle) * 11;
+	ctx.save();
+	if (variant === "off") drawOffTrajectory(ctx, startX, startY, path);
+	else drawOnTrajectory(ctx, startX, startY, path, variant);
+	ctx.beginPath();
+	ctx.arc(aimX, aimY, 5, 0, Math.PI * 2);
+	ctx.strokeStyle = "rgba(255,255,255,0.4)";
+	ctx.lineWidth = 1.5;
+	ctx.stroke();
+	ctx.restore();
+}
+var init_drawing_cue = __esmMin((() => {
+	init_constants();
+}));
+//#endregion
+//#region public/render/render_engine.js
+function drawImpactFlash(ctx, flash) {
+	if (!flash) return;
+	const t = flash.t;
+	const alpha = .5 * (1 - t);
+	ctx.save();
+	ctx.beginPath();
+	ctx.arc(flash.x, flash.y, 11 + t * 14, 0, Math.PI * 2);
+	ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+	ctx.lineWidth = 2.5 * (1 - t);
+	ctx.stroke();
+	ctx.restore();
+}
+function drawCueScene(ctx, cueBall, cue, typeface) {
+	if (!cue?.visible || !cueBall) return;
+	const fakeCueBall = {
+		x: cueBall.x,
+		y: cueBall.y
+	};
+	drawTrajectory(ctx, cue.angle, fakeCueBall, cue.aimX, cue.aimY, cue.trajectory, cue.aimLineVariant, cue.aimModifierEnabled);
+	drawSpinMark(ctx, fakeCueBall, cue.angle, cue.spinOffsetX, cue.spinOffsetY);
+	drawCueStick(ctx, cue.tipX, cue.tipY, cue.angle);
+}
+function initRenderEngine(ctx, typeface) {
+	ctx.setTypeface(typeface);
+	return {
+		ctx,
+		typeface
+	};
+}
+function drawFrame(ctx, state, typeface) {
+	const { balls, cue, impactFlash } = state;
+	const cueBall = balls.find((b) => b.isCueBall && !b.inPocket);
+	drawTable(ctx, state.debug?.drawRubber);
+	for (const ball of balls) if (!ball.pocketFall) drawBall(ctx, ball, typeface);
+	for (const ball of balls) if (ball.pocketFall) drawBall(ctx, ball, typeface);
+	drawImpactFlash(ctx, impactFlash);
+	if (cue) drawCueScene(ctx, cueBall, cue, typeface);
+}
+var init_render_engine = __esmMin((() => {
+	init_constants();
+	init_drawing_table();
+	init_ball_renderer();
+	init_drawing_cue();
+}));
+//#endregion
+//#region public/render/renderer.js
+function invalidateRenderCaches() {
+	invalidateTablePicture();
+	invalidateWoodPattern();
+	invalidateMetalPattern();
+	invalidatePocketSprites();
+	clearBallImageCache();
+	if (ctx) buildTablePicture(ctx);
+}
+async function initRenderer(canvas, width = CANVAS_WIDTH, height = 520, onProgress) {
+	onProgress?.("CanvasKit WASM…");
+	CK = await loadCanvasKit();
+	onProgress?.("Surface…");
+	surface = createCanvasSurface(CK, canvas);
+	if (!surface) throw new Error("CanvasKit: не удалось создать surface (WebGL/SW)");
+	ctx = new Skia2DContext(surface.getCanvas(), CK, width, height);
+	onProgress?.("Шрифт…");
+	typeface = await loadTypeface(CK, onProgress);
+	onProgress?.("Стол…");
+	initRenderEngine(ctx, typeface);
+	buildTablePicture(ctx);
+}
+function renderFrame(state) {
+	if (!ctx || !surface) return;
+	drawFrame(ctx, state, typeface);
+	flushSurface(surface);
+}
+var CK, surface, ctx, typeface;
+var init_renderer = __esmMin((() => {
+	init_constants();
+	init_skia_ctx();
+	init_canvaskit();
+	init_drawing_table();
+	init_wood_texture();
+	init_metal_texture();
+	init_pocket_texture();
+	init_ball_renderer();
+	init_render_engine();
+	CK = null;
+	surface = null;
+	ctx = null;
+	typeface = null;
+}));
 (/* @__PURE__ */ __commonJSMin((() => {
 	init_constants();
 	init_ball();
@@ -3387,6 +5796,7 @@ var init_render_state = __esmMin((() => {
 	init_spin();
 	init_cue_utils();
 	init_render_state();
+	init_renderer();
 	init_utils();
 	var preventBrowserZoom = (e) => e.preventDefault();
 	var zoomBlockOptions = {
@@ -3442,9 +5852,7 @@ var init_render_state = __esmMin((() => {
 	var traySlots = document.getElementById("pocketed-tray-slots");
 	canvas.width = CANVAS_WIDTH;
 	canvas.height = 520;
-	var renderWorker = null;
 	var renderReady = false;
-	var RENDER_INIT_TIMEOUT_MS = 45e3;
 	var AIM_PATH_THROTTLE_MS = 80;
 	var RENDER_PROFILE = typeof location !== "undefined" && new URLSearchParams(location.search).has("renderProfile");
 	var gameLoopRafId = null;
@@ -3467,67 +5875,10 @@ var init_render_state = __esmMin((() => {
 		if (!loadingOverlay) return;
 		loadingOverlay.hidden = true;
 	}
-	async function initRenderWorker() {
-		if (typeof OffscreenCanvas === "undefined") throw new Error("Браузер не поддерживает OffscreenCanvas");
+	async function initRender() {
 		setLoadingStatus("Запуск рендера…");
-		const offscreen = canvas.transferControlToOffscreen();
-		renderWorker = new Worker(new URL(
-			/* @vite-ignore */
-			"/assets/render_worker-BRE6B55i.js",
-			"" + import.meta.url
-		), { type: "module" });
-		await new Promise((resolve, reject) => {
-			let settled = false;
-			const finish = (fn, value) => {
-				if (settled) return;
-				settled = true;
-				cleanup();
-				fn(value);
-			};
-			const cleanup = () => {
-				clearTimeout(timeoutId);
-				renderWorker.removeEventListener("message", onMessage);
-				renderWorker.removeEventListener("error", onWorkerError);
-				renderWorker.removeEventListener("messageerror", onMessageError);
-			};
-			const timeoutId = setTimeout(() => {
-				finish(reject, /* @__PURE__ */ new Error("Превышено время ожидания загрузки рендера (45 с). Откройте консоль браузера (F12) → вкладки Console и Network."));
-			}, RENDER_INIT_TIMEOUT_MS);
-			const onMessage = (event) => {
-				const msg = event.data;
-				if (msg.type === "progress") {
-					setLoadingStatus(msg.text || "Загрузка…");
-					return;
-				}
-				if (msg.type === "ready") {
-					renderReady = true;
-					finish(resolve);
-				} else if (msg.type === "error") finish(reject, new Error(msg.message || "Ошибка worker"));
-			};
-			const onWorkerError = (event) => {
-				const detail = [
-					event.message,
-					event.filename,
-					event.lineno
-				].filter(Boolean).join(" ");
-				finish(reject, /* @__PURE__ */ new Error(detail ? `Worker: ${detail}` : "Не удалось загрузить render worker. Проверьте Network → render_worker.js и canvaskit.wasm"));
-			};
-			const onMessageError = () => {
-				finish(reject, /* @__PURE__ */ new Error("Worker: ошибка десериализации сообщения"));
-			};
-			renderWorker.addEventListener("message", onMessage);
-			renderWorker.addEventListener("error", onWorkerError);
-			renderWorker.addEventListener("messageerror", onMessageError);
-			if (RENDER_PROFILE) renderWorker.addEventListener("message", (e) => {
-				if (e.data?.type === "profile" && e.data.workerMs != null) console.debug("[render profile]", e.data);
-			});
-			renderWorker.postMessage({
-				type: "init",
-				canvas: offscreen,
-				width: CANVAS_WIDTH,
-				height: 520
-			}, [offscreen]);
-		});
+		await initRenderer(canvas, CANVAS_WIDTH, 520, setLoadingStatus);
+		renderReady = true;
 	}
 	function buildAimPathKey(angle) {
 		return [
@@ -3550,7 +5901,7 @@ var init_render_state = __esmMin((() => {
 		return cachedAimPath;
 	}
 	function postRenderFrame() {
-		if (!renderWorker || !renderReady) return;
+		if (!renderReady) return;
 		const t0 = RENDER_PROFILE ? performance.now() : 0;
 		const state = buildRenderState({
 			balls,
@@ -3569,15 +5920,16 @@ var init_render_state = __esmMin((() => {
 			predictAimPath: predictAimPathThrottled,
 			getCueTipPosition
 		});
-		const serializeMs = RENDER_PROFILE ? performance.now() - t0 : 0;
-		renderWorker.postMessage({
-			type: "frame",
-			state,
-			profile: RENDER_PROFILE ? { serializeMs } : void 0
+		const buildMs = RENDER_PROFILE ? performance.now() - t0 : 0;
+		const r0 = RENDER_PROFILE ? performance.now() : 0;
+		renderFrame(state);
+		if (RENDER_PROFILE) console.debug("[render profile]", {
+			buildMs,
+			renderMs: performance.now() - r0
 		});
 	}
 	function invalidateRenderTable() {
-		renderWorker?.postMessage({ type: "invalidate_table" });
+		invalidateRenderCaches();
 	}
 	function fitGameLayout() {
 		if (!gameContainer || !gameStage) return;
@@ -4332,7 +6684,7 @@ var init_render_state = __esmMin((() => {
 	updateSpinPadVisual();
 	(async () => {
 		try {
-			await initRenderWorker();
+			await initRender();
 			hideLoadingOverlay();
 			initGame();
 			fitGameLayout();
@@ -4493,5 +6845,6 @@ var init_render_state = __esmMin((() => {
 	};
 })))();
 //#endregion
+export { __commonJSMin as t };
 
-//# sourceMappingURL=index-DjDo9Agn.js.map
+//# sourceMappingURL=index-DspFRGvp.js.map
