@@ -56,8 +56,8 @@ import { invalidateCushionCollisionCache } from './cushion_collision.js';
 import { predictCueTrajectory, predictExtendedCueTrajectory } from './physics.js';
 import { predictSimulatedTrajectory } from './physics_preview.js';
 import { applySpinToBall, hasSignificantSpin } from './spin.js';
-import { getCueTipPosition } from './cue_utils.js';
-import { buildRenderState } from './render/render_state.js';
+import { drawTable } from './drawing_table.js';
+import { drawCueStick, drawTrajectory, drawSpinMark, getCueTipPosition } from './drawing_cue.js';
 import { getHeadSpot, lighten, darken, getPockets, getPlaySurface } from './utils.js';
 
 // Полностью блокируем браузерный зум: double-tap, pinch, Ctrl/Cmd+wheel и клавиши.
@@ -88,7 +88,7 @@ window.addEventListener('keydown', e => {
 }, zoomBlockOptions);
 
 const canvas = document.getElementById('billiard-canvas');
-const loadingOverlay = document.getElementById('loading-overlay');
+const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('score');
 const resetBtn = document.getElementById('reset-btn');
 const powerValue = document.getElementById('power-value');
@@ -115,177 +115,6 @@ const traySlots = document.getElementById('pocketed-tray-slots');
 
 canvas.width = CANVAS_WIDTH;
 canvas.height = CANVAS_HEIGHT;
-
-let renderWorker = null;
-let renderReady = false;
-
-const RENDER_INIT_TIMEOUT_MS = 45000;
-const AIM_PATH_THROTTLE_MS = 80;
-const RENDER_PROFILE = typeof location !== 'undefined'
-    && new URLSearchParams(location.search).has('renderProfile');
-
-let gameLoopRafId = null;
-let gameLoopActive = false;
-
-let cachedAimPath = null;
-let cachedAimPathKey = '';
-let lastAimPathTime = 0;
-
-function setLoadingStatus(text) {
-    if (!loadingOverlay || loadingOverlay.classList.contains('is-error')) return;
-    loadingOverlay.textContent = text;
-}
-
-function showLoadingError(message) {
-    if (!loadingOverlay) return;
-    loadingOverlay.hidden = false;
-    loadingOverlay.classList.remove('is-progress');
-    loadingOverlay.classList.add('is-error');
-    loadingOverlay.textContent = message;
-}
-
-function hideLoadingOverlay() {
-    if (!loadingOverlay) return;
-    loadingOverlay.hidden = true;
-}
-
-async function initRenderWorker() {
-    if (typeof OffscreenCanvas === 'undefined') {
-        throw new Error('Браузер не поддерживает OffscreenCanvas');
-    }
-
-    setLoadingStatus('Запуск рендера…');
-
-    const offscreen = canvas.transferControlToOffscreen();
-    renderWorker = new Worker(new URL('./render/render_worker.js', import.meta.url), { type: 'module' });
-
-    await new Promise((resolve, reject) => {
-        let settled = false;
-
-        const finish = (fn, value) => {
-            if (settled) return;
-            settled = true;
-            cleanup();
-            fn(value);
-        };
-
-        const cleanup = () => {
-            clearTimeout(timeoutId);
-            renderWorker.removeEventListener('message', onMessage);
-            renderWorker.removeEventListener('error', onWorkerError);
-            renderWorker.removeEventListener('messageerror', onMessageError);
-        };
-
-        const timeoutId = setTimeout(() => {
-            finish(reject, new Error(
-                'Превышено время ожидания загрузки рендера (45 с). '
-                + 'Откройте консоль браузера (F12) → вкладки Console и Network.'
-            ));
-        }, RENDER_INIT_TIMEOUT_MS);
-
-        const onMessage = (event) => {
-            const msg = event.data;
-            if (msg.type === 'progress') {
-                setLoadingStatus(msg.text || 'Загрузка…');
-                return;
-            }
-            if (msg.type === 'ready') {
-                renderReady = true;
-                finish(resolve);
-            } else if (msg.type === 'error') {
-                finish(reject, new Error(msg.message || 'Ошибка worker'));
-            }
-        };
-
-        const onWorkerError = (event) => {
-            const detail = [event.message, event.filename, event.lineno].filter(Boolean).join(' ');
-            finish(reject, new Error(
-                detail
-                    ? `Worker: ${detail}`
-                    : 'Не удалось загрузить render worker. Проверьте Network → render_worker.js и canvaskit.wasm'
-            ));
-        };
-
-        const onMessageError = () => {
-            finish(reject, new Error('Worker: ошибка десериализации сообщения'));
-        };
-
-        renderWorker.addEventListener('message', onMessage);
-        renderWorker.addEventListener('error', onWorkerError);
-        renderWorker.addEventListener('messageerror', onMessageError);
-
-        if (RENDER_PROFILE) {
-            renderWorker.addEventListener('message', (e) => {
-                if (e.data?.type === 'profile' && e.data.workerMs != null) {
-                    console.debug('[render profile]', e.data);
-                }
-            });
-        }
-
-        renderWorker.postMessage({
-            type: 'init',
-            canvas: offscreen,
-            width: CANVAS_WIDTH,
-            height: CANVAS_HEIGHT
-        }, [offscreen]);
-    });
-}
-
-function buildAimPathKey(angle) {
-    return [
-        angle.toFixed(5),
-        aimLineVariant,
-        aimModifierEnabled ? 1 : 0,
-        spinOffsetX.toFixed(4),
-        spinOffsetY.toFixed(4),
-        shotPower.toFixed(2),
-        balls.map(b => `${b.x.toFixed(1)},${b.y.toFixed(1)},${b.inPocket ? 1 : 0}`).join(';')
-    ].join('|');
-}
-
-function predictAimPathThrottled(angle) {
-    const key = buildAimPathKey(angle);
-    const now = performance.now();
-    if (cachedAimPath && key === cachedAimPathKey && now - lastAimPathTime < AIM_PATH_THROTTLE_MS) {
-        return cachedAimPath;
-    }
-    cachedAimPath = predictAimPath(angle);
-    cachedAimPathKey = key;
-    lastAimPathTime = now;
-    return cachedAimPath;
-}
-
-function postRenderFrame() {
-    if (!renderWorker || !renderReady) return;
-    const t0 = RENDER_PROFILE ? performance.now() : 0;
-    const state = buildRenderState({
-        balls,
-        cueBall,
-        strikeAnim,
-        impactFlash,
-        aimX,
-        aimY,
-        aimAngle: getAimAngle(),
-        spinOffsetX,
-        spinOffsetY,
-        aimLineVariant,
-        aimModifierEnabled,
-        canShowCue: canShowCue(),
-        getPullFromPower,
-        predictAimPath: predictAimPathThrottled,
-        getCueTipPosition
-    });
-    const serializeMs = RENDER_PROFILE ? performance.now() - t0 : 0;
-    renderWorker.postMessage({
-        type: 'frame',
-        state,
-        profile: RENDER_PROFILE ? { serializeMs } : undefined
-    });
-}
-
-function invalidateRenderTable() {
-    renderWorker?.postMessage({ type: 'invalidate_table' });
-}
 
 function fitGameLayout() {
     if (!gameContainer || !gameStage) return;
@@ -556,7 +385,6 @@ function cycleCushionLipScale() {
     const wrapped = next > CUSHION_LIP_SCALE_MAX ? CUSHION_LIP_SCALE_MIN : next;
     if (!setCushionLipScale(wrapped)) return;
     invalidateCushionCollisionCache();
-    invalidateRenderTable();
     updateCushionLipButton();
 }
 
@@ -803,7 +631,6 @@ function canAdjustSpin() {
 }
 
 function startStrike(pullBack, angle) {
-    wakeGameLoop();
     strikeAnim = {
         angle,
         pullBack,
@@ -852,6 +679,19 @@ function updateImpactFlash() {
     }
 }
 
+function drawImpactFlash() {
+    if (!impactFlash) return;
+    const t = (performance.now() - impactFlash.startTime) / IMPACT_FLASH_MS;
+    const alpha = 0.5 * (1 - t);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(impactFlash.x, impactFlash.y, BALL_RADIUS + t * 14, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+    ctx.lineWidth = 2.5 * (1 - t);
+    ctx.stroke();
+    ctx.restore();
+}
+
 function getShotPower() {
     return getPullFromPower() * POWER_FACTOR;
 }
@@ -884,6 +724,15 @@ function predictAimPath(angle) {
     return predictExtendedCueTrajectory(angle, cueBall, balls);
 }
 
+function drawCueScene(angle, pullBack) {
+    const tip = getCueTipPosition(cueBall, angle, pullBack, spinOffsetX, spinOffsetY);
+    const path = predictAimPath(angle);
+    const drawVariant = path.simulated ? 'off' : (aimModifierEnabled ? 'off' : aimLineVariant);
+    drawTrajectory(ctx, angle, cueBall, aimX, aimY, path, drawVariant, aimModifierEnabled);
+    drawSpinMark(ctx, cueBall, angle, spinOffsetX, spinOffsetY);
+    drawCueStick(ctx, tip.x, tip.y, angle);
+}
+
 function initGame() {
     balls = [];
     score = 0;
@@ -909,7 +758,6 @@ function initGame() {
     isPullingPower = false;
     activePullPointerId = null;
     lastFrameTime = performance.now();
-    wakeGameLoop();
 }
 
 function update(now = performance.now()) {
@@ -956,40 +804,29 @@ function update(now = performance.now()) {
     }
 }
 
-function sceneIsAnimating() {
-    if (impactFlash || strikeAnim) return true;
-    if (balls.some(b => b.isMoving() || b.isPocketing() || b.pocketFall)) return true;
-    if (isPullingPower || isDraggingAimSlider || isDraggingSpin || aimPointer) return true;
+function draw() {
+    drawTable(ctx);
+    balls.forEach(ball => {
+        if (!ball.isPocketing()) ball.draw(ctx);
+    });
+    balls.forEach(ball => {
+        if (ball.isPocketing()) ball.draw(ctx);
+    });
+    drawImpactFlash();
+
+    if (strikeAnim) {
+        drawCueScene(strikeAnim.angle, strikeAnim.currentPull);
+        return;
+    }
     if (canShowCue()) {
-        if (Math.abs(shortestAngleDelta(aimAngle, aimAngleTarget)) > 0.00005) return true;
-        if (Math.abs(shotPowerTarget - shotPower) > 0.01) return true;
+        drawCueScene(getAimAngle(), getPullFromPower());
     }
-    return false;
-}
-
-function wakeGameLoop() {
-    if (!renderReady) return;
-    if (!gameLoopActive) {
-        gameLoopActive = true;
-        scheduleGameLoop();
-    }
-}
-
-function scheduleGameLoop() {
-    if (gameLoopRafId !== null) return;
-    gameLoopRafId = requestAnimationFrame(gameLoop);
 }
 
 function gameLoop(now) {
-    gameLoopRafId = null;
     update(now);
-    postRenderFrame();
-
-    if (sceneIsAnimating()) {
-        scheduleGameLoop();
-    } else {
-        gameLoopActive = false;
-    }
+    draw();
+    requestAnimationFrame(gameLoop);
 }
 
 function canvasPointerPosition(e) {
@@ -1041,7 +878,6 @@ function finishCanvasAim(e) {
 
 canvas.addEventListener('pointerdown', (e) => {
     if (!canShowCue()) return;
-    wakeGameLoop();
     tryLockLandscape();
     const pos = canvasPointerPosition(e);
     canvas.setPointerCapture(e.pointerId);
@@ -1104,7 +940,6 @@ window.addEventListener('orientationchange', () => {
 
 powerTrack.addEventListener('pointerdown', (e) => {
     if (!canPullPower()) return;
-    wakeGameLoop();
     e.preventDefault();
     powerTrack.setPointerCapture(e.pointerId);
     isPullingPower = true;
@@ -1129,7 +964,6 @@ powerTrack.addEventListener('pointercancel', finishPowerPull);
 
 spinPad.addEventListener('pointerdown', (e) => {
     if (!canAdjustSpin()) return;
-    wakeGameLoop();
     e.preventDefault();
     spinPad.setPointerCapture(e.pointerId);
     isDraggingSpin = true;
@@ -1157,7 +991,6 @@ spinResetBtn.addEventListener('click', resetSpin);
 
 aimTrack.addEventListener('pointerdown', (e) => {
     if (!canAdjustAim()) return;
-    wakeGameLoop();
     e.preventDefault();
     aimTrack.setPointerCapture(e.pointerId);
     isDraggingAimSlider = true;
@@ -1220,10 +1053,7 @@ if (spinPresetBtn) {
     spinPresetBtn.addEventListener('click', toggleSpinPreset);
 }
 
-resetBtn.addEventListener('click', () => {
-    initGame();
-    wakeGameLoop();
-});
+resetBtn.addEventListener('click', initGame);
 
 loadAimLineVariant();
 loadAimModifier();
@@ -1241,18 +1071,9 @@ updateCushionLipButton();
 updateAimSliderVisual();
 initPowerMarks();
 updateSpinPadVisual();
-(async () => {
-    try {
-        await initRenderWorker();
-        hideLoadingOverlay();
-        initGame();
-        fitGameLayout();
-        wakeGameLoop();
-    } catch (err) {
-        console.error(err);
-        showLoadingError(err?.message || 'Ошибка загрузки рендера');
-    }
-})();
+initGame();
+fitGameLayout();
+gameLoop();
 
 window.__poolTest = {
     state() {
