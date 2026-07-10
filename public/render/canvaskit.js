@@ -1,10 +1,25 @@
-import CanvasKitInit from 'canvaskit-wasm';
 import wasmUrl from 'canvaskit-wasm/bin/canvaskit.wasm?url';
 
 const FONT_URL = 'https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@v2.004/hinted/ttf/NotoSans/NotoSans-Regular.ttf';
 const FETCH_TIMEOUT_MS = 20000;
 
 export async function loadCanvasKit() {
+    const mod = await import('canvaskit-wasm/bin/canvaskit.js');
+    const candidates = [
+        mod,
+        mod?.default,
+        mod?.default?.default,
+        mod?.CanvasKitInit,
+        mod?.default?.CanvasKitInit,
+        globalThis?.CanvasKitInit
+    ];
+    let CanvasKitInit = candidates.find(c => typeof c === 'function');
+    if (!CanvasKitInit && mod && typeof mod === 'object') {
+        CanvasKitInit = Object.values(mod).find(v => typeof v === 'function');
+    }
+    if (!CanvasKitInit) {
+        throw new Error('CanvasKit init export not found');
+    }
     return CanvasKitInit({ locateFile: () => wasmUrl });
 }
 

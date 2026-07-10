@@ -687,13 +687,16 @@
 		return new Skia2DContext(skCanvas, CK, width, height);
 	}
 	//#endregion
+	//#region node_modules/canvaskit-wasm/bin/canvaskit.wasm?url
+	var canvaskit_default = "/assets/canvaskit-DB1zH3nD.wasm";
+	//#endregion
 	//#region __vite-browser-external
 	var require___vite_browser_external = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		module.exports = {};
 	}));
 	//#endregion
-	//#region node_modules/canvaskit-wasm/bin/canvaskit.wasm?url
-	var import_canvaskit = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
+	//#region node_modules/canvaskit-wasm/bin/canvaskit.js
+	var require_canvaskit = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 		var CanvasKitInit = (() => {
 			var _scriptName = typeof document != "undefined" ? document.currentScript?.src : void 0;
 			if (typeof __filename != "undefined") _scriptName = _scriptName || __filename;
@@ -6347,14 +6350,24 @@
 			module.exports = CanvasKitInit;
 			module.exports.default = CanvasKitInit;
 		} else if (typeof define === "function" && define["amd"]) define([], () => CanvasKitInit);
-	})))());
-	var canvaskit_default = "/assets/canvaskit-DB1zH3nD.wasm";
+	}));
 	//#endregion
 	//#region public/render/canvaskit.js
 	const FONT_URL = "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@v2.004/hinted/ttf/NotoSans/NotoSans-Regular.ttf";
 	const FETCH_TIMEOUT_MS = 2e4;
 	async function loadCanvasKit() {
-		return (0, import_canvaskit.default)({ locateFile: () => canvaskit_default });
+		const mod = await Promise.resolve().then(() => /* @__PURE__ */ __toESM(require_canvaskit(), 1));
+		let CanvasKitInit = [
+			mod,
+			mod?.default,
+			mod?.default?.default,
+			mod?.CanvasKitInit,
+			mod?.default?.CanvasKitInit,
+			globalThis?.CanvasKitInit
+		].find((c) => typeof c === "function");
+		if (!CanvasKitInit && mod && typeof mod === "object") CanvasKitInit = Object.values(mod).find((v) => typeof v === "function");
+		if (!CanvasKitInit) throw new Error("CanvasKit init export not found");
+		return CanvasKitInit({ locateFile: () => canvaskit_default });
 	}
 	function createCanvasSurface(CK, offscreenCanvas) {
 		let surf = CK.MakeCanvasSurface(offscreenCanvas);
@@ -8794,4 +8807,4 @@
 	//#endregion
 })();
 
-//# sourceMappingURL=render_worker-UskxOpHe.js.map
+//# sourceMappingURL=render_worker-Db9NVFg1.js.map

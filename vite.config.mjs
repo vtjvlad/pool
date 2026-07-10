@@ -9,7 +9,7 @@ export default defineConfig({
         sourcemap: true
     },
     optimizeDeps: {
-        exclude: ['canvaskit-wasm']
+        include: ['canvaskit-wasm/bin/canvaskit.js']
     },
     server: {
         allowedHosts: ['vtjvlad.ddns.net'],

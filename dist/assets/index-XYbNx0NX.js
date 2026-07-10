@@ -3455,7 +3455,7 @@ var init_render_state = __esmMin((() => {
 		const offscreen = canvas.transferControlToOffscreen();
 		renderWorker = new Worker(new URL(
 			/* @vite-ignore */
-			"/assets/render_worker-UskxOpHe.js",
+			"/assets/render_worker-Db9NVFg1.js",
 			"" + import.meta.url
 		), { type: "module" });
 		await new Promise((resolve, reject) => {
@@ -4476,4 +4476,4 @@ var init_render_state = __esmMin((() => {
 })))();
 //#endregion
 
-//# sourceMappingURL=index-BGttW1bd.js.map
+//# sourceMappingURL=index-XYbNx0NX.js.map
